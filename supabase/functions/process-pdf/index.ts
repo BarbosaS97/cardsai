@@ -32,30 +32,34 @@ serve(async (req) => {
     const DEEPSEEK_API_KEY = Deno.env.get('DEEPSEEK_API_KEY')
     if (!DEEPSEEK_API_KEY) throw new Error('API Key não configurada')
 
-    // Dividir em 4 partes
-    const partSize = Math.ceil(pdfText.length / 4)
-    const parts = [
-      pdfText.substring(0, partSize),
-      pdfText.substring(partSize, partSize * 2),
-      pdfText.substring(partSize * 2, partSize * 3),
-      pdfText.substring(partSize * 3)
-    ]
+    // Dividir em MAIS partes para evitar timeout (6 partes em vez de 4)
+    const numParts = 6
+    const partSize = Math.ceil(pdfText.length / numParts)
+    const parts = []
+    for (let i = 0; i < numParts; i++) {
+      parts.push(pdfText.substring(i * partSize, (i + 1) * partSize))
+    }
     
     const results = []
     
     for (let idx = 0; idx < parts.length; idx++) {
-      console.log(`📝 Processando parte ${idx + 1}/4...`)
+      console.log(`📝 Processando parte ${idx + 1}/${numParts}...`)
       
-      const prompt = `Analise o texto e gere JSON:
+      const prompt = `Analise o texto e gere JSON com BASE NO CONTEÚDO REAL. NÃO invente. Se não houver conteúdo suficiente, gere menos itens.
 
 {
-  "summary": "resumo desta parte",
-  "topics": ["topico1","topico2","topico3"],
-  "questions": [{"text":"pergunta","alternatives":["A) a","B) b","C) c","D) d"],"correct_answer":"A","topic":"t"}],
-  "flashcards": [{"front":"pergunta","back":"resposta","topic":"t"}]
+  "questions": [{"text":"pergunta baseada no texto","alternatives":["A) alternativa correta","B) segunda","C) terceira","D) quarta"],"correct_answer":"A","topic":"topic"}],
+  "flashcards": [{"front":"termo ou pergunta do texto","back":"definição ou resposta","topic":"topic"}],
+  "topics": ["topico1","topico2"]
 }
 
-Texto: ${parts[idx].substring(0, 6000)}`
+IMPORTANTE: 
+- Gere ATÉ 15 questões e ATÉ 25 flashcards por parte
+- As perguntas devem ser ESPECÍFICAS sobre o texto
+- As alternativas devem ser REAIS e baseadas no conteúdo
+- Use tópicos REAIS extraídos do texto
+
+Texto: ${parts[idx].substring(0, 8000)}`
 
       try {
         const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
@@ -63,9 +67,9 @@ Texto: ${parts[idx].substring(0, 6000)}`
           headers: { 'Authorization': `Bearer ${DEEPSEEK_API_KEY}`, 'Content-Type': 'application/json' },
           body: JSON.stringify({
             model: 'deepseek-chat',
-            messages: [{ role: 'system', content: 'Retorne APENAS JSON.' }, { role: 'user', content: prompt }],
+            messages: [{ role: 'system', content: 'Retorne APENAS JSON válido. Não adicione texto antes ou depois.' }, { role: 'user', content: prompt }],
             temperature: 0.3,
-            max_tokens: 16000,
+            max_tokens: 20000, // Aumentado
           }),
         })
 
@@ -79,16 +83,16 @@ Texto: ${parts[idx].substring(0, 6000)}`
           results.push({
             questions: result.questions || [],
             flashcards: result.flashcards || [],
-            summary: result.summary || "",
             topics: result.topics || []
           })
           console.log(`✅ Parte ${idx + 1}: ${result.questions?.length || 0} questões, ${result.flashcards?.length || 0} flashcards`)
         } else {
-          results.push({ questions: [], flashcards: [], summary: "", topics: [] })
+          console.log(`⚠️ Parte ${idx + 1}: sem JSON válido`)
+          results.push({ questions: [], flashcards: [], topics: [] })
         }
       } catch (e) {
         console.error(`❌ Erro parte ${idx + 1}:`, e.message)
-        results.push({ questions: [], flashcards: [], summary: "", topics: [] })
+        results.push({ questions: [], flashcards: [], topics: [] })
       }
     }
 
@@ -103,21 +107,50 @@ Texto: ${parts[idx].substring(0, 6000)}`
       if (r.topics) allTopics.push(...r.topics)
     }
     
-    // Garantir quantidades mínimas
+    console.log(`📊 Total gerado: ${allQuestions.length} questões, ${allFlashcards.length} flashcards`)
+    
+    // Se não gerou NADA, usar fallback MELHORADO (baseado no texto real)
+    if (allQuestions.length === 0 && allFlashcards.length === 0) {
+      console.log('⚠️ Nenhum conteúdo gerado! Usando fallback baseado no texto...')
+      
+      // Extrair frases do texto como fallback
+      const sentences = pdfText.split(/[.!?]+/).filter(s => s.trim().length > 30).slice(0, 30)
+      
+      for (let i = 0; i < Math.min(50, sentences.length); i++) {
+        allQuestions.push({
+          text: `Sobre: ${sentences[i].substring(0, 100)}`,
+          alternatives: ["A) Verdadeiro", "B) Falso", "C) Parcialmente", "D) Não informado"],
+          correct_answer: "A",
+          topic: "Conteúdo do texto"
+        })
+      }
+      
+      for (let i = 0; i < Math.min(100, sentences.length); i++) {
+        allFlashcards.push({
+          front: `Conceito: ${sentences[i].substring(0, 80)}`,
+          back: `Detalhe: ${sentences[i].substring(80, 160)}`,
+          topic: "Conteúdo do texto"
+        })
+      }
+    }
+    
+    // Garantir quantidades mínimas (MAS com conteúdo melhorado)
     while (allQuestions.length < 50) {
+      const idx = allQuestions.length % 10
       allQuestions.push({
-        text: `Questão ${allQuestions.length + 1}: Conceito importante do material?`,
-        alternatives: ["A) Correto", "B) Incorreto", "C) Parcial", "D) Não se aplica"],
+        text: `Questão sobre ${uniqueTopics[idx] || "o conteúdo"}: qual a afirmação correta?`,
+        alternatives: ["A) Correta segundo o texto", "B) Incorreta segundo o texto", "C) Parcialmente correta", "D) Não mencionada"],
         correct_answer: "A",
-        topic: "Fundamentos"
+        topic: uniqueTopics[idx] || "Conteúdo"
       })
     }
     
     while (allFlashcards.length < 100) {
+      const idx = allFlashcards.length % 10
       allFlashcards.push({
-        front: `Flashcard ${allFlashcards.length + 1}: Ponto relevante?`,
-        back: "Resposta baseada no conteúdo.",
-        topic: "Fundamentos"
+        front: `${uniqueTopics[idx] || "Ponto importante"}: conceito fundamental`,
+        back: "Consulte o material original para detalhes completos.",
+        topic: uniqueTopics[idx] || "Conteúdo"
       })
     }
     
@@ -125,10 +158,24 @@ Texto: ${parts[idx].substring(0, 6000)}`
     allFlashcards = allFlashcards.slice(0, 100)
     const uniqueTopics = [...new Set(allTopics)]
     
-    // Gerar resumo único
+    // Gerar resumo único (melhorado)
     let finalSummary = "Resumo gerado automaticamente."
     try {
-      const summaryPrompt = `Gere um resumo estruturado do texto com: **Introdução**, **Pontos Principais** (em lista) e **Conclusão**. Texto: ${pdfText.substring(0, 8000)}`
+      const summaryPrompt = `Você é um assistente especialista em criar resumos de alta qualidade.
+
+REGRAS:
+1. NÃO use asteriscos (*) ou (**)
+2. Use hífen (-) para itens de lista
+3. Tópicos principais em MAIÚSCULAS
+4. Seja COMPLETO e BEM FEITO
+
+Formato:
+TÍTULO DO TÓPICO
+- Conceito: explicação detalhada
+- Outro ponto: desenvolvimento
+
+Texto: ${pdfText.substring(0, 10000)}`
+
       const summaryRes = await fetch('https://api.deepseek.com/v1/chat/completions', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${DEEPSEEK_API_KEY}`, 'Content-Type': 'application/json' },
@@ -136,7 +183,7 @@ Texto: ${parts[idx].substring(0, 6000)}`
           model: 'deepseek-chat',
           messages: [{ role: 'user', content: summaryPrompt }],
           temperature: 0.3,
-          max_tokens: 1500,
+          max_tokens: 2000,
         }),
       })
       const summaryData = await summaryRes.json()

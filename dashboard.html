@@ -65,6 +65,9 @@
       background: var(--bg);
       -webkit-font-smoothing: antialiased;
       transition: background .2s, color .2s;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
     }
     a { color: inherit; text-decoration: none; }
     button { font-family: inherit; cursor: pointer; }
@@ -72,7 +75,7 @@
 
     /* ── Layout ─────────────────────────────────────────────── */
     .max-w { max-width: 680px; margin: 0 auto; padding: 0 24px; }
-    main { padding: 40px 0 80px; }
+    main { padding: 40px 0 80px; flex: 1; }
 
     /* ── Header ─────────────────────────────────────────────── */
     header {
@@ -287,6 +290,15 @@
   <div class="max-w header-inner">
     <a href="/index.html" class="logo">CardsQuestõesAI</a>
     <div class="header-right">
+
+      <!-- Anotações link -->
+      <a href="/anotacoes.html"
+        style="font-size:12px;font-weight:500;color:var(--text-2);display:inline-flex;align-items:center;gap:4px;padding:5px 10px;border:1px solid var(--border);border-radius:8px;transition:background .15s,color .15s;"
+        onmouseover="this.style.background='var(--surface-2)';this.style.color='var(--text)';"
+        onmouseout="this.style.background='';this.style.color='var(--text-2)';">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+        Anotações
+      </a>
 
       <!-- Credits pill — clicável para comprar -->
       <a id="creditsPill" href="/pricing.html" class="credits-pill credits-ok">

@@ -255,6 +255,55 @@
     .google-btn:hover { opacity: 1; background: rgba(0,0,0,.07); }
     .google-btn-light { opacity: 0.5; background: rgba(255,255,255,0.1); }
     .google-btn-light:hover { opacity: 1; background: rgba(255,255,255,0.2); }
+
+    /* ── Note button ───────────────────────────────────────── */
+    .note-btn {
+      background: transparent; border: none;
+      padding: 4px; border-radius: 5px; cursor: pointer;
+      line-height: 0; color: var(--text-3, #94A3B8);
+      opacity: 0.45; display: block;
+      transition: opacity .15s, background .15s, color .15s;
+    }
+    .note-btn:hover { opacity: 1; background: rgba(0,0,0,.07); }
+    .note-btn.has-note { color: #2563EB; opacity: 1; }
+    .note-btn-light { color: rgba(255,255,255,0.7); }
+    .note-btn-light:hover { background: rgba(255,255,255,0.2); opacity: 1; }
+    .note-btn-light.has-note { color: #fff; opacity: 1; }
+
+    /* ── Note modal ────────────────────────────────────────── */
+    #noteModal {
+      display: none; position: fixed; inset: 0; z-index: 200;
+      background: rgba(0,0,0,0.55);
+      align-items: center; justify-content: center; padding: 16px;
+    }
+    #noteModal.open { display: flex; }
+    #noteModal { overflow-y: auto; }
+    #noteBox {
+      background: var(--surface, #fff);
+      border: 1px solid var(--border, #E2E8F0);
+      border-radius: 16px; padding: 1.5rem;
+      width: 100%; max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.25);
+      margin: auto;
+    }
+    #noteCardPreview {
+      font-size: 13px; color: var(--text-2, #475569);
+      background: var(--bg, #F8FAFC);
+      border: 1px solid var(--border, #E2E8F0);
+      border-radius: 8px; padding: 10px 12px;
+      margin-bottom: 14px; line-height: 1.6;
+    }
+    #noteTextarea {
+      width: 100%; min-height: 160px;
+      border: 1px solid var(--border, #E2E8F0);
+      border-radius: 8px; padding: 12px 14px;
+      font-size: 14px; font-family: inherit;
+      color: var(--text, #1E293B);
+      background: var(--surface, #fff);
+      resize: vertical; outline: none; line-height: 1.6;
+      transition: border-color .15s;
+    }
+    #noteTextarea:focus { border-color: #2563EB; }
   </style>
   <!-- PWA -->
   <link rel="manifest" href="/manifest.json" />
@@ -344,6 +393,9 @@
 
       <!-- Card -->
       <div id="qCard" class="card-in bg-white rounded-2xl border border-slate-200 shadow-sm p-4 md:p-6 mb-4" style="position:relative;">
+        <button id="qNoteBtn" class="note-btn" title="Adicionar anotação" style="position:absolute;top:12px;right:40px;" onclick="void 0">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+        </button>
         <button id="qGoogleBtn" class="google-btn" title="Pesquisar no Google" style="position:absolute;top:12px;right:12px;" onclick="void 0">
           <img src="/static/images/google.png" alt="Pesquisar no Google" width="16" height="16" style="display:block;">
         </button>
@@ -408,8 +460,11 @@
             </span>
             <p id="fcFront" class="text-sm md:text-base font-medium text-slate-900 leading-snug max-w-md"></p>
             <p class="text-xs text-slate-300 mt-3 select-none">Clique ou deslize para ver a resposta</p>
-            <button id="fcGoogleFront" class="google-btn" title="Pesquisar no Google" style="position:absolute;bottom:10px;right:10px;" onclick="event.stopPropagation()">
+            <button id="fcGoogleFront" class="google-btn" title="Pesquisar no Google" style="position:absolute;top:10px;left:50%;transform:translateX(-50%);" onclick="event.stopPropagation()">
               <img src="/static/images/google.png" alt="Pesquisar no Google" width="16" height="16" style="display:block;">
+            </button>
+            <button id="fcNoteBtn" class="note-btn" title="Adicionar anotação" style="position:absolute;top:10px;right:10px;" onclick="event.stopPropagation()">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
             </button>
           </div>
 
@@ -423,8 +478,11 @@
             </span>
             <p id="fcBack" class="text-sm md:text-base font-semibold text-white leading-snug max-w-md"></p>
             <p class="text-xs text-blue-200 mt-3 select-none">Clique para voltar</p>
-            <button id="fcGoogleBack" class="google-btn google-btn-light" title="Pesquisar no Google" style="position:absolute;bottom:10px;right:10px;" onclick="event.stopPropagation()">
+            <button id="fcGoogleBack" class="google-btn google-btn-light" title="Pesquisar no Google" style="position:absolute;top:10px;left:50%;transform:translateX(-50%);" onclick="event.stopPropagation()">
               <img src="/static/images/google.png" alt="Pesquisar no Google" width="16" height="16" style="display:block;">
+            </button>
+            <button id="fcNoteBtnBack" class="note-btn note-btn-light" title="Adicionar anotação" style="position:absolute;top:10px;right:10px;" onclick="event.stopPropagation()">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
             </button>
           </div>
 
@@ -515,7 +573,7 @@
             <span style="font-size:10px;font-weight:600;color:#3B82F6;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;">Pergunta</span>
             <p id="focusFCFront" style="font-size:15px;font-weight:600;color:#F1F5F9;line-height:1.5;"></p>
             <p style="font-size:11px;color:#475569;margin-top:12px;">Clique para ver a resposta</p>
-            <button id="focusFCGoogleFront" class="google-btn google-btn-light" title="Pesquisar no Google" style="position:absolute;bottom:10px;right:10px;" onclick="event.stopPropagation()">
+            <button id="focusFCGoogleFront" class="google-btn google-btn-light" title="Pesquisar no Google" style="position:absolute;top:10px;left:50%;transform:translateX(-50%);" onclick="event.stopPropagation()">
               <img src="/static/images/google.png" alt="Pesquisar no Google" width="15" height="15" style="display:block;">
             </button>
           </div>
@@ -523,7 +581,7 @@
             <span style="font-size:10px;font-weight:600;color:#BFDBFE;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;">Resposta</span>
             <p id="focusFCBack" style="font-size:15px;font-weight:600;color:#fff;line-height:1.5;"></p>
             <p style="font-size:11px;color:#BFDBFE;margin-top:12px;">Clique para voltar</p>
-            <button id="focusFCGoogleBack" class="google-btn google-btn-light" title="Pesquisar no Google" style="position:absolute;bottom:10px;right:10px;" onclick="event.stopPropagation()">
+            <button id="focusFCGoogleBack" class="google-btn google-btn-light" title="Pesquisar no Google" style="position:absolute;top:10px;left:50%;transform:translateX(-50%);" onclick="event.stopPropagation()">
               <img src="/static/images/google.png" alt="Pesquisar no Google" width="15" height="15" style="display:block;">
             </button>
           </div>
@@ -555,6 +613,31 @@
   </div>
 </div>
 
+<!-- ── Note Modal ──────────────────────────────────────────── -->
+<div id="noteModal" role="dialog" aria-modal="true" aria-label="Anotação">
+  <div id="noteBox">
+    <p style="font-size:15px;font-weight:700;color:var(--text,#1E293B);margin-bottom:12px;">Anotação</p>
+    <p id="noteCardPreview"></p>
+    <textarea id="noteTextarea" placeholder="Escreva sua anotação aqui…" rows="4"></textarea>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:14px;gap:8px;flex-wrap:wrap;">
+      <button id="noteDeleteBtn" onclick="deleteNote()"
+        style="display:none;font-size:12px;font-weight:500;cursor:pointer;padding:8px 14px;border-radius:8px;border:1px solid var(--red-bd,#FECACA);background:var(--red-bg,#FEF2F2);color:var(--red,#DC2626);transition:opacity .15s;">
+        Excluir anotação
+      </button>
+      <div style="display:flex;gap:8px;margin-left:auto;">
+        <button onclick="closeNoteModal()"
+          style="font-size:13px;font-weight:500;cursor:pointer;padding:8px 16px;border-radius:8px;border:1px solid var(--border,#E2E8F0);background:transparent;color:var(--text-2,#475569);">
+          Cancelar
+        </button>
+        <button onclick="saveNote()"
+          style="font-size:13px;font-weight:600;cursor:pointer;padding:8px 18px;border-radius:8px;border:none;background:#2563EB;color:#fff;">
+          Salvar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
   /* ── Dark mode ──────────────────────────────────────────── */
   (function () {
@@ -580,6 +663,88 @@
     window.open('https://www.google.com/search?q=' + encodeURIComponent(text.trim()), '_blank', 'noopener');
   };
 
+  /* ── Toast (local, sem auth.js) ─────────────────────────── */
+  function showToast(msg, type) {
+    const el = document.getElementById('toast');
+    if (el) el.remove();
+    const t = document.createElement('div');
+    t.id = 'toast';
+    const bg = { success: '#10b981', error: '#ef4444', info: '#3b82f6' }[type] || '#ef4444';
+    t.style.cssText = `position:fixed;top:24px;right:24px;z-index:300;padding:12px 18px;border-radius:10px;color:#fff;font-size:13px;font-weight:500;background:${bg};box-shadow:0 4px 16px rgba(0,0,0,.25);max-width:320px;transition:opacity .3s;`;
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 3500);
+  }
+
+  /* ── Note modal ─────────────────────────────────────────── */
+  let _noteCtx = null; // { type, cardId, cardText }
+
+  window.openNoteModal = function (type, cardId, cardText) {
+    _noteCtx = { type, cardId, cardText };
+    const key = (type === 'question' ? 'q-' : 'fc-') + cardId;
+    const existing = window._notesMap && window._notesMap[key];
+    document.getElementById('noteCardPreview').textContent = cardText;
+    document.getElementById('noteTextarea').value = existing ? existing.note_text : '';
+    document.getElementById('noteDeleteBtn').style.display = existing ? 'block' : 'none';
+    document.getElementById('noteModal').classList.add('open');
+    setTimeout(() => document.getElementById('noteTextarea').focus(), 60);
+  };
+
+  window.closeNoteModal = function () {
+    document.getElementById('noteModal').classList.remove('open');
+    _noteCtx = null;
+  };
+
+  window.saveNote = async function () {
+    if (!_noteCtx) return;
+    const text = document.getElementById('noteTextarea').value.trim();
+    if (!text) { closeNoteModal(); return; }
+    const { type, cardId } = _noteCtx;
+    const key = (type === 'question' ? 'q-' : 'fc-') + cardId;
+    const existing = window._notesMap && window._notesMap[key];
+    const supabaseUrl = 'https://gxkhmmbovlfulcxyupue.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4a2htbWJvdmxmdWxjeHl1cHVlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNDAzMzcsImV4cCI6MjA5NTcxNjMzN30.BipAmuzpW_x7KhIQdgdnQma5wLOS53QVLFCMYsxmMqE';
+    const _db = window.supabase.createClient(supabaseUrl, supabaseKey);
+    const { data: { user } } = await _db.auth.getUser();
+    let result;
+    if (existing) {
+      result = await _db.from('notes').update({ note_text: text }).eq('id', existing.id).select().single();
+    } else {
+      const payload = { user_id: user.id, card_type: type, note_text: text };
+      if (type === 'question') payload.question_id = cardId;
+      else payload.flashcard_id = cardId;
+      result = await _db.from('notes').insert(payload).select().single();
+    }
+    if (result.error) { showToast('Erro ao salvar anotação.', 'error'); return; }
+    if (!window._notesMap) window._notesMap = {};
+    window._notesMap[key] = result.data;
+    if (window._refreshNoteButtons) window._refreshNoteButtons();
+    closeNoteModal();
+    showToast('Anotação salva!', 'success');
+  };
+
+  window.deleteNote = async function () {
+    if (!_noteCtx) return;
+    const { type, cardId } = _noteCtx;
+    const key = (type === 'question' ? 'q-' : 'fc-') + cardId;
+    const existing = window._notesMap && window._notesMap[key];
+    if (!existing) return;
+    const supabaseUrl = 'https://gxkhmmbovlfulcxyupue.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4a2htbWJvdmxmdWxjeHl1cHVlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNDAzMzcsImV4cCI6MjA5NTcxNjMzN30.BipAmuzpW_x7KhIQdgdnQma5wLOS53QVLFCMYsxmMqE';
+    const _db = window.supabase.createClient(supabaseUrl, supabaseKey);
+    const { error } = await _db.from('notes').delete().eq('id', existing.id);
+    if (error) { showToast('Erro ao excluir anotação.', 'error'); return; }
+    delete window._notesMap[key];
+    if (window._refreshNoteButtons) window._refreshNoteButtons();
+    closeNoteModal();
+    showToast('Anotação excluída.', 'success');
+  };
+
+  /* Close modal on backdrop click */
+  document.getElementById('noteModal').addEventListener('click', function (e) {
+    if (e.target === this) closeNoteModal();
+  });
+
 (function () {
   const SUPABASE_URL = 'https://gxkhmmbovlfulcxyupue.supabase.co';
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4a2htbWJvdmxmdWxjeHl1cHVlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNDAzMzcsImV4cCI6MjA5NTcxNjMzN30.BipAmuzpW_x7KhIQdgdnQma5wLOS53QVLFCMYsxmMqE';
@@ -587,6 +752,7 @@
 
   let questions = [], flashcards = [];
   let qIdx = 0, fcIdx = 0, activeTab = 'questions';
+  window._notesMap = {};
 
   /* ── Tab switching ─────────────────────────────────────── */
   const TABS = ['questions', 'flashcards', 'summary'];
@@ -618,6 +784,7 @@
     document.getElementById('qTopic').textContent = q.topic || '';
     document.getElementById('qText').textContent  = q.text;
     document.getElementById('qGoogleBtn').onclick = () => searchOnGoogle(q.text);
+    if (window._refreshNoteButtons) window._refreshNoteButtons();
 
     document.getElementById('qAnswer').classList.add('hidden');
     document.getElementById('qReveal').textContent = 'Ver resposta';
@@ -699,6 +866,7 @@
     document.getElementById('fcBack').textContent       = f.back  || 'Sem resposta';
     document.getElementById('fcGoogleFront').onclick = (e) => { e.stopPropagation(); searchOnGoogle(f.front || ''); };
     document.getElementById('fcGoogleBack').onclick  = (e) => { e.stopPropagation(); searchOnGoogle(f.back  || ''); };
+    if (window._refreshNoteButtons) window._refreshNoteButtons();
 
     document.getElementById('fcPrev').disabled = fcIdx === 0;
     document.getElementById('fcNext').disabled = fcIdx === flashcards.length - 1;
@@ -720,6 +888,9 @@
 
   /* ── Keyboard shortcuts ────────────────────────────────── */
   document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && document.getElementById('noteModal').classList.contains('open')) {
+      closeNoteModal(); return;
+    }
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
     // Focus mode captures all navigation
@@ -867,6 +1038,48 @@
     document.getElementById('focusQAnswer').style.display = 'block';
   }
 
+  /* ── Notes helpers ─────────────────────────────────────── */
+  async function loadNotes() {
+    const { data: { user } } = await db.auth.getUser();
+    const qIds  = questions.map(q => q.id).filter(Boolean);
+    const fcIds = flashcards.map(f => f.id).filter(Boolean);
+    const fetches = [];
+    if (qIds.length)  fetches.push(db.from('notes').select('*').eq('user_id', user.id).in('question_id',  qIds));
+    if (fcIds.length) fetches.push(db.from('notes').select('*').eq('user_id', user.id).in('flashcard_id', fcIds));
+    const results = await Promise.all(fetches);
+    results.forEach(r => {
+      (r.data || []).forEach(n => {
+        if (n.question_id)  window._notesMap['q-'  + n.question_id]  = n;
+        if (n.flashcard_id) window._notesMap['fc-' + n.flashcard_id] = n;
+      });
+    });
+    _refreshNoteButtons();
+  }
+
+  window._refreshNoteButtons = function () {
+    // Question note button
+    const q = questions[qIdx];
+    if (q) {
+      const btn = document.getElementById('qNoteBtn');
+      if (btn) {
+        btn.classList.toggle('has-note', !!window._notesMap['q-' + q.id]);
+        btn.onclick = () => openNoteModal('question', q.id, q.text);
+      }
+    }
+    // Flashcard note buttons (same card, front & back)
+    const f = flashcards[fcIdx];
+    if (f) {
+      const hasNote = !!window._notesMap['fc-' + f.id];
+      ['fcNoteBtn','fcNoteBtnBack'].forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) {
+          btn.classList.toggle('has-note', hasNote);
+          btn.onclick = (e) => { e.stopPropagation(); openNoteModal('flashcard', f.id, f.front || ''); };
+        }
+      });
+    }
+  };
+
   /* ── Load data from Supabase ───────────────────────────── */
   async function loadData() {
     const id = new URLSearchParams(window.location.search).get('id');
@@ -912,6 +1125,7 @@
 
       renderQ();
       renderFC();
+      loadNotes();
 
       document.getElementById('loading').classList.add('hidden');
       document.getElementById('app').classList.remove('hidden');

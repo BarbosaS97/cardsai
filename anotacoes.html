@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Minhas Anotações — CardsQuestõesAI</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --bg:        #F8FAFC;
+      --surface:   #FFFFFF;
+      --surface-2: #F1F5F9;
+      --border:    #E2E8F0;
+      --text:      #1E293B;
+      --text-2:    #475569;
+      --text-3:    #94A3B8;
+      --blue:      #2563EB;
+      --blue-bg:   #EFF6FF;
+      --blue-bd:   #BFDBFE;
+      --green-bg:  #F0FDF4;
+      --green:     #15803D;
+      --green-bd:  #BBF7D0;
+      --red-bg:    #FEF2F2;
+      --red:       #DC2626;
+      --red-bd:    #FECACA;
+      --violet-bg: #F5F3FF;
+      --violet:    #6D28D9;
+      --violet-bd: #DDD6FE;
+      --shadow:    0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+      --shadow-md: 0 4px 12px rgba(0,0,0,.08);
+    }
+    [data-theme="dark"] {
+      --bg:        #0F172A;
+      --surface:   #1E293B;
+      --surface-2: #0F172A;
+      --border:    #334155;
+      --text:      #F1F5F9;
+      --text-2:    #94A3B8;
+      --text-3:    #64748B;
+      --blue:      #3B82F6;
+      --blue-bg:   #1E3A5F;
+      --blue-bd:   #1D4ED8;
+      --green-bg:  #052E16;
+      --green:     #4ADE80;
+      --green-bd:  #166534;
+      --red-bg:    #450A0A;
+      --red:       #F87171;
+      --red-bd:    #7F1D1D;
+      --violet-bg: #2E1065;
+      --violet:    #A78BFA;
+      --violet-bd: #4C1D95;
+      --shadow:    0 1px 3px rgba(0,0,0,.3);
+      --shadow-md: 0 4px 12px rgba(0,0,0,.4);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, 'Inter', sans-serif;
+      font-size: 14px; line-height: 1.5;
+      color: var(--text); background: var(--bg);
+      -webkit-font-smoothing: antialiased;
+      transition: background .2s, color .2s;
+      min-height: 100vh; display: flex; flex-direction: column;
+    }
+    a { color: inherit; text-decoration: none; }
+    button { font-family: inherit; cursor: pointer; }
+
+    .max-w { max-width: 720px; margin: 0 auto; padding: 0 24px; }
+    main { padding: 32px 0 72px; flex: 1; }
+
+    /* Header */
+    header {
+      position: sticky; top: 0; z-index: 40;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      height: 54px;
+    }
+    .header-inner {
+      display: flex; align-items: center;
+      justify-content: space-between; height: 100%;
+    }
+    .header-left { display: flex; align-items: center; gap: 10px; }
+    .back-link {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 13px; color: var(--text-2); font-weight: 500;
+      transition: color .15s;
+    }
+    .back-link:hover { color: var(--text); }
+    .logo { font-size: 15px; font-weight: 700; color: var(--text); }
+    .header-right { display: flex; align-items: center; gap: 8px; }
+    .btn-icon {
+      background: transparent; border: 1px solid var(--border);
+      border-radius: 8px; padding: 6px; color: var(--text-2);
+      display: inline-flex; align-items: center; justify-content: center;
+      transition: background .15s, color .15s;
+    }
+    .btn-icon:hover { border-color: var(--text-3); color: var(--text); background: var(--surface-2); }
+
+    /* Filters */
+    .filter-bar {
+      display: flex; gap: 6px; margin-bottom: 20px; flex-wrap: wrap;
+    }
+    .filter-btn {
+      font-size: 12px; font-weight: 600; padding: 5px 14px;
+      border-radius: 99px; border: 1px solid var(--border);
+      background: transparent; color: var(--text-2);
+      cursor: pointer; transition: background .15s, color .15s, border-color .15s;
+    }
+    .filter-btn:hover { border-color: var(--text-3); color: var(--text); }
+    .filter-btn.active {
+      background: var(--blue); border-color: var(--blue); color: #fff;
+    }
+
+    /* Note card */
+    .note-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 16px 18px;
+      box-shadow: var(--shadow); margin-bottom: 10px;
+      transition: border-color .15s;
+    }
+    .note-card:hover { border-color: var(--text-3); }
+
+    .note-type-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 10px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: .05em; padding: 2px 8px; border-radius: 99px;
+      border: 1px solid; margin-bottom: 8px;
+    }
+    .badge-question  { background: var(--blue-bg);   color: var(--blue);   border-color: var(--blue-bd); }
+    .badge-flashcard { background: var(--violet-bg);  color: var(--violet); border-color: var(--violet-bd); }
+
+    /* Section labels inside card */
+    .content-label {
+      font-size: 10px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .06em; color: var(--text-3);
+      margin: 10px 0 4px;
+    }
+    .content-label:first-of-type { margin-top: 2px; }
+
+    /* Content blocks */
+    .content-block {
+      font-size: 13px; line-height: 1.6; color: var(--text);
+      background: var(--surface-2); border-radius: 8px;
+      padding: 9px 12px;
+    }
+    .content-block-answer {
+      background: var(--green-bg); color: var(--green);
+      border-left: 3px solid var(--green-bd);
+    }
+    .content-block-fc-back {
+      background: var(--blue-bg); color: var(--blue);
+      border-left: 3px solid var(--blue-bd);
+    }
+
+    /* Note preview (annotation itself) */
+    .note-preview {
+      font-size: 13px; color: var(--text-2); line-height: 1.6;
+      background: var(--surface-2); border-radius: 8px;
+      padding: 9px 12px; margin-bottom: 10px;
+      border-left: 3px solid var(--blue);
+    }
+    .note-meta { font-size: 11px; color: var(--text-3); margin-bottom: 10px; }
+
+    .note-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .btn-sm {
+      font-size: 12px; font-weight: 500; padding: 6px 12px;
+      border-radius: 7px; border: 1px solid; cursor: pointer;
+      transition: opacity .15s, background .15s;
+      display: inline-flex; align-items: center; gap: 4px;
+    }
+    .btn-view  { background: var(--blue-bg);  color: var(--blue);  border-color: var(--blue-bd); }
+    .btn-edit  { background: transparent;      color: var(--text-2); border-color: var(--border); }
+    .btn-edit:hover { border-color: var(--text-3); color: var(--text); background: var(--surface-2); }
+    .btn-del   { background: var(--red-bg);   color: var(--red);   border-color: var(--red-bd); }
+    .btn-sm:hover { opacity: .85; }
+
+    /* Edit inline */
+    .edit-area {
+      width: 100%; min-height: 80px;
+      border: 1px solid var(--blue); border-radius: 8px;
+      padding: 9px 12px; font-size: 13px; font-family: inherit;
+      color: var(--text); background: var(--surface);
+      resize: vertical; outline: none; line-height: 1.5;
+      margin-bottom: 8px;
+    }
+
+    /* Skeleton */
+    @keyframes shimmer {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+    .skeleton {
+      background: linear-gradient(90deg, var(--surface-2) 25%, var(--border) 50%, var(--surface-2) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: 12px;
+    }
+
+    .hidden { display: none !important; }
+
+    @media (max-width: 540px) {
+      .max-w { padding: 0 14px; }
+      main { padding: 20px 0 48px; }
+      .logo { font-size: 14px; }
+      .note-card { padding: 14px; }
+    }
+  </style>
+  <!-- PWA -->
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#2563EB" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="CardsQuestõesAI" />
+  <link rel="apple-touch-icon" href="/static/images/icons/icon-192.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/static/images/favicon.png" />
+</head>
+<body>
+
+<!-- Header -->
+<header>
+  <div class="max-w header-inner">
+    <div class="header-left">
+      <a href="/dashboard.html" class="back-link">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+        </svg>
+        Dashboard
+      </a>
+      <span style="color:var(--border);font-size:16px;">|</span>
+      <span class="logo">Minhas Anotações</span>
+    </div>
+    <div class="header-right">
+      <button id="darkToggle" class="btn-icon" onclick="toggleDark()" title="Alternar tema">
+        <svg id="iconSun" class="hidden" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="5"/>
+          <path stroke-linecap="round" d="M12 2v2m0 16v2M4.22 4.22l1.42 1.42m12.72 12.72 1.42 1.42M2 12h2m16 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+        </svg>
+        <svg id="iconMoon" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- Main -->
+<main>
+  <div class="max-w">
+
+    <div style="margin-bottom:20px;">
+      <h1 style="font-size:18px;font-weight:700;color:var(--text);">Minhas Anotações</h1>
+      <p style="font-size:13px;color:var(--text-2);margin-top:3px;">Anotações pessoais em questões e flashcards</p>
+    </div>
+
+    <!-- Filtros -->
+    <div class="filter-bar">
+      <button class="filter-btn active" data-filter="all"        onclick="setFilter('all')">Todas</button>
+      <button class="filter-btn"        data-filter="question"   onclick="setFilter('question')">Questões</button>
+      <button class="filter-btn"        data-filter="flashcard"  onclick="setFilter('flashcard')">Flashcards</button>
+    </div>
+
+    <!-- Skeleton -->
+    <div id="skeleton">
+      <div class="skeleton" style="height:120px;margin-bottom:10px;"></div>
+      <div class="skeleton" style="height:120px;margin-bottom:10px;"></div>
+      <div class="skeleton" style="height:120px;"></div>
+    </div>
+
+    <!-- Empty -->
+    <div id="emptyState" class="hidden" style="padding:32px 0;text-align:center;">
+      <svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"
+        style="color:var(--text-3);margin:0 auto 12px;display:block;">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+      </svg>
+      <p style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px;">Nenhuma anotação ainda</p>
+      <p style="font-size:13px;color:var(--text-3);margin-bottom:16px;">
+        Abra um material de estudo e clique no ícone de lápis em uma questão ou flashcard.
+      </p>
+      <a href="/dashboard.html" style="font-size:13px;font-weight:600;color:var(--blue);">Ir para o Dashboard →</a>
+    </div>
+
+    <!-- Lista -->
+    <div id="notesList"></div>
+
+  </div>
+</main>
+
+<script src="/js/config.js"></script>
+<script src="/js/auth.js"></script>
+<script>
+  /* ── Dark mode ──────────────────────────────────────────── */
+  (function () {
+    const saved = localStorage.getItem('cardsai-theme');
+    if (saved === 'dark') applyDark(true);
+  })();
+
+  function applyDark(on) {
+    document.documentElement.setAttribute('data-theme', on ? 'dark' : 'light');
+    document.getElementById('iconSun').classList.toggle('hidden', !on);
+    document.getElementById('iconMoon').classList.toggle('hidden', on);
+  }
+
+  window.toggleDark = function () {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    applyDark(!isDark);
+    localStorage.setItem('cardsai-theme', isDark ? 'light' : 'dark');
+  };
+
+  /* ── State ──────────────────────────────────────────────── */
+  let allNotes = [];
+  let activeFilter = 'all';
+
+  /* ── Init ───────────────────────────────────────────────── */
+  async function init() {
+    const session = await requireAuth();
+    if (!session) return;
+    await loadNotes();
+  }
+
+  /* ── Load notes ─────────────────────────────────────────── */
+  async function loadNotes() {
+    const { data: { user } } = await db.auth.getUser();
+
+    const { data: notes, error } = await db
+      .from('notes')
+      .select(`
+        *,
+        questions(id, text, correct_answer, alternatives, generation_id),
+        flashcards(id, front, back, generation_id)
+      `)
+      .eq('user_id', user.id)
+      .order('updated_at', { ascending: false });
+
+    document.getElementById('skeleton').style.display = 'none';
+
+    if (error) {
+      console.error('loadNotes:', error);
+      document.getElementById('emptyState').classList.remove('hidden');
+      return;
+    }
+
+    allNotes = notes || [];
+    renderNotes();
+  }
+
+  /* ── Filter ─────────────────────────────────────────────── */
+  window.setFilter = function (filter) {
+    activeFilter = filter;
+    document.querySelectorAll('.filter-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.filter === filter);
+    });
+    renderNotes();
+  };
+
+  /* ── Render ─────────────────────────────────────────────── */
+  function renderNotes() {
+    const list = document.getElementById('notesList');
+    const empty = document.getElementById('emptyState');
+
+    const filtered = activeFilter === 'all'
+      ? allNotes
+      : allNotes.filter(n => n.card_type === activeFilter);
+
+    if (!filtered.length) {
+      list.innerHTML = '';
+      empty.classList.remove('hidden');
+      return;
+    }
+    empty.classList.add('hidden');
+    list.innerHTML = filtered.map(n => renderNoteCard(n)).join('');
+  }
+
+  function renderNoteCard(n) {
+    const isQ  = n.card_type === 'question';
+    const genId = isQ
+      ? (n.questions?.generation_id || '')
+      : (n.flashcards?.generation_id || '');
+    const tab  = isQ ? 'questions' : 'flashcards';
+    const date = formatDate(n.updated_at);
+    const safeNote = escHtml(n.note_text);
+
+    const badgeClass = isQ ? 'badge-question' : 'badge-flashcard';
+    const badgeLabel = isQ ? 'Questão' : 'Flashcard';
+    const badgeIcon  = isQ
+      ? `<svg width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`
+      : `<svg width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8m-4-4v4"/></svg>`;
+
+    let contentHtml = '';
+
+    if (isQ) {
+      const questionText = n.questions?.text || '—';
+      const corUp        = (n.questions?.correct_answer || '').charAt(0).toUpperCase();
+      const alternatives = Array.isArray(n.questions?.alternatives) ? n.questions.alternatives : [];
+      const correctAlt   = alternatives.find(a => a.charAt(0).toUpperCase() === corUp)
+                           || n.questions?.correct_answer || '';
+
+      contentHtml = `
+        <p class="content-label">Enunciado</p>
+        <p class="content-block">${escHtml(questionText)}</p>
+        ${correctAlt ? `
+        <p class="content-label">Gabarito</p>
+        <p class="content-block content-block-answer">${escHtml(correctAlt)}</p>
+        ` : ''}`;
+    } else {
+      const front = n.flashcards?.front || '—';
+      const back  = n.flashcards?.back  || '';
+
+      contentHtml = `
+        <p class="content-label">Pergunta / Conceito</p>
+        <p class="content-block">${escHtml(front)}</p>
+        ${back ? `
+        <p class="content-label">Resposta / Significado</p>
+        <p class="content-block content-block-fc-back">${escHtml(back)}</p>
+        ` : ''}`;
+    }
+
+    return `
+    <div class="note-card" id="note-${n.id}">
+      <span class="note-type-badge ${badgeClass}">${badgeIcon} ${badgeLabel}</span>
+
+      ${contentHtml}
+
+      <p class="content-label">Anotação</p>
+      <div class="note-preview" id="notePreview-${n.id}">${safeNote}</div>
+
+      <div id="editArea-${n.id}" style="display:none;margin-bottom:10px;">
+        <textarea class="edit-area" id="editTextarea-${n.id}">${escHtml(n.note_text)}</textarea>
+        <div style="display:flex;gap:8px;">
+          <button class="btn-sm btn-view" onclick="saveEdit('${n.id}')">Salvar</button>
+          <button class="btn-sm btn-edit" onclick="cancelEdit('${n.id}')">Cancelar</button>
+        </div>
+      </div>
+
+      <p class="note-meta">Atualizado em ${date}</p>
+      <div class="note-actions">
+        ${genId ? `<a href="/results.html?id=${genId}" class="btn-sm btn-view">
+          <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+          Ver material
+        </a>` : ''}
+        <button class="btn-sm btn-edit" onclick="startEdit('${n.id}')">
+          <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+          Editar
+        </button>
+        <button class="btn-sm btn-del" onclick="deleteNote('${n.id}')">
+          <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+          Excluir
+        </button>
+      </div>
+    </div>`;
+  }
+
+  /* ── Inline edit ────────────────────────────────────────── */
+  window.startEdit = function (id) {
+    document.getElementById('notePreview-' + id).style.display = 'none';
+    document.getElementById('editArea-'    + id).style.display = 'block';
+    document.getElementById('editTextarea-' + id).focus();
+  };
+
+  window.cancelEdit = function (id) {
+    document.getElementById('notePreview-' + id).style.display = '';
+    document.getElementById('editArea-'    + id).style.display = 'none';
+  };
+
+  window.saveEdit = async function (id) {
+    const ta = document.getElementById('editTextarea-' + id);
+    const text = ta ? ta.value.trim() : '';
+    if (!text) return;
+
+    const { data, error } = await db
+      .from('notes')
+      .update({ note_text: text })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) { showToast('Erro ao salvar.', 'error'); return; }
+
+    // Update local state
+    const idx = allNotes.findIndex(n => n.id === id);
+    if (idx !== -1) {
+      allNotes[idx].note_text = data.note_text;
+      allNotes[idx].updated_at = data.updated_at;
+    }
+
+    cancelEdit(id);
+    document.getElementById('notePreview-' + id).textContent = text;
+    showToast('Anotação atualizada!', 'success');
+  };
+
+  /* ── Delete ─────────────────────────────────────────────── */
+  window.deleteNote = async function (id) {
+    if (!confirm('Excluir esta anotação?')) return;
+
+    const { error } = await db.from('notes').delete().eq('id', id);
+    if (error) { showToast('Erro ao excluir.', 'error'); return; }
+
+    allNotes = allNotes.filter(n => n.id !== id);
+    const card = document.getElementById('note-' + id);
+    if (card) card.remove();
+
+    const visible = document.getElementById('notesList').children.length;
+    if (!visible) renderNotes();
+
+    showToast('Anotação excluída.', 'success');
+  };
+
+  /* ── Helpers ────────────────────────────────────────────── */
+  function escHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  init();
+</script>
+  <script>if('serviceWorker'in navigator){navigator.serviceWorker.register('/sw.js');}</script>
+  <footer style="border-top:1px solid var(--border,#E2E8F0);padding:20px 24px;text-align:center;margin-top:auto;">
+    <p style="font-size:12px;color:#94A3B8;">© 2026 CardsQuestõesAI &nbsp;·&nbsp; <a href="/termos.html" style="color:#94A3B8;text-decoration:none;">Termos</a> &nbsp;·&nbsp; <a href="/privacidade.html" style="color:#94A3B8;text-decoration:none;">Privacidade</a> &nbsp;·&nbsp; <a href="mailto:contato@cardsquestoesai.com" style="color:#94A3B8;text-decoration:none;">Contato</a></p>
+  </footer>
+</body>
+</html>
