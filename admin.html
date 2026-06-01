@@ -263,7 +263,10 @@
           <td>
             <p style="font-weight:500;color:#1E293B;">${u.full_name || '—'}</p>
             <p style="font-size:12px;color:#94A3B8;margin-top:2px;">${u.email}</p>
-            ${u.is_admin ? '<span style="font-size:11px;font-weight:600;color:#2563EB;background:#EFF6FF;padding:2px 8px;border-radius:4px;border:1px solid #BFDBFE;display:inline-block;margin-top:4px;">ADMIN</span>' : ''}
+            <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px;">
+              ${u.is_admin ? '<span style="font-size:11px;font-weight:600;color:#2563EB;background:#EFF6FF;padding:2px 8px;border-radius:4px;border:1px solid #BFDBFE;">ADMIN</span>' : ''}
+              ${u.unlimited_access ? '<span style="font-size:11px;font-weight:600;color:#7C3AED;background:#F5F3FF;padding:2px 8px;border-radius:4px;border:1px solid #DDD6FE;">ILIMITADO</span>' : ''}
+            </div>
           </td>
           <td><span style="font-weight:600;color:#1E293B;">${u.credits >= 999990 ? '∞' : u.credits}</span></td>
           <td style="color:#1E293B;font-weight:500;">${gensByUser[u.id] || 0}</td>
@@ -272,6 +275,8 @@
             <div style="display:flex;gap:6px;flex-wrap:wrap;">
               <button onclick="openCreditsModal('${u.id}', '${u.email}', ${u.credits})" class="btn-ghost">Créditos</button>
               <button onclick="viewUserGens('${u.id}')" class="btn-ghost">Gerações</button>
+              <button onclick="toggleUnlimited('${u.id}', ${!!u.unlimited_access})" class="btn-ghost" style="${u.unlimited_access ? 'color:#7C3AED;border-color:#DDD6FE;' : ''}">${u.unlimited_access ? 'Rem. ∞' : 'Dar ∞'}</button>
+              <button onclick="toggleAdmin('${u.id}', ${!!u.is_admin})" class="btn-ghost" style="${u.is_admin ? 'color:#DC2626;border-color:#FECACA;' : 'color:#2563EB;border-color:#BFDBFE;'}">${u.is_admin ? 'Rem. Admin' : 'Dar Admin'}</button>
             </div>
           </td>
         </tr>
@@ -339,6 +344,24 @@
       const { error } = await db.rpc('reset_credits', { p_user_id: selectedUserId, p_amount: amount });
       if (error) { showMsg('Erro: ' + error.message, 'error'); return; }
       showMsg(`Créditos resetados para ${amount}!`, 'success');
+      await loadData();
+    }
+
+    async function toggleUnlimited(userId, currentValue) {
+      const action = currentValue ? 'Remover acesso ilimitado de' : 'Dar acesso ilimitado a';
+      if (!confirm(`${action} este usuário?`)) return;
+      const { error } = await db.rpc('toggle_unlimited_access', { p_user_id: userId, p_value: !currentValue });
+      if (error) { showToast('Erro: ' + error.message); return; }
+      showToast(currentValue ? 'Acesso ilimitado removido.' : 'Acesso ilimitado ativado!', 'success');
+      await loadData();
+    }
+
+    async function toggleAdmin(userId, currentValue) {
+      const action = currentValue ? 'Remover privilégios de admin de' : 'Tornar admin';
+      if (!confirm(`${action} este usuário?`)) return;
+      const { error } = await db.rpc('toggle_admin', { p_user_id: userId, p_value: !currentValue });
+      if (error) { showToast('Erro: ' + error.message); return; }
+      showToast(currentValue ? 'Admin removido.' : 'Usuário agora é admin!', 'success');
       await loadData();
     }
 

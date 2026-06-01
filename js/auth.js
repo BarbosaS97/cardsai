@@ -7,7 +7,16 @@ async function requireAuth(adminRequired = false) {
   if (adminRequired) {
     const profile = await getProfile();
     if (!profile?.is_admin) {
-      window.location.href = '/dashboard.html';
+      document.body.innerHTML = `
+        <div style="display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:system-ui,sans-serif;background:#F8FAFC;">
+          <div style="text-align:center;padding:40px 32px;background:#fff;border:1px solid #E2E8F0;border-radius:16px;max-width:400px;width:90%;">
+            <div style="width:56px;height:56px;background:#FEF2F2;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:24px;">&#x1F6AB;</div>
+            <h1 style="font-size:20px;font-weight:700;color:#DC2626;margin:0 0 8px;">Acesso Negado</h1>
+            <p style="color:#475569;font-size:14px;margin:0 0 4px;">Você não tem permissão para acessar o painel administrativo.</p>
+            <p style="color:#94A3B8;font-size:12px;margin:0;">Redirecionando em 3 segundos…</p>
+          </div>
+        </div>`;
+      setTimeout(() => { window.location.href = '/dashboard.html'; }, 3000);
       return null;
     }
     return { session, profile };
