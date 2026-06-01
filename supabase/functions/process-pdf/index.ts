@@ -134,9 +134,11 @@ Texto: ${parts[idx].substring(0, 8000)}`
       }
     }
     
+    const uniqueTopics = [...new Set(allTopics)]
+
     // Garantir quantidades mínimas (MAS com conteúdo melhorado)
     while (allQuestions.length < 50) {
-      const idx = allQuestions.length % 10
+      const idx: number = allQuestions.length % 10
       allQuestions.push({
         text: `Questão sobre ${uniqueTopics[idx] || "o conteúdo"}: qual a afirmação correta?`,
         alternatives: ["A) Correta segundo o texto", "B) Incorreta segundo o texto", "C) Parcialmente correta", "D) Não mencionada"],
@@ -144,19 +146,18 @@ Texto: ${parts[idx].substring(0, 8000)}`
         topic: uniqueTopics[idx] || "Conteúdo"
       })
     }
-    
+
     while (allFlashcards.length < 100) {
-      const idx = allFlashcards.length % 10
+      const idx: number = allFlashcards.length % 10
       allFlashcards.push({
         front: `${uniqueTopics[idx] || "Ponto importante"}: conceito fundamental`,
         back: "Consulte o material original para detalhes completos.",
         topic: uniqueTopics[idx] || "Conteúdo"
       })
     }
-    
+
     allQuestions = allQuestions.slice(0, 50)
     allFlashcards = allFlashcards.slice(0, 100)
-    const uniqueTopics = [...new Set(allTopics)]
     
     // Gerar resumo único (melhorado)
     let finalSummary = "Resumo gerado automaticamente."
@@ -224,9 +225,22 @@ Texto: ${pdfText.substring(0, 10000)}`
     }
     
     // Debitar crédito
-    const { data: profile } = await supabase.from('profiles').select('credits, is_admin').eq('id', userId).single()
-    if (!profile?.is_admin && profile?.credits > 0) {
-      await supabase.from('profiles').update({ credits: profile.credits - 1 }).eq('id', userId)
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('credits, is_admin, unlimited_access')
+      .eq('id', userId)
+      .single()
+
+    if (!profile?.is_admin && !profile?.unlimited_access) {
+      if (profile && profile.credits > 0) {
+        await supabase
+          .from('profiles')
+          .update({ credits: profile.credits - 1 })
+          .eq('id', userId)
+        console.log(`💳 Crédito debitado. Restam: ${profile.credits - 1}`)
+      }
+    } else {
+      console.log(`✅ Débito pulado: admin=${profile?.is_admin}, unlimited=${profile?.unlimited_access}`)
     }
     
     console.log(`🎉 Concluído em ${Math.round((Date.now() - startTime)/1000)}s!`)

@@ -84,7 +84,6 @@
           </div>
 
           <div id="errorMsg" class="hidden alert-error"></div>
-          <div id="successMsg" class="hidden alert-success"></div>
 
           <button type="submit" id="submitBtn" class="btn-primary" style="margin-top:8px;">Criar conta grátis</button>
         </form>
@@ -103,17 +102,43 @@
     <p style="font-size:12px;color:#94A3B8;">© 2026 CardsQuestõesAI &nbsp;·&nbsp; <a href="/termos.html" style="color:#94A3B8;text-decoration:none;">Termos</a> &nbsp;·&nbsp; <a href="/privacidade.html" style="color:#94A3B8;text-decoration:none;">Privacidade</a> &nbsp;·&nbsp; <a href="mailto:contato@cardsquestoesai.com" style="color:#94A3B8;text-decoration:none;">Contato</a></p>
   </footer>
 
+  <!-- Modal: cadastro realizado -->
+  <div id="successModal" style="display:none;position:fixed;inset:0;z-index:100;background:rgba(15,23,42,0.5);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:16px;">
+    <div style="background:#fff;border-radius:16px;padding:40px 28px;max-width:400px;width:100%;text-align:center;box-shadow:0 24px 64px rgba(0,0,0,0.15);">
+      <div style="width:64px;height:64px;background:#F0FDF4;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;border:2px solid #BBF7D0;">
+        <svg width="28" height="28" fill="none" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke="#16A34A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <h2 style="font-size:20px;font-weight:700;color:#1E293B;margin:0 0 10px;">Cadastro realizado!</h2>
+      <p style="font-size:14px;color:#475569;line-height:1.6;margin:0 0 6px;">Enviamos um e-mail de confirmação para:</p>
+      <p id="modalEmail" style="font-size:14px;font-weight:600;color:#1E293B;margin:0 0 16px;word-break:break-all;"></p>
+      <p style="font-size:13px;color:#64748B;line-height:1.6;margin:0 0 28px;">Verifique sua <strong>caixa de entrada</strong> e também a pasta de <strong>spam</strong>. Clique no link para ativar sua conta.</p>
+      <button onclick="closeSuccessModal()" style="display:block;width:100%;background:#2563EB;color:#fff;border:none;border-radius:8px;padding:13px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;">Entendi</button>
+    </div>
+  </div>
+
   <script src="/js/config.js"></script>
   <script>
     db.auth.getSession().then(({ data: { session } }) => {
       if (session) window.location.href = '/dashboard.html';
     });
 
+    function showSuccessModal(email) {
+      document.getElementById('modalEmail').textContent = email;
+      document.getElementById('successModal').style.display = 'flex';
+    }
+
+    function closeSuccessModal() {
+      document.getElementById('successModal').style.display = 'none';
+      document.getElementById('registerForm').reset();
+      const btn = document.getElementById('submitBtn');
+      btn.disabled = false;
+      btn.textContent = 'Criar conta grátis';
+    }
+
     document.getElementById('registerForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const btn = document.getElementById('submitBtn');
       const errDiv = document.getElementById('errorMsg');
-      const sucDiv = document.getElementById('successMsg');
 
       const name = document.getElementById('name').value.trim();
       const email = document.getElementById('email').value.trim();
@@ -121,7 +146,6 @@
       const confirm = document.getElementById('confirmPassword').value;
 
       errDiv.classList.add('hidden');
-      sucDiv.classList.add('hidden');
 
       if (password.length < 6) {
         errDiv.textContent = 'A senha precisa ter pelo menos 6 caracteres.';
@@ -142,7 +166,7 @@
         password,
         options: {
           data: { full_name: name },
-          emailRedirectTo: `${window.location.origin}/dashboard.html`,
+          emailRedirectTo: 'https://cardsai.vercel.app/login.html?confirmed=true',
         },
       });
 
@@ -154,15 +178,13 @@
         return;
       }
 
-      if (data.session && name) {
-        await db.from('profiles').update({ full_name: name }).eq('id', data.user.id);
+      if (data.session) {
+        if (name) await db.from('profiles').update({ full_name: name }).eq('id', data.user.id);
         window.location.href = '/dashboard.html';
         return;
       }
 
-      sucDiv.textContent = 'Conta criada! Verifique seu e-mail para confirmar o cadastro.';
-      sucDiv.classList.remove('hidden');
-      btn.textContent = 'E-mail enviado!';
+      showSuccessModal(email);
     });
   </script>
   <script>if('serviceWorker'in navigator){navigator.serviceWorker.register('/sw.js');}</script>
