@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dashboard — QuestõesCardsAI</title>
+  <title>Dashboard — CardsQuestõesAI</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <style>
@@ -270,13 +270,22 @@
       .btn-icon { padding: 5px; }
     }
   </style>
+  <!-- PWA -->
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#2563EB" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="CardsQuestõesAI" />
+  <link rel="apple-touch-icon" href="/static/images/icons/icon-192.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/static/images/favicon.png" />
 </head>
 <body>
 
 <!-- ── Header ───────────────────────────────────────────────── -->
 <header>
   <div class="max-w header-inner">
-    <a href="/index.html" class="logo">QuestõesCardsAI</a>
+    <a href="/index.html" class="logo">CardsQuestõesAI</a>
     <div class="header-right">
 
       <!-- Credits pill — clicável para comprar -->
@@ -696,5 +705,6 @@
 
   init();
 </script>
+  <script>if('serviceWorker'in navigator){navigator.serviceWorker.register('/sw.js');}</script>
 </body>
 </html>

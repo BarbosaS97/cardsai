@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Créditos — QuestõesCardsAI</title>
+  <title>Créditos — CardsQuestõesAI</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     /* ── Variables ──────────────────────────────────────────── */
@@ -338,13 +338,22 @@
       .pkg-price { font-size: 18px; }
     }
   </style>
+  <!-- PWA -->
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#2563EB" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="CardsQuestõesAI" />
+  <link rel="apple-touch-icon" href="/static/images/icons/icon-192.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/static/images/favicon.png" />
 </head>
 <body>
 
 <!-- ── Header ───────────────────────────────────────────────── -->
 <header>
   <div class="max-w header-inner">
-    <a href="/index.html" class="logo">QuestõesCardsAI</a>
+    <a href="/index.html" class="logo">CardsQuestõesAI</a>
     <div class="header-right">
       <button id="darkToggle" class="btn-icon" onclick="toggleDark()" title="Alternar tema">
         <svg id="iconSun" class="hidden" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -371,7 +380,7 @@
 
     <!-- Page heading -->
     <div class="page-head">
-      <h1>Creditos QuestõesCardsAI</h1>
+      <h1>Creditos CardsQuestõesAI</h1>
       <p>Pague uma vez. Use quando quiser.</p>
       <div class="credits-notice">
         Você tem <strong><span id="creditsNum">—</span> créditos</strong>
@@ -517,7 +526,7 @@
 
     <div class="modal-actions">
       <button class="btn-modal-secondary" onclick="closeModal()">Fechar</button>
-      <a href="mailto:contato@cardsai.com?subject=Compra de Creditos QuestõesCardsAI"
+      <a href="mailto:contato@cardsai.com?subject=Compra de Creditos CardsQuestõesAI"
         class="btn-modal-primary">
         Entrar em contato
       </a>
@@ -581,5 +590,6 @@
 
   init();
 </script>
+  <script>if('serviceWorker'in navigator){navigator.serviceWorker.register('/sw.js');}</script>
 </body>
 </html>

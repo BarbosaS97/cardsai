@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Criar Conta — QuestõesCardsAI</title>
+  <title>Criar Conta — CardsQuestõesAI</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
@@ -31,13 +31,22 @@
       h1 { font-size: 20px !important; }
     }
   </style>
+  <!-- PWA -->
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#2563EB" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="CardsQuestõesAI" />
+  <link rel="apple-touch-icon" href="/static/images/icons/icon-192.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/static/images/favicon.png" />
 </head>
 <body class="min-h-screen flex flex-col">
 
   <!-- Header minimal -->
   <header style="background:#fff;border-bottom:1px solid #E2E8F0;">
     <div class="max-w-screen-xl mx-auto px-4 h-14 flex items-center justify-between">
-      <a href="/index.html" style="font-size:17px;font-weight:700;color:#1E293B;text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:60%;">QuestõesCardsAI</a>
+      <a href="/index.html" style="font-size:17px;font-weight:700;color:#1E293B;text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:60%;">CardsQuestõesAI</a>
       <a href="/login.html" style="font-size:13px;color:#2563EB;text-decoration:none;font-weight:500;white-space:nowrap;">Já tenho conta →</a>
     </div>
   </header>
@@ -91,7 +100,7 @@
 
   <!-- Footer -->
   <footer style="border-top:1px solid #E2E8F0;padding:20px 24px;text-align:center;background:#fff;">
-    <p style="font-size:12px;color:#94A3B8;">© 2025 QuestõesCardsAI</p>
+    <p style="font-size:12px;color:#94A3B8;">© 2025 CardsQuestõesAI</p>
   </footer>
 
   <script src="/js/config.js"></script>
@@ -156,5 +165,6 @@
       btn.textContent = 'E-mail enviado!';
     });
   </script>
+  <script>if('serviceWorker'in navigator){navigator.serviceWorker.register('/sw.js');}</script>
 </body>
 </html>

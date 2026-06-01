@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Novo Upload — QuestõesCardsAI</title>
+  <title>Novo Upload — CardsQuestõesAI</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -58,6 +58,15 @@
       .stage-connector { margin: 0 4px !important; }
     }
   </style>
+  <!-- PWA -->
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#2563EB" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="CardsQuestõesAI" />
+  <link rel="apple-touch-icon" href="/static/images/icons/icon-192.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/static/images/favicon.png" />
 </head>
 <body class="min-h-screen">
 
@@ -65,7 +74,7 @@
   <header style="background:#fff;border-bottom:1px solid #E2E8F0;">
     <div class="max-w-3xl mx-auto px-6 h-14 flex items-center justify-between">
       <a href="/dashboard.html" style="font-size:14px;color:#475569;text-decoration:none;font-weight:500;white-space:nowrap;">← Dashboard</a>
-      <a href="/index.html" class="upload-header-logo" style="font-size:17px;font-weight:700;color:#1E293B;text-decoration:none;">QuestõesCardsAI</a>
+      <a href="/index.html" class="upload-header-logo" style="font-size:17px;font-weight:700;color:#1E293B;text-decoration:none;">CardsQuestõesAI</a>
       <div style="display:flex;align-items:center;gap:5px;font-size:13px;white-space:nowrap;">
         <span style="color:#2563EB;font-weight:700;" id="creditsCount">—</span>
         <span style="color:#94A3B8;">gerações</span>
@@ -384,5 +393,6 @@
 
     init();
   </script>
+  <script>if('serviceWorker'in navigator){navigator.serviceWorker.register('/sw.js');}</script>
 </body>
 </html>

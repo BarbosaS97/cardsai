@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Material de Estudo — QuestõesCardsAI</title>
+  <title>Material de Estudo — CardsQuestõesAI</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
@@ -251,6 +251,15 @@
       #qPrev svg, #qNext svg { display: none; }
     }
   </style>
+  <!-- PWA -->
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#2563EB" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="CardsQuestõesAI" />
+  <link rel="apple-touch-icon" href="/static/images/icons/icon-192.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/static/images/favicon.png" />
 </head>
 <body>
 
@@ -870,5 +879,6 @@
   loadData();
 })();
 </script>
+  <script>if('serviceWorker'in navigator){navigator.serviceWorker.register('/sw.js');}</script>
 </body>
 </html>

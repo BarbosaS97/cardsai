@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Admin — QuestõesCardsAI</title>
+  <title>Admin — CardsQuestõesAI</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
@@ -72,6 +72,15 @@
       .grid.grid-cols-2 { grid-template-columns: 1fr; }
     }
   </style>
+  <!-- PWA -->
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#2563EB" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="CardsQuestõesAI" />
+  <link rel="apple-touch-icon" href="/static/images/icons/icon-192.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/static/images/favicon.png" />
 </head>
 <body class="min-h-screen">
 
@@ -79,7 +88,7 @@
   <header style="position:sticky;top:0;z-index:50;background:#fff;border-bottom:1px solid #E2E8F0;height:56px;">
     <div class="max-w-screen-xl mx-auto px-6 h-full flex items-center justify-between gap-4">
       <div style="display:flex;align-items:center;gap:16px;">
-        <a href="/dashboard.html" style="font-size:18px;font-weight:700;color:#1E293B;text-decoration:none;">QuestõesCardsAI</a>
+        <a href="/dashboard.html" style="font-size:18px;font-weight:700;color:#1E293B;text-decoration:none;">CardsQuestõesAI</a>
         <span style="font-size:12px;font-weight:600;color:#2563EB;background:#EFF6FF;padding:3px 10px;border-radius:6px;border:1px solid #BFDBFE;">Admin</span>
       </div>
       <button onclick="signOut()" class="btn-ghost">Sair</button>
@@ -155,7 +164,7 @@
 
   <!-- Footer -->
   <footer style="border-top:1px solid #E2E8F0;padding:20px 24px;text-align:center;margin-top:32px;background:#fff;">
-    <p style="font-size:12px;color:#94A3B8;">© 2025 QuestõesCardsAI · Painel Administrativo</p>
+    <p style="font-size:12px;color:#94A3B8;">© 2025 CardsQuestõesAI · Painel Administrativo</p>
   </footer>
 
   <!-- Modal: gerenciar créditos -->
@@ -352,5 +361,6 @@
 
     init();
   </script>
+  <script>if('serviceWorker'in navigator){navigator.serviceWorker.register('/sw.js');}</script>
 </body>
 </html>

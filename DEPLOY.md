@@ -1,4 +1,4 @@
-# QuestõesCardsAI — Guia de Deploy
+# CardsQuestõesAI — Guia de Deploy
 
 ## 1. Configurar Supabase
 
