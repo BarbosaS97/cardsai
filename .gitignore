@@ -1,0 +1,14 @@
+.env
+__pycache__/
+*.py[cod]
+*.pyc
+venv/
+staticfiles/
+media/
+logs/*.log
+db.sqlite3
+*.egg-info/
+.DS_Store
+
+.vercel
+.env*

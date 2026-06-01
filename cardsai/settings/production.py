@@ -1,0 +1,12 @@
+from .base import *  # noqa: F401, F403
+
+DEBUG = False
+
+SECURE_BROWSER_XSS_FILTER = True
+X_FRAME_OPTIONS = 'DENY'
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# Ativar quando tiver HTTPS (Let's Encrypt):
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = False

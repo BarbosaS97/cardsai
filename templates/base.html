@@ -1,0 +1,87 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}QuestõesCardsAI{% endblock %}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="{% static 'css/styles.css' %}" />
+  {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-slate-50 min-h-screen" style="font-family: system-ui, -apple-system, sans-serif;">
+
+{% if user.is_authenticated %}
+<!-- Authenticated app layout -->
+<div class="min-h-screen bg-slate-50">
+
+  <!-- Top header -->
+  <header class="app-header">
+    <div class="w-full max-w-screen-xl mx-auto px-6 flex items-center justify-between gap-4">
+
+      <a href="{% url 'dashboard' %}" class="app-logo">QuestõesCardsAI</a>
+
+      <nav class="hidden md:flex items-center gap-1">
+        <a href="{% url 'dashboard' %}"
+           class="app-nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+          Dashboard
+        </a>
+        <a href="{% url 'upload' %}"
+           class="app-nav-link {% if request.resolver_match.url_name == 'upload' %}active{% endif %}">
+          Novo Upload
+        </a>
+        <a href="{% url 'documents' %}"
+           class="app-nav-link {% if request.resolver_match.url_name == 'documents' %}active{% endif %}">
+          Documentos
+        </a>
+        {% if user.is_staff %}
+        <a href="{% url 'admin_panel' %}"
+           class="app-nav-link {% if request.resolver_match.url_name == 'admin_panel' %}active{% endif %}">
+          Admin
+        </a>
+        {% endif %}
+      </nav>
+
+      <div class="flex items-center gap-3">
+        {% if user.credits == 0 %}
+          <span class="credits-badge credits-zero">0 gerações</span>
+        {% elif user.credits <= 2 %}
+          <span class="credits-badge credits-low">{{ user.credits }} geração{{ user.credits|pluralize:"ões" }}</span>
+        {% else %}
+          <span class="credits-badge credits-ok">{{ user.credits }} gerações</span>
+        {% endif %}
+
+        <span class="text-sm text-slate-400 hidden lg:block">{{ user.email }}</span>
+
+        <form method="post" action="{% url 'logout' %}">
+          {% csrf_token %}
+          <button type="submit"
+                  class="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors">
+            Sair
+          </button>
+        </form>
+      </div>
+    </div>
+  </header>
+
+  <!-- Page content -->
+  <main class="max-w-screen-xl mx-auto px-6 py-8">
+    {% for message in messages %}
+    <div class="alert {% if message.tags == 'success' %}alert-success{% elif message.tags == 'error' %}alert-error{% else %}alert-info{% endif %}">
+      {{ message }}
+    </div>
+    {% endfor %}
+
+    {% block content %}{% endblock %}
+  </main>
+</div>
+
+{% else %}
+<!-- Unauthenticated: page controls its own layout -->
+{% block auth_content %}{% endblock %}
+{% endif %}
+
+<script src="{% static 'js/main.js' %}"></script>
+{% block extra_scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,168 @@
+{% load static %}
+{% load i18n %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Transforme qualquer PDF em 50 questões e 100 flashcards com IA em menos de 2 minutos." />
+  <title>QuestõesCardsAI — PDF → Questões e Flashcards em 1 minuto</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="{% static 'css/styles.css' %}" />
+</head>
+<body style="font-family: system-ui, -apple-system, sans-serif; background: #fff; color: #1E293B;">
+
+<!-- ====== HEADER ====== -->
+<header class="landing-header">
+  <div class="max-w-screen-xl mx-auto px-6 h-14 flex items-center justify-between gap-4">
+    <a href="/" class="landing-logo">QuestõesCardsAI</a>
+    <nav class="flex items-center gap-4">
+      <a href="#como-funciona" class="landing-nav-link hidden sm:block">Como funciona</a>
+      <a href="#pricing" class="landing-nav-link hidden sm:block">Preços</a>
+      <a href="{% url 'login' %}" class="landing-nav-link font-medium">Entrar</a>
+      <a href="{% url 'register' %}" class="btn btn-primary btn-sm">Começar</a>
+    </nav>
+  </div>
+</header>
+
+<!-- ====== HERO ====== -->
+<section class="py-20 md:py-28">
+  <div class="max-w-screen-xl mx-auto px-6 text-center">
+    <h1 class="hero-title mb-6">
+      PDF → Questões e Flashcards<br class="hidden md:block" /> em 1 minuto
+    </h1>
+    <p class="hero-subtitle mb-10 mx-auto">
+      Faça upload, a IA gera <strong>50 questões</strong> de múltipla escolha
+      + <strong>100 flashcards</strong> automaticamente
+    </p>
+    <div class="flex flex-col sm:flex-row gap-3 justify-center">
+      <a href="{% url 'register' %}" class="btn btn-primary btn-lg">
+        Começar grátis →
+      </a>
+      <a href="#pricing" class="btn btn-secondary btn-lg">Ver planos</a>
+    </div>
+    <p class="text-sm text-slate-400 mt-5">2 gerações grátis · Sem cartão de crédito</p>
+  </div>
+</section>
+
+<!-- ====== COMO FUNCIONA ====== -->
+<section id="como-funciona" class="py-16 bg-slate-50 border-y border-slate-200">
+  <div class="max-w-screen-xl mx-auto px-6">
+    <h2 class="text-2xl font-bold text-center mb-12">Como funciona</h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+
+      <div class="flex flex-col items-center text-center gap-4">
+        <div class="step-number">1</div>
+        <div>
+          <p class="font-semibold text-slate-900 mb-1">Envie o PDF</p>
+          <p class="text-sm text-slate-500">Arraste ou selecione seu PDF. Até 150 páginas por geração.</p>
+        </div>
+      </div>
+
+      <div class="flex flex-col items-center text-center gap-4">
+        <div class="step-number">2</div>
+        <div>
+          <p class="font-semibold text-slate-900 mb-1">IA processa</p>
+          <p class="text-sm text-slate-500">Nossa IA extrai o conteúdo e gera o material de estudo automaticamente.</p>
+        </div>
+      </div>
+
+      <div class="flex flex-col items-center text-center gap-4">
+        <div class="step-number">3</div>
+        <div>
+          <p class="font-semibold text-slate-900 mb-1">Estude</p>
+          <p class="text-sm text-slate-500">Acesse 50 questões interativas + 100 flashcards prontos para revisar.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ====== PRICING ====== -->
+<section id="pricing" class="py-16">
+  <div class="max-w-screen-xl mx-auto px-6">
+    <h2 class="text-2xl font-bold text-center mb-4">Planos</h2>
+    <p class="text-center text-slate-500 mb-12">1 geração = 50 questões + 100 flashcards de um PDF</p>
+
+    <!-- Free plan (destaque isolado) -->
+    <div class="max-w-sm mx-auto mb-8">
+      <div class="pricing-free">
+        <p class="text-lg font-semibold text-slate-900 mb-1">Comece grátis</p>
+        <p class="text-3xl font-bold text-slate-900 mb-1">R$ 0</p>
+        <p class="text-sm text-slate-500 mb-6">2 gerações incluídas</p>
+        <a href="{% url 'register' %}" class="btn btn-secondary w-full" style="justify-content: center;">
+          Criar conta grátis
+        </a>
+      </div>
+    </div>
+
+    <!-- Paid plans -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+
+      <div class="pricing-card">
+        <div>
+          <p class="text-sm font-medium text-slate-500 mb-1">5 gerações</p>
+          <p class="price">R$ 14,90</p>
+          <p class="per-gen">R$ 2,98 por geração</p>
+        </div>
+        <a href="{% url 'register' %}" class="btn btn-secondary btn-sm" style="justify-content: center;">
+          Comprar
+        </a>
+      </div>
+
+      <div class="pricing-card popular">
+        <div>
+          <div class="flex items-center gap-2 mb-1">
+            <p class="text-sm font-medium text-slate-500">10 gerações</p>
+            <span class="text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100">Popular</span>
+          </div>
+          <p class="price">R$ 24,90</p>
+          <p class="per-gen">R$ 2,49 por geração</p>
+        </div>
+        <a href="{% url 'register' %}" class="btn btn-primary btn-sm" style="justify-content: center;">
+          Comprar
+        </a>
+      </div>
+
+      <div class="pricing-card">
+        <div>
+          <p class="text-sm font-medium text-slate-500 mb-1">20 gerações</p>
+          <p class="price">R$ 39,90</p>
+          <p class="per-gen">R$ 2,00 por geração</p>
+        </div>
+        <a href="{% url 'register' %}" class="btn btn-secondary btn-sm" style="justify-content: center;">
+          Comprar
+        </a>
+      </div>
+
+      <div class="pricing-card">
+        <div>
+          <p class="text-sm font-medium text-slate-500 mb-1">50 gerações</p>
+          <p class="price">R$ 79,90</p>
+          <p class="per-gen">R$ 1,60 por geração</p>
+        </div>
+        <a href="{% url 'register' %}" class="btn btn-secondary btn-sm" style="justify-content: center;">
+          Comprar
+        </a>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ====== FOOTER ====== -->
+<footer class="landing-footer py-8">
+  <div class="max-w-screen-xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+    <p class="font-bold text-slate-900">QuestõesCardsAI</p>
+    <p class="text-sm text-slate-400">© {% now "Y" %} QuestõesCardsAI. Todos os direitos reservados.</p>
+    <nav class="flex items-center gap-6">
+      <a href="#" class="text-sm text-slate-400 hover:text-slate-600 transition-colors">Termos</a>
+      <a href="#" class="text-sm text-slate-400 hover:text-slate-600 transition-colors">Privacidade</a>
+      <a href="#" class="text-sm text-slate-400 hover:text-slate-600 transition-colors">Suporte</a>
+    </nav>
+  </div>
+</footer>
+
+</body>
+</html>

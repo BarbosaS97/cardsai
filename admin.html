@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — QuestõesCardsAI</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family: system-ui, -apple-system, sans-serif; color: #1E293B; background: #F8FAFC; -webkit-font-smoothing: antialiased; }
+
+    .card { border: 1px solid #E2E8F0; border-radius: 12px; padding: 24px; background: #fff; }
+
+    .btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 6px; background: #2563EB; color: #fff; border: none; border-radius: 8px; padding: 10px 20px; font-weight: 600; font-size: 14px; cursor: pointer; transition: opacity .15s; }
+    .btn-primary:hover { opacity: 0.9; }
+    .btn-ghost { display: inline-flex; align-items: center; justify-content: center; background: transparent; color: #475569; border: 1px solid #E2E8F0; border-radius: 6px; padding: 6px 12px; font-size: 12px; font-weight: 500; cursor: pointer; transition: border-color .15s, color .15s; }
+    .btn-ghost:hover { border-color: #94A3B8; color: #1E293B; }
+    .btn-danger { display: inline-flex; align-items: center; justify-content: center; background: #FEF2F2; color: #DC2626; border: 1px solid #FECACA; border-radius: 6px; padding: 6px 12px; font-size: 12px; font-weight: 500; cursor: pointer; }
+    .btn-danger:hover { background: #FEE2E2; }
+
+    .input-field { width: 100%; padding: 9px 12px; border: 1px solid #E2E8F0; border-radius: 8px; font-size: 14px; color: #1E293B; background: #fff; outline: none; transition: border-color .15s, box-shadow .15s; font-family: inherit; }
+    .input-field:focus { border-color: #2563EB; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+    .input-field::placeholder { color: #94A3B8; }
+
+    .tab-btn { padding: 10px 20px; font-size: 14px; font-weight: 500; color: #475569; border: none; background: none; cursor: pointer; border-bottom: 2px solid transparent; transition: color .15s, border-color .15s; }
+    .tab-btn:hover { color: #1E293B; }
+    .tab-btn.active { color: #2563EB; border-color: #2563EB; font-weight: 600; }
+
+    .status-completed { background: #F0FDF4; color: #15803D; border: 1px solid #BBF7D0; padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 600; }
+    .status-failed { background: #FEF2F2; color: #DC2626; border: 1px solid #FECACA; padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 600; }
+    .status-processing { background: #EFF6FF; color: #1D4ED8; border: 1px solid #BFDBFE; padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 600; }
+    .status-pending { background: #F8FAFC; color: #64748B; border: 1px solid #E2E8F0; padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 600; }
+
+    tr { border-bottom: 1px solid #F1F5F9; }
+    tr:hover { background: #F8FAFC; }
+    th { text-align: left; padding: 12px 20px; font-size: 11px; font-weight: 600; color: #475569; text-transform: uppercase; letter-spacing: 0.05em; }
+    td { padding: 14px 20px; font-size: 14px; }
+  </style>
+</head>
+<body class="min-h-screen">
+
+  <!-- Header -->
+  <header style="position:sticky;top:0;z-index:50;background:#fff;border-bottom:1px solid #E2E8F0;height:56px;">
+    <div class="max-w-screen-xl mx-auto px-6 h-full flex items-center justify-between gap-4">
+      <div style="display:flex;align-items:center;gap:16px;">
+        <a href="/dashboard.html" style="font-size:18px;font-weight:700;color:#1E293B;text-decoration:none;">QuestõesCardsAI</a>
+        <span style="font-size:12px;font-weight:600;color:#2563EB;background:#EFF6FF;padding:3px 10px;border-radius:6px;border:1px solid #BFDBFE;">Admin</span>
+      </div>
+      <button onclick="signOut()" class="btn-ghost">Sair</button>
+    </div>
+  </header>
+
+  <main class="max-w-screen-xl mx-auto px-6 py-8">
+
+    <!-- Stats -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+      <div class="card" style="padding:20px;">
+        <p style="font-size:11px;font-weight:600;color:#475569;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Usuários</p>
+        <p id="statUsers" style="font-size:28px;font-weight:700;color:#1E293B;">—</p>
+      </div>
+      <div class="card" style="padding:20px;">
+        <p style="font-size:11px;font-weight:600;color:#475569;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Gerações</p>
+        <p id="statGens" style="font-size:28px;font-weight:700;color:#1E293B;">—</p>
+      </div>
+      <div class="card" style="padding:20px;">
+        <p style="font-size:11px;font-weight:600;color:#475569;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Questões</p>
+        <p id="statQ" style="font-size:28px;font-weight:700;color:#1E293B;">—</p>
+      </div>
+      <div class="card" style="padding:20px;">
+        <p style="font-size:11px;font-weight:600;color:#475569;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Flashcards</p>
+        <p id="statF" style="font-size:28px;font-weight:700;color:#1E293B;">—</p>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div style="border-bottom:1px solid #E2E8F0;margin-bottom:24px;display:flex;">
+      <button onclick="showTab('users')" id="tab-users" class="tab-btn active">Usuários</button>
+      <button onclick="showTab('generations')" id="tab-generations" class="tab-btn">Gerações</button>
+    </div>
+
+    <!-- Users tab -->
+    <div id="tab-users-content">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px;">
+        <h2 style="font-size:15px;font-weight:600;color:#1E293B;">Todos os usuários</h2>
+        <input id="userSearch" type="text" placeholder="Buscar por email…" oninput="filterUsers()"
+          class="input-field" style="width:240px;" />
+      </div>
+      <div class="card" style="padding:0;overflow:hidden;">
+        <table class="w-full">
+          <thead style="background:#F8FAFC;border-bottom:1px solid #E2E8F0;">
+            <tr>
+              <th>Usuário</th>
+              <th>Créditos</th>
+              <th>Gerações</th>
+              <th>Desde</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="usersTable">
+            <tr><td colspan="5" style="text-align:center;color:#94A3B8;padding:32px;">Carregando…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Generations tab -->
+    <div id="tab-generations-content" class="hidden">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px;">
+        <h2 style="font-size:15px;font-weight:600;color:#1E293B;">Todas as gerações</h2>
+        <input id="genSearch" type="text" placeholder="Buscar…" oninput="filterGenerations()"
+          class="input-field" style="width:240px;" />
+      </div>
+      <div class="space-y-2" id="generationsTable">
+        <div style="text-align:center;color:#94A3B8;padding:32px;">Carregando…</div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer style="border-top:1px solid #E2E8F0;padding:20px 24px;text-align:center;margin-top:32px;background:#fff;">
+    <p style="font-size:12px;color:#94A3B8;">© 2025 QuestõesCardsAI · Painel Administrativo</p>
+  </footer>
+
+  <!-- Modal: gerenciar créditos -->
+  <div id="creditsModal" class="hidden" style="position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(15,23,42,0.5);backdrop-filter:blur(4px);">
+    <div class="card" style="width:100%;max-width:400px;padding:32px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+        <h3 style="font-size:16px;font-weight:700;color:#1E293B;">Gerenciar créditos</h3>
+        <button onclick="closeCreditsModal()" style="color:#94A3B8;font-size:20px;background:none;border:none;cursor:pointer;line-height:1;">×</button>
+      </div>
+      <p id="creditsModalEmail" style="font-size:13px;color:#475569;padding-bottom:20px;margin-bottom:20px;border-bottom:1px solid #E2E8F0;"></p>
+
+      <div class="space-y-4">
+        <div>
+          <label style="display:block;font-size:11px;font-weight:600;color:#475569;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Adicionar créditos</label>
+          <div style="display:flex;gap:8px;">
+            <input id="addCreditsInput" type="number" min="1" max="9999" placeholder="Ex: 10" class="input-field" />
+            <button onclick="addCredits()" class="btn-primary" style="flex-shrink:0;">Adicionar</button>
+          </div>
+        </div>
+        <div>
+          <label style="display:block;font-size:11px;font-weight:600;color:#475569;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Resetar para</label>
+          <div style="display:flex;gap:8px;">
+            <input id="resetCreditsInput" type="number" min="0" max="9999" placeholder="Ex: 2" class="input-field" />
+            <button onclick="resetCredits()" class="btn-ghost" style="flex-shrink:0;">Resetar</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="creditsModalMsg" class="hidden" style="font-size:13px;padding:10px 14px;border-radius:8px;margin-top:16px;"></div>
+
+      <button onclick="closeCreditsModal()" class="btn-ghost" style="width:100%;margin-top:16px;justify-content:center;">Fechar</button>
+    </div>
+  </div>
+
+  <script src="/js/config.js"></script>
+  <script src="/js/auth.js"></script>
+  <script>
+    let allUsers = [];
+    let allGens = [];
+    let selectedUserId = null;
+
+    async function init() {
+      const result = await requireAuth(true);
+      if (!result) return;
+      await loadData();
+    }
+
+    async function loadData() {
+      const [usersRes, gensRes] = await Promise.all([
+        db.from('profiles').select('*').order('created_at', { ascending: false }),
+        db.from('generations').select('*').order('created_at', { ascending: false }),
+      ]);
+
+      allUsers = usersRes.data || [];
+      allGens = gensRes.data || [];
+
+      const completed = allGens.filter(g => g.status === 'completed');
+      document.getElementById('statUsers').textContent = allUsers.length;
+      document.getElementById('statGens').textContent = allGens.length;
+      document.getElementById('statQ').textContent = completed.reduce((s, g) => s + (g.question_count || 0), 0);
+      document.getElementById('statF').textContent = completed.reduce((s, g) => s + (g.flashcard_count || 0), 0);
+
+      renderUsers(allUsers);
+      renderGenerations(allGens);
+    }
+
+    function showTab(tab) {
+      ['users', 'generations'].forEach(t => {
+        document.getElementById(`tab-${t}`).className =
+          'tab-btn' + (t === tab ? ' active' : '');
+        document.getElementById(`tab-${t}-content`).classList.toggle('hidden', t !== tab);
+      });
+    }
+
+    function filterUsers() {
+      const q = document.getElementById('userSearch').value.toLowerCase();
+      renderUsers(q ? allUsers.filter(u => u.email.toLowerCase().includes(q)) : allUsers);
+    }
+
+    function filterGenerations() {
+      const q = document.getElementById('genSearch').value.toLowerCase();
+      renderGenerations(q ? allGens.filter(g => (g.title || g.pdf_name || '').toLowerCase().includes(q)) : allGens);
+    }
+
+    function renderUsers(users) {
+      const tbody = document.getElementById('usersTable');
+      if (users.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#94A3B8;padding:32px;">Nenhum usuário encontrado</td></tr>';
+        return;
+      }
+      const gensByUser = {};
+      allGens.forEach(g => { gensByUser[g.user_id] = (gensByUser[g.user_id] || 0) + 1; });
+
+      tbody.innerHTML = users.map(u => `
+        <tr>
+          <td>
+            <p style="font-weight:500;color:#1E293B;">${u.full_name || '—'}</p>
+            <p style="font-size:12px;color:#94A3B8;margin-top:2px;">${u.email}</p>
+            ${u.is_admin ? '<span style="font-size:11px;font-weight:600;color:#2563EB;background:#EFF6FF;padding:2px 8px;border-radius:4px;border:1px solid #BFDBFE;display:inline-block;margin-top:4px;">ADMIN</span>' : ''}
+          </td>
+          <td><span style="font-weight:600;color:#1E293B;">${u.credits >= 999990 ? '∞' : u.credits}</span></td>
+          <td style="color:#1E293B;font-weight:500;">${gensByUser[u.id] || 0}</td>
+          <td style="color:#94A3B8;font-size:12px;">${formatDate(u.created_at)}</td>
+          <td>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <button onclick="openCreditsModal('${u.id}', '${u.email}', ${u.credits})" class="btn-ghost">Créditos</button>
+              <button onclick="viewUserGens('${u.id}')" class="btn-ghost">Gerações</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function renderGenerations(gens) {
+      const el = document.getElementById('generationsTable');
+      if (gens.length === 0) {
+        el.innerHTML = '<div style="text-align:center;color:#94A3B8;padding:32px;">Nenhuma geração encontrada</div>';
+        return;
+      }
+      const userMap = {};
+      allUsers.forEach(u => { userMap[u.id] = u.email; });
+
+      el.innerHTML = gens.map(g => `
+        <div style="border:1px solid #E2E8F0;border-radius:8px;padding:14px 16px;background:#fff;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+          <div style="flex:1;min-width:0;">
+            <p style="font-size:14px;font-weight:500;color:#1E293B;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${g.title || g.pdf_name || 'Sem título'}</p>
+            <p style="font-size:12px;color:#94A3B8;margin-top:2px;">
+              ${userMap[g.user_id] || g.user_id} · ${formatDate(g.created_at)}
+              ${g.status === 'completed' ? ` · ${g.question_count || 0}Q · ${g.flashcard_count || 0}FC` : ''}
+            </p>
+            ${g.status === 'failed' ? `<p style="font-size:12px;color:#DC2626;margin-top:2px;">${g.error_message || 'Erro'}</p>` : ''}
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+            <span class="status-${g.status}">${{completed:'Concluído',processing:'Processando',pending:'Aguardando',failed:'Erro'}[g.status]||g.status}</span>
+            ${g.status === 'completed' ? `<a href="/results.html?id=${g.id}" class="btn-ghost">Ver →</a>` : ''}
+            <button onclick="deleteGeneration('${g.id}')" class="btn-danger">Deletar</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function viewUserGens(userId) {
+      showTab('generations');
+      renderGenerations(allGens.filter(g => g.user_id === userId));
+    }
+
+    function openCreditsModal(userId, email, currentCredits) {
+      selectedUserId = userId;
+      document.getElementById('creditsModal').style.display = 'flex';
+      document.getElementById('creditsModalEmail').textContent =
+        `${email} — ${currentCredits >= 999990 ? '∞' : currentCredits} créditos atuais`;
+      document.getElementById('creditsModalMsg').classList.add('hidden');
+    }
+
+    function closeCreditsModal() {
+      document.getElementById('creditsModal').style.display = 'none';
+      selectedUserId = null;
+    }
+
+    async function addCredits() {
+      const amount = parseInt(document.getElementById('addCreditsInput').value);
+      if (!amount || amount <= 0) return;
+      const { error } = await db.rpc('add_credits', { p_user_id: selectedUserId, p_amount: amount });
+      if (error) { showMsg('Erro: ' + error.message, 'error'); return; }
+      showMsg(`${amount} créditos adicionados!`, 'success');
+      await loadData();
+    }
+
+    async function resetCredits() {
+      const amount = parseInt(document.getElementById('resetCreditsInput').value);
+      if (amount === undefined || amount < 0) return;
+      const { error } = await db.rpc('reset_credits', { p_user_id: selectedUserId, p_amount: amount });
+      if (error) { showMsg('Erro: ' + error.message, 'error'); return; }
+      showMsg(`Créditos resetados para ${amount}!`, 'success');
+      await loadData();
+    }
+
+    async function deleteGeneration(id) {
+      if (!confirm('Deletar esta geração permanentemente? Questões e flashcards também serão removidos.')) return;
+      const { error } = await db.from('generations').delete().eq('id', id);
+      if (error) { showToast('Erro ao deletar: ' + error.message); return; }
+      showToast('Geração deletada.', 'success');
+      await loadData();
+    }
+
+    function showMsg(msg, type) {
+      const el = document.getElementById('creditsModalMsg');
+      el.textContent = msg;
+      el.style.background = type === 'success' ? '#F0FDF4' : '#FEF2F2';
+      el.style.color = type === 'success' ? '#15803D' : '#DC2626';
+      el.style.border = `1px solid ${type === 'success' ? '#BBF7D0' : '#FECACA'}`;
+      el.classList.remove('hidden');
+    }
+
+    init();
+  </script>
+</body>
+</html>

@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Créditos — QuestõesCardsAI</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    /* ── Variables ──────────────────────────────────────────── */
+    :root {
+      --bg:        #F8FAFC;
+      --surface:   #FFFFFF;
+      --surface-2: #F1F5F9;
+      --border:    #E2E8F0;
+      --text:      #1E293B;
+      --text-2:    #475569;
+      --text-3:    #94A3B8;
+      --blue:      #2563EB;
+      --blue-bg:   #EFF6FF;
+      --blue-bd:   #BFDBFE;
+      --blue-dark: #1D4ED8;
+      --amber-bg:  #FEF9C3;
+      --amber:     #713F12;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,.06);
+      --shadow-md: 0 4px 16px rgba(0,0,0,.08);
+      --shadow-blue: 0 6px 24px rgba(37,99,235,.18);
+    }
+    [data-theme="dark"] {
+      --bg:        #0F172A;
+      --surface:   #1E293B;
+      --surface-2: #0F172A;
+      --border:    #334155;
+      --text:      #F1F5F9;
+      --text-2:    #94A3B8;
+      --text-3:    #64748B;
+      --blue:      #3B82F6;
+      --blue-bg:   #1E3A5F;
+      --blue-bd:   #1D4ED8;
+      --blue-dark: #2563EB;
+      --amber-bg:  #422006;
+      --amber:     #FCD34D;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,.3);
+      --shadow-md: 0 4px 16px rgba(0,0,0,.4);
+      --shadow-blue: 0 6px 24px rgba(59,130,246,.22);
+    }
+
+    /* ── Reset ──────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, 'Inter', sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+      color: var(--text);
+      background: var(--bg);
+      -webkit-font-smoothing: antialiased;
+      transition: background .2s, color .2s;
+      min-height: 100vh;
+    }
+    a { color: inherit; text-decoration: none; }
+    button { font-family: inherit; cursor: pointer; }
+
+    /* ── Layout ─────────────────────────────────────────────── */
+    .max-w { max-width: 860px; margin: 0 auto; padding: 0 24px; }
+    main { padding: 56px 0 80px; }
+
+    /* ── Header ─────────────────────────────────────────────── */
+    header {
+      position: sticky; top: 0; z-index: 40;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      height: 54px;
+    }
+    .header-inner {
+      display: flex; align-items: center;
+      justify-content: space-between;
+      height: 100%;
+    }
+    .logo { font-size: 16px; font-weight: 700; letter-spacing: -.3px; color: var(--text); }
+    .header-right { display: flex; align-items: center; gap: 8px; }
+    .btn-icon {
+      background: transparent; border: 1px solid var(--border);
+      border-radius: 8px; padding: 6px;
+      color: var(--text-2);
+      display: inline-flex; align-items: center; justify-content: center;
+      transition: background .15s, color .15s, border-color .15s;
+      cursor: pointer;
+    }
+    .btn-icon:hover { border-color: var(--text-3); color: var(--text); background: var(--surface-2); }
+    .back-link {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 13px; font-weight: 500; color: var(--text-2);
+      transition: color .15s;
+    }
+    .back-link:hover { color: var(--text); }
+
+    /* ── Page header ─────────────────────────────────────────── */
+    .page-head { text-align: center; margin-bottom: 48px; }
+    .page-head h1 {
+      font-size: 28px; font-weight: 700; letter-spacing: -.4px;
+      color: var(--text); margin-bottom: 8px;
+    }
+    .page-head p {
+      font-size: 15px; color: var(--text-2); margin-bottom: 0;
+    }
+    .credits-notice {
+      display: inline-flex; align-items: center; gap: 6px;
+      margin-top: 18px;
+      background: var(--surface-2); border: 1px solid var(--border);
+      border-radius: 99px; padding: 5px 16px;
+      font-size: 13px; color: var(--text-2); font-weight: 500;
+    }
+    .credits-notice strong { color: var(--text); }
+
+    /* ── Cards grid ─────────────────────────────────────────── */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    @media (min-width: 640px) {
+      .cards-grid { grid-template-columns: repeat(4, 1fr); gap: 14px; }
+    }
+
+    /* ── Package card ───────────────────────────────────────── */
+    .pkg-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px 18px 20px;
+      display: flex; flex-direction: column;
+      align-items: center; text-align: center;
+      position: relative;
+      box-shadow: var(--shadow-sm);
+      transition: box-shadow .2s, border-color .2s, transform .2s;
+    }
+    .pkg-card:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+    }
+
+    /* ── Featured card ──────────────────────────────────────── */
+    .pkg-featured {
+      border: 2px solid var(--blue);
+      box-shadow: var(--shadow-blue);
+    }
+    .pkg-featured:hover {
+      box-shadow: 0 8px 28px rgba(37,99,235,.26);
+      transform: translateY(-3px);
+    }
+
+    /* ── Popular badge ──────────────────────────────────────── */
+    .badge-popular {
+      position: absolute;
+      top: -11px; left: 50%;
+      transform: translateX(-50%);
+      background: var(--amber-bg);
+      color: var(--amber);
+      font-size: 10px; font-weight: 700;
+      padding: 3px 10px; border-radius: 99px;
+      letter-spacing: .05em; white-space: nowrap;
+    }
+
+    /* ── Card content ───────────────────────────────────────── */
+    .pkg-qty {
+      font-size: 44px; font-weight: 800;
+      line-height: 1; color: var(--text);
+      margin-bottom: 2px;
+      letter-spacing: -1px;
+    }
+    .pkg-featured .pkg-qty { color: var(--blue); }
+    .pkg-unit {
+      font-size: 12px; font-weight: 500;
+      color: var(--text-3); margin-bottom: 20px;
+      text-transform: lowercase;
+    }
+    .pkg-price {
+      font-size: 20px; font-weight: 700;
+      color: var(--text); margin-bottom: 4px;
+      letter-spacing: -.3px;
+    }
+    .pkg-per {
+      font-size: 11px; color: var(--text-3);
+      margin-bottom: 20px;
+    }
+
+    /* ── Buy button ─────────────────────────────────────────── */
+    .btn-buy {
+      width: 100%; padding: 9px 0;
+      border-radius: 9px; border: 1px solid var(--border);
+      background: transparent; color: var(--text-2);
+      font-size: 13px; font-weight: 600;
+      transition: background .15s, color .15s, border-color .15s;
+    }
+    .btn-buy:hover {
+      background: var(--surface-2);
+      border-color: var(--text-3);
+      color: var(--text);
+    }
+    .btn-buy-featured {
+      background: var(--blue); color: #fff;
+      border-color: var(--blue);
+    }
+    .btn-buy-featured:hover {
+      background: var(--blue-dark);
+      border-color: var(--blue-dark);
+      color: #fff;
+    }
+
+    /* ── Info text ──────────────────────────────────────────── */
+    .info-text {
+      text-align: center;
+      font-size: 13px; color: var(--text-3);
+      margin-bottom: 56px;
+    }
+
+    /* ── Trust row ──────────────────────────────────────────── */
+    .trust-row {
+      display: flex; flex-wrap: wrap; justify-content: center;
+      gap: 8px 28px;
+      margin-bottom: 56px;
+    }
+    .trust-item {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 12px; color: var(--text-3);
+    }
+    .trust-item svg { color: var(--blue); flex-shrink: 0; }
+
+    /* ── FAQ ─────────────────────────────────────────────────── */
+    .faq { max-width: 560px; margin: 0 auto; }
+    .faq-title {
+      font-size: 15px; font-weight: 600;
+      color: var(--text); text-align: center;
+      margin-bottom: 16px;
+    }
+    .faq-item {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 16px 18px;
+      margin-bottom: 8px;
+    }
+    .faq-q { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 5px; }
+    .faq-a { font-size: 13px; color: var(--text-2); }
+
+    /* ── Modal backdrop ─────────────────────────────────────── */
+    .modal-backdrop {
+      position: fixed; inset: 0; z-index: 50;
+      display: flex; align-items: center; justify-content: center;
+      padding: 24px;
+      background: rgba(15,23,42,.55);
+      backdrop-filter: blur(4px);
+    }
+    .modal-box {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 18px; padding: 28px;
+      width: 100%; max-width: 400px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.2);
+    }
+    .modal-header {
+      display: flex; align-items: flex-start;
+      justify-content: space-between; gap: 12px;
+      margin-bottom: 18px;
+    }
+    .modal-title { font-size: 16px; font-weight: 700; color: var(--text); }
+    .modal-subtitle { font-size: 13px; color: var(--text-2); margin-top: 2px; }
+    .modal-close {
+      background: none; border: none; font-size: 20px;
+      color: var(--text-3); line-height: 1;
+      transition: color .15s; cursor: pointer; padding: 0;
+    }
+    .modal-close:hover { color: var(--text); }
+    .modal-notice {
+      background: var(--amber-bg); border: 1px solid;
+      border-color: #FDE68A; border-radius: 10px;
+      padding: 12px 14px; margin-bottom: 18px;
+    }
+    [data-theme="dark"] .modal-notice { border-color: #78350F; }
+    .modal-notice-title {
+      font-size: 12px; font-weight: 700;
+      color: var(--amber); margin-bottom: 4px;
+    }
+    .modal-notice-body { font-size: 12px; color: var(--text-2); }
+    .modal-facts { margin-bottom: 20px; }
+    .modal-fact {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 13px; color: var(--text-2);
+      padding: 4px 0;
+    }
+    .modal-fact svg { color: var(--blue); flex-shrink: 0; }
+    .modal-actions { display: flex; gap: 10px; }
+    .btn-modal-secondary {
+      flex: 1; padding: 10px 0;
+      border-radius: 10px; border: 1px solid var(--border);
+      background: transparent; color: var(--text-2);
+      font-size: 13px; font-weight: 600;
+      transition: background .15s, color .15s;
+      cursor: pointer;
+    }
+    .btn-modal-secondary:hover { background: var(--surface-2); color: var(--text); }
+    .btn-modal-primary {
+      flex: 1; padding: 10px 0;
+      border-radius: 10px; border: none;
+      background: var(--blue); color: #fff;
+      font-size: 13px; font-weight: 600;
+      transition: opacity .15s;
+      cursor: pointer; text-align: center; display: inline-block;
+      text-decoration: none;
+    }
+    .btn-modal-primary:hover { opacity: .88; }
+
+    /* ── Utility ─────────────────────────────────────────────── */
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+<!-- ── Header ───────────────────────────────────────────────── -->
+<header>
+  <div class="max-w header-inner">
+    <a href="/index.html" class="logo">QuestõesCardsAI</a>
+    <div class="header-right">
+      <button id="darkToggle" class="btn-icon" onclick="toggleDark()" title="Alternar tema">
+        <svg id="iconSun" class="hidden" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="5"/>
+          <path stroke-linecap="round" d="M12 2v2m0 16v2M4.22 4.22l1.42 1.42m12.72 12.72 1.42 1.42M2 12h2m16 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+        </svg>
+        <svg id="iconMoon" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+      </button>
+      <a href="/dashboard.html" class="back-link">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+        </svg>
+        Dashboard
+      </a>
+    </div>
+  </div>
+</header>
+
+<!-- ── Main ─────────────────────────────────────────────────── -->
+<main>
+  <div class="max-w">
+
+    <!-- Page heading -->
+    <div class="page-head">
+      <h1>Creditos QuestõesCardsAI</h1>
+      <p>Pague uma vez. Use quando quiser.</p>
+      <div class="credits-notice">
+        Você tem <strong><span id="creditsNum">—</span> créditos</strong>
+      </div>
+    </div>
+
+    <!-- Cards -->
+    <div class="cards-grid">
+
+      <!-- 5 gerações -->
+      <div class="pkg-card">
+        <div class="pkg-qty">5</div>
+        <div class="pkg-unit">gerações</div>
+        <div class="pkg-price">R$ 14,90</div>
+        <div class="pkg-per">R$ 2,98 por geração</div>
+        <button class="btn-buy" onclick="openModal(5, 'R$ 14,90')">Comprar</button>
+      </div>
+
+      <!-- 10 gerações — destaque -->
+      <div class="pkg-card pkg-featured">
+        <span class="badge-popular">Mais vendido</span>
+        <div class="pkg-qty">10</div>
+        <div class="pkg-unit">gerações</div>
+        <div class="pkg-price">R$ 24,90</div>
+        <div class="pkg-per">R$ 2,49 por geração</div>
+        <button class="btn-buy btn-buy-featured" onclick="openModal(10, 'R$ 24,90')">Comprar</button>
+      </div>
+
+      <!-- 20 gerações -->
+      <div class="pkg-card">
+        <div class="pkg-qty">20</div>
+        <div class="pkg-unit">gerações</div>
+        <div class="pkg-price">R$ 39,90</div>
+        <div class="pkg-per">R$ 2,00 por geração</div>
+        <button class="btn-buy" onclick="openModal(20, 'R$ 39,90')">Comprar</button>
+      </div>
+
+      <!-- 50 gerações -->
+      <div class="pkg-card">
+        <div class="pkg-qty">50</div>
+        <div class="pkg-unit">gerações</div>
+        <div class="pkg-price">R$ 79,90</div>
+        <div class="pkg-per">R$ 1,60 por geração</div>
+        <button class="btn-buy" onclick="openModal(50, 'R$ 79,90')">Comprar</button>
+      </div>
+
+    </div>
+
+    <!-- Info line -->
+    <p class="info-text">Cada geração produz 50 questões e 100 flashcards a partir do seu PDF</p>
+
+    <!-- Trust row -->
+    <div class="trust-row">
+      <div class="trust-item">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+        </svg>
+        Créditos sem expiração
+      </div>
+      <div class="trust-item">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+        </svg>
+        Só debita após sucesso
+      </div>
+      <div class="trust-item">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+        </svg>
+        Erro na IA = sem débito
+      </div>
+      <div class="trust-item">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+        </svg>
+        Sem assinatura
+      </div>
+    </div>
+
+    <!-- FAQ -->
+    <div class="faq">
+      <p class="faq-title">Dúvidas frequentes</p>
+      <div class="faq-item">
+        <p class="faq-q">Os créditos expiram?</p>
+        <p class="faq-a">Não. Seus créditos ficam disponíveis por tempo indeterminado.</p>
+      </div>
+      <div class="faq-item">
+        <p class="faq-q">O upload do PDF consome crédito?</p>
+        <p class="faq-a">Não. O crédito só é debitado após a geração ser concluída com sucesso.</p>
+      </div>
+      <div class="faq-item">
+        <p class="faq-q">E se a geração falhar?</p>
+        <p class="faq-a">Nenhum crédito é consumido em caso de erro. Você pode tentar novamente.</p>
+      </div>
+      <div class="faq-item">
+        <p class="faq-q">Qual o limite de páginas por PDF?</p>
+        <p class="faq-a">Até 150 páginas por upload. Para documentos maiores, divida em partes.</p>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- ── Modal ─────────────────────────────────────────────────── -->
+<div id="paymentModal" class="modal-backdrop hidden">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div>
+        <p class="modal-title" id="modalTitle">Pacote de — gerações</p>
+        <p class="modal-subtitle" id="modalSubtitle">—</p>
+      </div>
+      <button class="modal-close" onclick="closeModal()">&#x2715;</button>
+    </div>
+
+    <div class="modal-notice">
+      <p class="modal-notice-title">Integração de pagamento pendente</p>
+      <p class="modal-notice-body">
+        Configure o Stripe ou PagSeguro e adicione os links de checkout.
+        Por enquanto, entre em contato — o admin adiciona os créditos manualmente.
+      </p>
+    </div>
+
+    <div class="modal-facts">
+      <div class="modal-fact">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+        </svg>
+        Pagamento único, sem assinatura
+      </div>
+      <div class="modal-fact">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+        </svg>
+        Créditos não expiram
+      </div>
+      <div class="modal-fact">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+        </svg>
+        Falha na geração = sem débito
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-modal-secondary" onclick="closeModal()">Fechar</button>
+      <a href="mailto:contato@cardsai.com?subject=Compra de Creditos QuestõesCardsAI"
+        class="btn-modal-primary">
+        Entrar em contato
+      </a>
+    </div>
+  </div>
+</div>
+
+<script src="/js/config.js"></script>
+<script src="/js/auth.js"></script>
+<script>
+  /* ── Dark mode ──────────────────────────────────────────── */
+  (function () {
+    const saved = localStorage.getItem('cardsai-theme');
+    if (saved === 'dark') applyDark(true);
+  })();
+
+  function applyDark(on) {
+    document.documentElement.setAttribute('data-theme', on ? 'dark' : 'light');
+    document.getElementById('iconSun').classList.toggle('hidden', !on);
+    document.getElementById('iconMoon').classList.toggle('hidden', on);
+  }
+
+  window.toggleDark = function () {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    applyDark(!isDark);
+    localStorage.setItem('cardsai-theme', isDark ? 'light' : 'dark');
+  };
+
+  /* ── Init ───────────────────────────────────────────────── */
+  async function init() {
+    const session = await requireAuth();
+    if (!session) return;
+    const profile = await getProfile();
+    if (profile) {
+      document.getElementById('creditsNum').textContent = formatCredits(profile.credits);
+    }
+  }
+
+  /* ── Modal ──────────────────────────────────────────────── */
+  window.openModal = function (qty, price) {
+    document.getElementById('modalTitle').textContent =
+      'Pacote de ' + qty + ' gerações';
+    document.getElementById('modalSubtitle').textContent =
+      qty + ' gerações por ' + price;
+    document.getElementById('paymentModal').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+  };
+
+  window.closeModal = function () {
+    document.getElementById('paymentModal').classList.add('hidden');
+    document.body.style.overflow = '';
+  };
+
+  document.getElementById('paymentModal').addEventListener('click', function (e) {
+    if (e.target === this) closeModal();
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') closeModal();
+  });
+
+  init();
+</script>
+</body>
+</html>

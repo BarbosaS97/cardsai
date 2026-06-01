@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Novo Upload — QuestõesCardsAI</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family: system-ui, -apple-system, sans-serif; color: #1E293B; background: #F8FAFC; -webkit-font-smoothing: antialiased; }
+
+    .card { border: 1px solid #E2E8F0; border-radius: 12px; padding: 24px; background: #fff; }
+
+    .btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; background: #2563EB; color: #fff; border: none; border-radius: 8px; padding: 14px 24px; font-weight: 600; font-size: 15px; cursor: pointer; transition: opacity .15s; }
+    .btn-primary:hover { opacity: 0.9; }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .drop-zone { border: 2px dashed #E2E8F0; border-radius: 12px; padding: 48px 24px; text-align: center; cursor: pointer; transition: border-color .15s, background .15s; background: #fff; }
+    .drop-zone:hover { border-color: #2563EB; background: #EFF6FF; }
+    .drop-zone.drag-over { border-color: #2563EB; background: #EFF6FF; }
+    .drop-zone.has-file { border-color: #4ADE80; background: #F0FDF4; border-style: solid; }
+
+    .alert-error { background: #FEF2F2; color: #DC2626; border: 1px solid #FECACA; border-radius: 8px; padding: 12px 14px; font-size: 13px; }
+    .alert-info { background: #EFF6FF; color: #1D4ED8; border: 1px solid #BFDBFE; border-radius: 8px; padding: 12px 14px; font-size: 13px; }
+
+    .stage-dot { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; transition: all .3s; }
+    .stage-dot.active { background: #2563EB; color: #fff; }
+    .stage-dot.done { background: #DCFCE7; color: #16A34A; border: 1px solid #86EFAC; }
+    .stage-dot.waiting { background: #F1F5F9; color: #94A3B8; border: 1px solid #E2E8F0; }
+
+    .progress-bar { transition: width .5s ease; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body class="min-h-screen">
+
+  <!-- Header -->
+  <header style="background:#fff;border-bottom:1px solid #E2E8F0;">
+    <div class="max-w-3xl mx-auto px-6 h-14 flex items-center justify-between">
+      <a href="/dashboard.html" style="font-size:14px;color:#475569;text-decoration:none;font-weight:500;">← Dashboard</a>
+      <a href="/index.html" style="font-size:18px;font-weight:700;color:#1E293B;text-decoration:none;">QuestõesCardsAI</a>
+      <div style="display:flex;align-items:center;gap:6px;font-size:14px;">
+        <span style="color:#2563EB;font-weight:700;" id="creditsCount">—</span>
+        <span style="color:#94A3B8;">gerações</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-3xl mx-auto px-6 py-10">
+
+    <div class="text-center mb-8">
+      <h1 style="font-size:24px;font-weight:700;color:#1E293B;margin-bottom:8px;">Nova geração</h1>
+      <p style="font-size:14px;color:#475569;">Faça upload de um PDF para gerar 50 questões + 100 flashcards com IA</p>
+    </div>
+
+    <!-- Upload section -->
+    <div id="uploadSection">
+
+      <!-- Drop zone -->
+      <div id="dropZone" class="drop-zone mb-4" onclick="document.getElementById('fileInput').click()">
+        <input type="file" id="fileInput" accept=".pdf" class="hidden" />
+        <div id="dropContent">
+          <svg style="width:48px;height:48px;color:#CBD5E1;margin:0 auto 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+          </svg>
+          <p style="font-size:15px;font-weight:500;color:#1E293B;margin-bottom:6px;">Arraste o PDF aqui</p>
+          <p style="font-size:14px;color:#475569;margin-bottom:12px;">ou <span style="color:#2563EB;">clique para selecionar</span></p>
+          <span style="font-size:12px;color:#94A3B8;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:6px;padding:4px 12px;">Máximo 150 páginas · Apenas PDF</span>
+        </div>
+        <div id="fileContent" class="hidden">
+          <svg style="width:40px;height:40px;color:#4ADE80;margin:0 auto 12px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          <p id="fileName" style="font-size:16px;font-weight:600;color:#1E293B;margin-bottom:4px;"></p>
+          <p id="fileInfo" style="font-size:13px;color:#475569;margin-bottom:12px;"></p>
+          <button onclick="clearFile(event)" style="font-size:12px;color:#DC2626;background:none;border:none;cursor:pointer;font-weight:500;">Remover arquivo</button>
+        </div>
+      </div>
+
+      <div id="errorMsg" class="hidden alert-error mb-4"></div>
+
+      <p style="font-size:12px;color:#94A3B8;text-align:center;margin-bottom:16px;">
+        O crédito só é debitado após a geração ser concluída com sucesso.
+      </p>
+
+      <button id="generateBtn" onclick="startGeneration()" disabled class="btn-primary">
+        Gerar material de estudo
+      </button>
+    </div>
+
+    <!-- Processing section -->
+    <div id="processingSection" class="hidden">
+      <div class="card">
+
+        <!-- Stage indicators -->
+        <div style="display:flex;align-items:center;margin-bottom:28px;">
+          <div style="display:flex;flex-direction:column;align-items:center;">
+            <div id="stage1" class="stage-dot waiting">1</div>
+            <p style="font-size:11px;color:#94A3B8;margin-top:6px;text-align:center;">Lendo PDF</p>
+          </div>
+          <div style="flex:1;height:1px;background:#E2E8F0;margin:0 8px;"></div>
+          <div style="display:flex;flex-direction:column;align-items:center;">
+            <div id="stage2" class="stage-dot waiting">2</div>
+            <p style="font-size:11px;color:#94A3B8;margin-top:6px;text-align:center;">IA processando</p>
+          </div>
+          <div style="flex:1;height:1px;background:#E2E8F0;margin:0 8px;"></div>
+          <div style="display:flex;flex-direction:column;align-items:center;">
+            <div id="stage3" class="stage-dot waiting">3</div>
+            <p style="font-size:11px;color:#94A3B8;margin-top:6px;text-align:center;">Salvando</p>
+          </div>
+          <div style="flex:1;height:1px;background:#E2E8F0;margin:0 8px;"></div>
+          <div style="display:flex;flex-direction:column;align-items:center;">
+            <div id="stage4" class="stage-dot waiting">✓</div>
+            <p style="font-size:11px;color:#94A3B8;margin-top:6px;text-align:center;">Pronto!</p>
+          </div>
+        </div>
+
+        <!-- Progress bar -->
+        <div style="height:4px;background:#F1F5F9;border-radius:99px;overflow:hidden;margin-bottom:20px;">
+          <div id="progressBar" class="progress-bar" style="width:0%;height:100%;background:#2563EB;border-radius:99px;"></div>
+        </div>
+
+        <!-- Status -->
+        <p id="statusText" style="text-align:center;color:#475569;font-size:14px;font-weight:500;">Iniciando…</p>
+        <p id="pageProgress" style="text-align:center;color:#94A3B8;font-size:12px;margin-top:6px;" class="hidden">
+          Lendo página <span id="currentPage">0</span> de <span id="totalPages">0</span>
+        </p>
+
+        <!-- Tip -->
+        <div style="margin-top:24px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:14px 16px;">
+          <p style="font-size:11px;font-weight:600;color:#475569;margin-bottom:6px;">DICA DE ESTUDO</p>
+          <p id="studyTip" style="font-size:13px;color:#475569;line-height:1.5;"></p>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <script src="/js/config.js"></script>
+  <script src="/js/auth.js"></script>
+  <script>
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+    const tips = [
+      'Questões de múltipla escolha ajudam a identificar lacunas no seu conhecimento.',
+      'Flashcards são mais eficientes quando revisados com espaçamento — tente revisar depois de 1h, 1 dia e 1 semana.',
+      'Tente responder as questões sem ver a resposta primeiro. Isso ativa a memória ativa.',
+      'Estudar em sessões de 25 minutos com pausas de 5 minutos (Pomodoro) aumenta a retenção.',
+      'Explique o conteúdo para alguém (ou para você mesmo) — essa técnica fixa o aprendizado.',
+    ];
+
+    let selectedFile = null;
+    let profile = null;
+
+    async function init() {
+      const session = await requireAuth();
+      if (!session) return;
+      profile = await getProfile();
+      if (!profile) return;
+
+      document.getElementById('creditsCount').textContent = formatCredits(profile.credits);
+
+      if (!profile.is_admin && profile.credits <= 0) {
+        document.getElementById('errorMsg').textContent = 'Você não tem créditos disponíveis. Adquira um pacote para continuar.';
+        document.getElementById('errorMsg').classList.remove('hidden');
+      }
+
+      document.getElementById('studyTip').textContent = tips[Math.floor(Math.random() * tips.length)];
+      setupDragDrop();
+      document.getElementById('fileInput').addEventListener('change', handleFileSelect);
+    }
+
+    function setupDragDrop() {
+      const zone = document.getElementById('dropZone');
+      zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+      zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+      zone.addEventListener('drop', e => {
+        e.preventDefault();
+        zone.classList.remove('drag-over');
+        const file = e.dataTransfer.files[0];
+        if (file) processFile(file);
+      });
+    }
+
+    function handleFileSelect(e) {
+      const file = e.target.files[0];
+      if (file) processFile(file);
+    }
+
+    function processFile(file) {
+      const errDiv = document.getElementById('errorMsg');
+      errDiv.classList.add('hidden');
+
+      if (!file.name.toLowerCase().endsWith('.pdf')) {
+        errDiv.textContent = 'Apenas arquivos PDF são aceitos.';
+        errDiv.classList.remove('hidden');
+        return;
+      }
+
+      const maxSize = 50 * 1024 * 1024;
+      if (file.size > maxSize) {
+        errDiv.textContent = 'O arquivo é muito grande. Limite máximo: 50MB.';
+        errDiv.classList.remove('hidden');
+        return;
+      }
+
+      selectedFile = file;
+      document.getElementById('dropContent').classList.add('hidden');
+      document.getElementById('fileContent').classList.remove('hidden');
+      document.getElementById('fileName').textContent = file.name;
+      document.getElementById('fileInfo').textContent = `${(file.size / 1024 / 1024).toFixed(2)} MB`;
+      document.getElementById('dropZone').classList.add('has-file');
+
+      const canGenerate = profile?.is_admin || (profile?.credits > 0);
+      document.getElementById('generateBtn').disabled = !canGenerate;
+    }
+
+    function clearFile(e) {
+      e.stopPropagation();
+      selectedFile = null;
+      document.getElementById('dropContent').classList.remove('hidden');
+      document.getElementById('fileContent').classList.add('hidden');
+      document.getElementById('dropZone').classList.remove('has-file');
+      document.getElementById('fileInput').value = '';
+      document.getElementById('generateBtn').disabled = true;
+    }
+
+    function setStage(n) {
+      for (let i = 1; i <= 4; i++) {
+        const el = document.getElementById(`stage${i}`);
+        if (i < n) {
+          el.className = 'stage-dot done';
+          el.textContent = '✓';
+        } else if (i === n) {
+          el.className = 'stage-dot active';
+          el.innerHTML = '<svg style="width:14px;height:14px;animation:spin 1s linear infinite;" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>';
+        } else {
+          el.className = 'stage-dot waiting';
+          el.textContent = i === 4 ? '✓' : i;
+        }
+      }
+    }
+
+    async function startGeneration() {
+      if (!selectedFile || !profile) return;
+
+      document.getElementById('uploadSection').classList.add('hidden');
+      document.getElementById('processingSection').classList.remove('hidden');
+
+      try {
+        setStage(1);
+        document.getElementById('statusText').textContent = 'Lendo o PDF…';
+        document.getElementById('pageProgress').classList.remove('hidden');
+        document.getElementById('progressBar').style.width = '10%';
+
+        const { text, pageCount, title } = await extractPDFText(selectedFile, (cur, total) => {
+          document.getElementById('currentPage').textContent = cur;
+          document.getElementById('totalPages').textContent = total;
+          document.getElementById('progressBar').style.width = `${10 + (cur / total) * 30}%`;
+        });
+
+        if (!text || text.trim().length < 100) {
+          throw new Error('Não foi possível extrair texto do PDF. O arquivo pode estar protegido ou ser uma imagem escaneada.');
+        }
+
+        setStage(2);
+        document.getElementById('statusText').textContent = 'Enviando para a IA…';
+        document.getElementById('progressBar').style.width = '45%';
+        document.getElementById('pageProgress').classList.add('hidden');
+
+        const { data: { user } } = await db.auth.getUser();
+        const { data: gen, error: genErr } = await db.from('generations').insert({
+          user_id: user.id,
+          title: title || selectedFile.name.replace('.pdf', ''),
+          pdf_name: selectedFile.name,
+          page_count: pageCount,
+          status: 'pending',
+        }).select().single();
+
+        if (genErr) throw new Error('Erro ao criar registro: ' + genErr.message);
+
+        const { data: { session } } = await db.auth.getSession();
+
+        document.getElementById('progressBar').style.width = '50%';
+        document.getElementById('statusText').textContent = 'IA gerando questões e flashcards…';
+
+        const response = await fetch(EDGE_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({
+            generationId: gen.id,
+            pdfText: text,
+            pdfName: selectedFile.name,
+            pageCount,
+          }),
+        });
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+          throw new Error(result.error || 'Erro ao processar com IA');
+        }
+
+        setStage(4);
+        document.getElementById('stage4').className = 'stage-dot done';
+        document.getElementById('stage4').textContent = '✓';
+        document.getElementById('progressBar').style.width = '100%';
+        document.getElementById('statusText').textContent = `Pronto! ${result.questionCount} questões e ${result.flashcardCount} flashcards gerados!`;
+
+        setTimeout(() => {
+          window.location.href = `/results.html?id=${gen.id}`;
+        }, 1500);
+
+      } catch (err) {
+        console.error(err);
+        document.getElementById('processingSection').classList.add('hidden');
+        document.getElementById('uploadSection').classList.remove('hidden');
+        document.getElementById('errorMsg').textContent = err.message || 'Erro inesperado. Tente novamente.';
+        document.getElementById('errorMsg').classList.remove('hidden');
+        document.getElementById('generateBtn').disabled = false;
+      }
+    }
+
+    async function extractPDFText(file, onProgress) {
+      const arrayBuffer = await file.arrayBuffer();
+      const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+      const pdf = await loadingTask.promise;
+
+      const numPages = pdf.numPages;
+      if (numPages > 150) {
+        throw new Error(`O PDF tem ${numPages} páginas. O limite máximo é 150 páginas.`);
+      }
+
+      let fullText = '';
+      let titleText = '';
+
+      for (let i = 1; i <= numPages; i++) {
+        if (onProgress) onProgress(i, numPages);
+        const page = await pdf.getPage(i);
+        const content = await page.getTextContent();
+        const pageText = content.items.map(item => item.str).join(' ').replace(/\s+/g, ' ').trim();
+        fullText += pageText + '\n';
+        if (i === 1 && pageText.length > 0) {
+          titleText = pageText.substring(0, 100).split('.')[0];
+        }
+      }
+
+      return {
+        text: fullText.trim(),
+        pageCount: numPages,
+        title: titleText || file.name.replace('.pdf', ''),
+      };
+    }
+
+    init();
+  </script>
+</body>
+</html>

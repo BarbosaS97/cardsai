@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Material de Estudo — QuestõesCardsAI</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    /* ── CSS variables (light / dark) ─────────────────── */
+    :root {
+      --bg:         #F8FAFC;
+      --surface:    #FFFFFF;
+      --border:     #E2E8F0;
+      --border-sub: #F1F5F9;
+      --text:       #1E293B;
+      --text-2:     #475569;
+      --text-3:     #94A3B8;
+      --text-4:     #CBD5E1;
+      --blue:       #2563EB;
+      --blue-bg:    #EFF6FF;
+      --blue-text:  #1D4ED8;
+      --violet-bg:  #F5F3FF;
+      --violet-text:#6D28D9;
+      --green-bg:   #F0FDF4;
+      --green-text: #166534;
+      --green-bd:   #BBF7D0;
+      --bar-track:  #E2E8F0;
+      --shadow:     0 1px 3px rgba(0,0,0,.06);
+    }
+    [data-theme="dark"] {
+      --bg:         #0F172A;
+      --surface:    #1E293B;
+      --border:     #334155;
+      --border-sub: #1E293B;
+      --text:       #F1F5F9;
+      --text-2:     #94A3B8;
+      --text-3:     #64748B;
+      --text-4:     #475569;
+      --blue:       #3B82F6;
+      --blue-bg:    #1E3A5F;
+      --blue-text:  #93C5FD;
+      --violet-bg:  #2E1065;
+      --violet-text:#A78BFA;
+      --green-bg:   #052E16;
+      --green-text: #4ADE80;
+      --green-bd:   #166534;
+      --bar-track:  #334155;
+      --shadow:     0 1px 3px rgba(0,0,0,.4);
+    }
+
+    body {
+      font-family: system-ui, -apple-system, 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      transition: background .2s, color .2s;
+    }
+
+    /* ── Dark mode overrides for Tailwind classes ───────── */
+    [data-theme="dark"] .bg-\[\#F8FAFC\] { background-color: var(--bg) !important; }
+    [data-theme="dark"] .bg-white        { background-color: var(--surface) !important; }
+    [data-theme="dark"] .border-slate-100 { border-color: var(--border-sub) !important; }
+    [data-theme="dark"] .border-slate-200 { border-color: var(--border) !important; }
+    [data-theme="dark"] .text-slate-900  { color: var(--text) !important; }
+    [data-theme="dark"] .text-slate-800  { color: var(--text) !important; }
+    [data-theme="dark"] .text-slate-700  { color: var(--text-2) !important; }
+    [data-theme="dark"] .text-slate-600  { color: var(--text-2) !important; }
+    [data-theme="dark"] .text-slate-500  { color: var(--text-3) !important; }
+    [data-theme="dark"] .text-slate-400  { color: var(--text-3) !important; }
+    [data-theme="dark"] .text-slate-300  { color: var(--text-4) !important; }
+    [data-theme="dark"] .bg-slate-200    { background-color: var(--bar-track) !important; }
+    [data-theme="dark"] .bg-blue-50      { background-color: var(--blue-bg) !important; }
+    [data-theme="dark"] .text-blue-700   { color: var(--blue-text) !important; }
+    [data-theme="dark"] .text-\[\#2563EB\] { color: var(--blue) !important; }
+    [data-theme="dark"] .border-b-\[\#2563EB\] { border-bottom-color: var(--blue) !important; }
+    [data-theme="dark"] .bg-\[\#2563EB\] { background-color: var(--blue) !important; }
+    [data-theme="dark"] .bg-violet-50    { background-color: var(--violet-bg) !important; }
+    [data-theme="dark"] .text-violet-700 { color: var(--violet-text) !important; }
+    [data-theme="dark"] .bg-green-50     { background-color: var(--green-bg) !important; }
+    [data-theme="dark"] .border-green-200 { border-color: var(--green-bd) !important; }
+    [data-theme="dark"] .text-green-800  { color: var(--green-text) !important; }
+    [data-theme="dark"] .shadow-sm       { box-shadow: var(--shadow) !important; }
+    [data-theme="dark"] .hover\:text-slate-700:hover { color: var(--text) !important; }
+    [data-theme="dark"] .hover\:text-slate-900:hover { color: var(--text) !important; }
+    [data-theme="dark"] .hover\:border-slate-300:hover { border-color: var(--text-3) !important; }
+    [data-theme="dark"] .hover\:bg-blue-50:hover { background-color: var(--blue-bg) !important; }
+    [data-theme="dark"] .hover\:border-blue-300:hover { border-color: var(--blue) !important; }
+    [data-theme="dark"] .hover\:bg-violet-100:hover { background-color: var(--violet-bg) !important; }
+    [data-theme="dark"] .hover\:bg-blue-700:hover { opacity: .85; }
+
+    /* opt buttons dark mode */
+    [data-theme="dark"] .opt {
+      background-color: var(--surface) !important;
+      border-color: var(--border) !important;
+      color: var(--text-2) !important;
+    }
+
+    /* ── Correct / wrong option states (light + dark) ─── */
+    .opt-correct {
+      background: #F0FDF4 !important; border-color: #4ADE80 !important; color: #166534 !important;
+    }
+    .opt-wrong {
+      background: #FFF1F2 !important; border-color: #FDA4AF !important; color: #9F1239 !important;
+    }
+    .opt-dim { opacity: 0.4; pointer-events: none; }
+
+    [data-theme="dark"] .opt-correct {
+      background: #052E16 !important; border-color: #166534 !important; color: #4ADE80 !important;
+    }
+    [data-theme="dark"] .opt-wrong {
+      background: #450A0A !important; border-color: #7F1D1D !important; color: #F87171 !important;
+    }
+
+    /* dark mode toggle button */
+    .btn-icon-sm {
+      background: transparent;
+      border: 1px solid var(--border, #E2E8F0);
+      border-radius: 8px; padding: 6px;
+      color: var(--text-3, #94A3B8);
+      cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: center;
+      transition: background .15s, color .15s;
+    }
+    .btn-icon-sm:hover { background: rgba(0,0,0,.06); color: var(--text, #1E293B); }
+
+    /* ── Flip card 3D ───────────────────────────────────── */
+    .flip-wrap { perspective: 1200px; cursor: pointer; user-select: none; }
+    .flip-inner {
+      position: relative; width: 100%; height: 100%;
+      transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+      transform-style: preserve-3d;
+    }
+    .flip-wrap.flipped .flip-inner { transform: rotateY(180deg); }
+    .flip-face {
+      position: absolute; inset: 0;
+      backface-visibility: hidden; -webkit-backface-visibility: hidden;
+      border-radius: 20px;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 2rem 2.5rem; text-align: center;
+    }
+    .flip-face-back { transform: rotateY(180deg); }
+
+    /* ── Flip card height responsive ────────────────────── */
+    .flip-wrap { height: 240px; }
+    @media (min-width: 480px) { .flip-wrap { height: 290px; } }
+    @media (min-width: 768px) { .flip-wrap { height: 350px; } }
+
+    /* ── Tab active state ───────────────────────────────── */
+    .tab-active { color: #2563EB !important; border-bottom-color: #2563EB !important; }
+
+    /* ── Option button states ───────────────────────────── */
+    .opt { transition: background 0.15s, border-color 0.15s, color 0.15s; }
+
+    /* ── Progress bar ───────────────────────────────────── */
+    .bar { transition: width 0.4s ease; }
+
+    /* ── Focus Mode ─────────────────────────────────────── */
+    #focusOverlay {
+      display: none;
+      position: fixed; inset: 0; z-index: 100;
+      background: rgba(0, 0, 0, 0.92);
+      align-items: center; justify-content: center;
+      padding: 24px;
+    }
+    #focusOverlay.active { display: flex; }
+    #focusBox {
+      width: 100%; max-width: 720px;
+      background: #1E293B;
+      border: 1px solid #334155;
+      border-radius: 20px;
+      padding: 2.5rem;
+      position: relative;
+    }
+    #focusClose {
+      position: absolute; top: 16px; right: 16px;
+      background: #334155; border: none; border-radius: 8px;
+      color: #94A3B8; cursor: pointer; padding: 6px 10px;
+      font-size: 12px; font-weight: 500;
+      display: flex; align-items: center; gap: 5px;
+      transition: background .15s;
+    }
+    #focusClose:hover { background: #475569; color: #F1F5F9; }
+    .focus-nav {
+      display: flex; align-items: center; justify-content: center;
+      gap: 12px; margin-top: 28px;
+    }
+    .focus-nav button {
+      background: #334155; border: none; border-radius: 10px;
+      color: #94A3B8; cursor: pointer; padding: 10px 18px;
+      font-size: 13px; font-weight: 500;
+      display: inline-flex; align-items: center; gap: 6px;
+      transition: background .15s, color .15s;
+    }
+    .focus-nav button:hover { background: #475569; color: #F1F5F9; }
+    .focus-nav button:disabled { opacity: .35; cursor: not-allowed; }
+
+    /* Focus — flip card inside overlay */
+    #focusFlip { perspective: 1200px; cursor: pointer; user-select: none; height: 260px; }
+    #focusFlip .flip-inner {
+      position: relative; width: 100%; height: 100%;
+      transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+      transform-style: preserve-3d;
+    }
+    #focusFlip.flipped .flip-inner { transform: rotateY(180deg); }
+    #focusFlip .flip-face {
+      position: absolute; inset: 0;
+      backface-visibility: hidden; -webkit-backface-visibility: hidden;
+      border-radius: 14px;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 2rem; text-align: center;
+    }
+    #focusFlip .flip-face-back { transform: rotateY(180deg); }
+
+    /* ── Question card entrance ─────────────────────────── */
+    @keyframes fadeSlide {
+      from { opacity: 0; transform: translateX(18px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+    .card-in { animation: fadeSlide 0.22s ease both; }
+  </style>
+</head>
+<body>
+
+<!-- ── Loading ──────────────────────────────────────────────── -->
+<div id="loading" class="fixed inset-0 bg-[#F8FAFC] flex items-center justify-center z-50">
+  <div class="text-center">
+    <div class="w-10 h-10 rounded-full border-4 border-blue-100 border-t-[#2563EB] animate-spin mx-auto mb-4"></div>
+    <p class="text-sm text-slate-400">Carregando material de estudo…</p>
+  </div>
+</div>
+
+<!-- ── App ──────────────────────────────────────────────────── -->
+<div id="app" class="hidden min-h-screen flex flex-col">
+
+  <!-- Header -->
+  <header class="bg-white border-b border-slate-100 px-4 md:px-8 h-14 flex items-center justify-between gap-4 sticky top-0 z-10 shadow-sm">
+    <div class="flex items-center gap-3 min-w-0">
+      <a href="/dashboard.html" class="text-slate-400 hover:text-slate-700 transition flex-shrink-0" title="Voltar">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+        </svg>
+      </a>
+      <h1 id="pageTitle" class="text-sm font-semibold text-slate-800 truncate">Material de estudo</h1>
+    </div>
+    <div class="flex items-center gap-2 flex-shrink-0">
+      <span id="badgeQ"  class="hidden text-xs font-medium px-2.5 py-1 bg-blue-50 text-blue-700 rounded-full"></span>
+      <span id="badgeFC" class="hidden text-xs font-medium px-2.5 py-1 bg-violet-50 text-violet-700 rounded-full"></span>
+      <button id="darkToggle" class="btn-icon-sm" onclick="toggleDark()" title="Alternar tema">
+        <svg id="iconSun" class="hidden" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="5"/><path stroke-linecap="round" d="M12 2v2m0 16v2M4.22 4.22l1.42 1.42m12.72 12.72 1.42 1.42M2 12h2m16 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+        </svg>
+        <svg id="iconMoon" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+      </button>
+      <button onclick="openFocus()" id="focusBtn"
+        class="hidden items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-900 transition">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/>
+        </svg>
+        Modo foco
+      </button>
+    </div>
+  </header>
+
+  <!-- Tabs -->
+  <nav class="bg-white border-b border-slate-100 px-4 md:px-8 flex">
+    <button id="tabQuestions"  onclick="switchTab('questions')"
+      class="tab-active px-5 py-3 text-sm font-medium text-slate-500 border-b-2 border-transparent transition-colors whitespace-nowrap">
+      Questões
+    </button>
+    <button id="tabFlashcards" onclick="switchTab('flashcards')"
+      class="px-5 py-3 text-sm font-medium text-slate-500 border-b-2 border-transparent transition-colors whitespace-nowrap">
+      Flashcards
+    </button>
+    <button id="tabSummary"    onclick="switchTab('summary')"
+      class="px-5 py-3 text-sm font-medium text-slate-500 border-b-2 border-transparent transition-colors whitespace-nowrap">
+      Resumo
+    </button>
+  </nav>
+
+  <!-- Panels -->
+  <main class="flex-1 px-4 md:px-8 py-6 md:py-8 max-w-3xl mx-auto w-full">
+
+    <!-- ══ QUESTÕES ══════════════════════════════════════════ -->
+    <section id="panelQuestions">
+
+      <!-- Progress -->
+      <div class="flex items-center gap-3 mb-5">
+        <span id="qLabel" class="text-xs font-semibold text-blue-700 bg-blue-50 px-3 py-1 rounded-full whitespace-nowrap">
+          Q 1 de 50
+        </span>
+        <div class="flex-1 h-1.5 bg-slate-200 rounded-full overflow-hidden">
+          <div id="qBar" class="bar h-full bg-[#2563EB] rounded-full" style="width:2%"></div>
+        </div>
+      </div>
+
+      <!-- Card -->
+      <div id="qCard" class="card-in bg-white rounded-2xl border border-slate-200 shadow-sm p-6 md:p-8 mb-4">
+        <p id="qTopic" class="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mb-3"></p>
+        <p id="qText" class="text-base md:text-lg font-medium text-slate-900 leading-relaxed mb-6"></p>
+        <div id="qOpts" class="space-y-2.5"></div>
+        <div id="qAnswer" class="hidden mt-5 p-4 bg-green-50 border border-green-200 rounded-xl">
+          <p id="qAnswerText" class="text-sm font-semibold text-green-800"></p>
+        </div>
+      </div>
+
+      <!-- Navigation -->
+      <div class="flex items-center justify-between gap-3">
+        <button id="qPrev" onclick="goQ(-1)"
+          class="opt inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium rounded-xl border border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-900 transition shadow-sm disabled:opacity-40 disabled:pointer-events-none">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+          </svg>
+          Anterior
+        </button>
+        <button id="qReveal" onclick="revealAnswer()"
+          class="px-5 py-2.5 text-sm font-semibold text-white bg-[#2563EB] rounded-xl hover:bg-blue-700 transition shadow-sm">
+          Ver resposta
+        </button>
+        <button id="qNext" onclick="goQ(1)"
+          class="opt inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium rounded-xl border border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-900 transition shadow-sm disabled:opacity-40 disabled:pointer-events-none">
+          Próxima
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+          </svg>
+        </button>
+      </div>
+      <p class="text-center text-xs text-slate-300 mt-3 select-none">← → para navegar</p>
+
+    </section>
+
+    <!-- ══ FLASHCARDS ════════════════════════════════════════ -->
+    <section id="panelFlashcards" class="hidden flex flex-col items-center">
+
+      <!-- Progress -->
+      <div class="w-full flex items-center gap-3 mb-5">
+        <span id="fcLabel" class="text-xs font-semibold text-violet-700 bg-violet-50 px-3 py-1 rounded-full whitespace-nowrap">
+          1 de 100
+        </span>
+        <div class="flex-1 h-1.5 bg-slate-200 rounded-full overflow-hidden">
+          <div id="fcBar" class="bar h-full bg-violet-500 rounded-full" style="width:1%"></div>
+        </div>
+      </div>
+
+      <!-- Flip card -->
+      <div id="flipCard" class="flip-wrap w-full mb-5" onclick="flipCard()">
+        <div class="flip-inner">
+
+          <!-- Front face -->
+          <div class="flip-face bg-white border border-slate-200 shadow-sm">
+            <span id="fcTopicBadge" class="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mb-5 block min-h-[1rem]"></span>
+            <span class="inline-flex items-center gap-1 text-[11px] font-medium text-[#2563EB] bg-blue-50 px-2.5 py-1 rounded-full mb-5">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              Pergunta
+            </span>
+            <p id="fcFront" class="text-base md:text-lg font-medium text-slate-900 leading-relaxed max-w-md"></p>
+            <p class="text-xs text-slate-300 mt-6 select-none">Clique para ver a resposta</p>
+          </div>
+
+          <!-- Back face -->
+          <div class="flip-face flip-face-back bg-[#2563EB]">
+            <span class="inline-flex items-center gap-1 text-[11px] font-medium text-blue-200 bg-white/10 px-2.5 py-1 rounded-full mb-5">
+              <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+              </svg>
+              Resposta
+            </span>
+            <p id="fcBack" class="text-base md:text-lg font-semibold text-white leading-relaxed max-w-md"></p>
+            <p class="text-xs text-blue-200 mt-6 select-none">Clique para voltar</p>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Navigation -->
+      <div class="flex items-center gap-3">
+        <button id="fcPrev" onclick="goFC(-1)"
+          class="inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium rounded-xl border border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-900 transition shadow-sm disabled:opacity-40 disabled:pointer-events-none">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+          </svg>
+          Anterior
+        </button>
+        <button onclick="flipCard()"
+          class="px-5 py-2.5 text-sm font-semibold text-violet-700 bg-violet-50 rounded-xl hover:bg-violet-100 transition">
+          Virar
+        </button>
+        <button id="fcNext" onclick="goFC(1)"
+          class="inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium rounded-xl border border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-900 transition shadow-sm disabled:opacity-40 disabled:pointer-events-none">
+          Próxima
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+          </svg>
+        </button>
+      </div>
+      <p class="text-center text-xs text-slate-300 mt-3 select-none">← → navegar · Espaço para virar</p>
+
+    </section>
+
+    <!-- ══ RESUMO ══════════════════════════════════════════════ -->
+    <section id="panelSummary" class="hidden">
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 md:p-8">
+        <h2 class="text-sm font-semibold text-slate-800 mb-4">Resumo do conteúdo</h2>
+        <p id="summaryText" class="text-slate-600 text-sm leading-relaxed whitespace-pre-wrap"></p>
+        <div class="mt-6 pt-5 border-t border-slate-100">
+          <p class="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-3">Tópicos</p>
+          <div id="topicsList" class="flex flex-wrap gap-2"></div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ── Focus Mode Overlay ──────────────────────────────────── -->
+<div id="focusOverlay" role="dialog" aria-modal="true" aria-label="Modo foco">
+  <div id="focusBox">
+
+    <!-- Close -->
+    <button id="focusClose" onclick="closeFocus()">
+      <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+      </svg>
+      ESC
+    </button>
+
+    <!-- Progress label -->
+    <p id="focusLabel" style="font-size:11px;font-weight:600;color:#64748B;text-transform:uppercase;letter-spacing:.07em;margin-bottom:18px;text-align:center;"></p>
+
+    <!-- ── Question mode ── -->
+    <div id="focusModeQuestion" style="display:none;">
+      <p id="focusQTopic" style="font-size:11px;color:#64748B;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;text-align:center;"></p>
+      <p id="focusQText"  style="font-size:17px;font-weight:600;color:#F1F5F9;line-height:1.55;text-align:center;margin-bottom:20px;"></p>
+      <div id="focusQOpts" style="display:flex;flex-direction:column;gap:8px;"></div>
+      <div id="focusQAnswer" style="display:none;margin-top:14px;padding:12px 14px;background:#052E16;border:1px solid #166534;border-radius:10px;">
+        <p id="focusQAnswerText" style="font-size:13px;font-weight:600;color:#4ADE80;"></p>
+      </div>
+      <div style="text-align:center;margin-top:14px;">
+        <button onclick="focusReveal()"
+          style="background:#2563EB;color:#fff;border:none;border-radius:8px;padding:8px 18px;font-size:13px;font-weight:600;cursor:pointer;">
+          Ver resposta
+        </button>
+      </div>
+    </div>
+
+    <!-- ── Flashcard mode ── -->
+    <div id="focusModeFlashcard" style="display:none;">
+      <div id="focusFlip" onclick="focusFlipCard()">
+        <div class="flip-inner">
+          <div class="flip-face" style="background:#1E293B;border:1px solid #334155;">
+            <span style="font-size:11px;font-weight:600;color:#3B82F6;text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px;">Pergunta</span>
+            <p id="focusFCFront" style="font-size:16px;font-weight:600;color:#F1F5F9;line-height:1.5;"></p>
+            <p style="font-size:11px;color:#475569;margin-top:16px;">Clique para ver a resposta</p>
+          </div>
+          <div class="flip-face flip-face-back" style="background:#2563EB;">
+            <span style="font-size:11px;font-weight:600;color:#BFDBFE;text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px;">Resposta</span>
+            <p id="focusFCBack" style="font-size:16px;font-weight:600;color:#fff;line-height:1.5;"></p>
+            <p style="font-size:11px;color:#BFDBFE;margin-top:16px;">Clique para voltar</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="focus-nav">
+      <button id="focusPrev" onclick="focusNav(-1)">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+        </svg>
+        Anterior
+      </button>
+      <span id="focusCounter" style="font-size:13px;color:#64748B;min-width:80px;text-align:center;"></span>
+      <button id="focusNext" onclick="focusNav(1)">
+        Próxima
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+        </svg>
+      </button>
+    </div>
+
+    <p style="text-align:center;font-size:11px;color:#475569;margin-top:12px;">
+      ← → para navegar · ESC para sair
+      <span id="focusSpaceHint" style="display:none;"> · Espaço para virar</span>
+    </p>
+  </div>
+</div>
+
+<script>
+  /* ── Dark mode ──────────────────────────────────────────── */
+  (function () {
+    const saved = localStorage.getItem('cardsai-theme');
+    if (saved === 'dark') applyDark(true);
+  })();
+
+  function applyDark(on) {
+    document.documentElement.setAttribute('data-theme', on ? 'dark' : 'light');
+    const sun  = document.getElementById('iconSun');
+    const moon = document.getElementById('iconMoon');
+    if (sun)  sun.classList.toggle('hidden', !on);
+    if (moon) moon.classList.toggle('hidden', on);
+  }
+
+  window.toggleDark = function () {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    applyDark(!isDark);
+    localStorage.setItem('cardsai-theme', isDark ? 'light' : 'dark');
+  };
+
+(function () {
+  const SUPABASE_URL = 'https://gxkhmmbovlfulcxyupue.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4a2htbWJvdmxmdWxjeHl1cHVlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNDAzMzcsImV4cCI6MjA5NTcxNjMzN30.BipAmuzpW_x7KhIQdgdnQma5wLOS53QVLFCMYsxmMqE';
+  const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  let questions = [], flashcards = [];
+  let qIdx = 0, fcIdx = 0, activeTab = 'questions';
+
+  /* ── Tab switching ─────────────────────────────────────── */
+  const TABS = ['questions', 'flashcards', 'summary'];
+
+  window.switchTab = function (tab) {
+    activeTab = tab;
+    TABS.forEach(t => {
+      const key = t.charAt(0).toUpperCase() + t.slice(1);
+      document.getElementById('panel' + key).classList.toggle('hidden', t !== tab);
+      const btn = document.getElementById('tab' + key);
+      btn.classList.toggle('tab-active', t === tab);
+      btn.classList.toggle('text-slate-500', t !== tab);
+    });
+  };
+
+  /* ── Questions ─────────────────────────────────────────── */
+  function renderQ() {
+    if (!questions.length) {
+      document.getElementById('panelQuestions').innerHTML =
+        '<div class="bg-white rounded-2xl border border-slate-200 p-12 text-center text-slate-400 text-sm">Nenhuma questão disponível.</div>';
+      return;
+    }
+
+    const q   = questions[qIdx];
+    const pct = (qIdx + 1) / questions.length * 100;
+
+    document.getElementById('qLabel').textContent = `Q ${qIdx + 1} de ${questions.length}`;
+    document.getElementById('qBar').style.width   = pct + '%';
+    document.getElementById('qTopic').textContent = q.topic || '';
+    document.getElementById('qText').textContent  = q.text;
+
+    document.getElementById('qAnswer').classList.add('hidden');
+    document.getElementById('qReveal').textContent = 'Ver resposta';
+
+    const corUp = (q.correct_answer || '').charAt(0).toUpperCase();
+    const correctAlt = (q.alternatives || []).find(a => a.charAt(0).toUpperCase() === corUp) || q.correct_answer;
+    document.getElementById('qAnswerText').textContent = 'Resposta: ' + correctAlt;
+
+    document.getElementById('qPrev').disabled = qIdx === 0;
+    document.getElementById('qNext').disabled = qIdx === questions.length - 1;
+
+    // Build option buttons
+    const opts = document.getElementById('qOpts');
+    opts.innerHTML = '';
+    (q.alternatives || []).forEach((alt, idx) => {
+      const btn = document.createElement('button');
+      btn.className = 'opt w-full text-left px-4 py-3 text-sm rounded-xl border border-slate-200 text-slate-700 hover:border-blue-300 hover:bg-blue-50';
+      btn.textContent    = alt;
+      btn.dataset.idx    = idx;
+      btn.onclick        = () => pickOpt(idx, q.correct_answer, q.alternatives || []);
+      opts.appendChild(btn);
+    });
+
+    // Restart entrance animation
+    const card = document.getElementById('qCard');
+    card.classList.remove('card-in');
+    void card.offsetWidth;
+    card.classList.add('card-in');
+  }
+
+  function pickOpt(selectedIdx, correct, alternatives) {
+    const corUp = (correct || '').charAt(0).toUpperCase();
+    const correctIdx = (alternatives || []).findIndex(
+      a => a === correct || a.charAt(0).toUpperCase() === corUp
+    );
+    document.querySelectorAll('#qOpts .opt').forEach(b => {
+      b.classList.remove('opt-correct', 'opt-wrong', 'opt-dim');
+      b.onclick = null;
+      const idx = parseInt(b.dataset.idx, 10);
+      if (idx === correctIdx)
+        b.classList.add('opt-correct');
+      else if (idx === selectedIdx && selectedIdx !== correctIdx)
+        b.classList.add('opt-wrong');
+      else
+        b.classList.add('opt-dim');
+    });
+    document.getElementById('qAnswer').classList.remove('hidden');
+    document.getElementById('qReveal').textContent = 'Resposta revelada';
+  }
+
+  window.revealAnswer = function () {
+    const box    = document.getElementById('qAnswer');
+    const hidden = box.classList.toggle('hidden');
+    document.getElementById('qReveal').textContent = hidden ? 'Ver resposta' : 'Ocultar resposta';
+  };
+
+  window.goQ = function (d) {
+    const n = qIdx + d;
+    if (n < 0 || n >= questions.length) return;
+    qIdx = n;
+    renderQ();
+  };
+
+  /* ── Flashcards ────────────────────────────────────────── */
+  function renderFC() {
+    if (!flashcards.length) {
+      document.getElementById('panelFlashcards').innerHTML =
+        '<div class="bg-white rounded-2xl border border-slate-200 p-12 text-center text-slate-400 text-sm">Nenhum flashcard disponível.</div>';
+      return;
+    }
+
+    const f   = flashcards[fcIdx];
+    const pct = (fcIdx + 1) / flashcards.length * 100;
+
+    document.getElementById('fcLabel').textContent      = `${fcIdx + 1} de ${flashcards.length}`;
+    document.getElementById('fcBar').style.width        = pct + '%';
+    document.getElementById('fcTopicBadge').textContent = f.topic || '';
+    document.getElementById('fcFront').textContent      = f.front || 'Sem pergunta';
+    document.getElementById('fcBack').textContent       = f.back  || 'Sem resposta';
+
+    document.getElementById('fcPrev').disabled = fcIdx === 0;
+    document.getElementById('fcNext').disabled = fcIdx === flashcards.length - 1;
+
+    // Always start on the front face
+    document.getElementById('flipCard').classList.remove('flipped');
+  }
+
+  window.flipCard = function () {
+    document.getElementById('flipCard').classList.toggle('flipped');
+  };
+
+  window.goFC = function (d) {
+    const n = fcIdx + d;
+    if (n < 0 || n >= flashcards.length) return;
+    fcIdx = n;
+    renderFC();
+  };
+
+  /* ── Keyboard shortcuts ────────────────────────────────── */
+  document.addEventListener('keydown', e => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+    // Focus mode captures all navigation
+    if (document.getElementById('focusOverlay').classList.contains('active')) {
+      if (e.key === 'Escape')     closeFocus();
+      if (e.key === 'ArrowLeft')  focusNav(-1);
+      if (e.key === 'ArrowRight') focusNav(1);
+      if (e.key === ' ' && activeTab === 'flashcards') { e.preventDefault(); focusFlipCard(); }
+      return;
+    }
+
+    if (activeTab === 'questions') {
+      if (e.key === 'ArrowLeft')  goQ(-1);
+      if (e.key === 'ArrowRight') goQ(1);
+    }
+    if (activeTab === 'flashcards') {
+      if (e.key === 'ArrowLeft')  goFC(-1);
+      if (e.key === 'ArrowRight') goFC(1);
+      if (e.key === ' ') { e.preventDefault(); flipCard(); }
+    }
+  });
+
+  /* ── Focus Mode ────────────────────────────────────────── */
+  window.openFocus = function () {
+    const overlay = document.getElementById('focusOverlay');
+    overlay.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    renderFocusFrame();
+  };
+
+  window.closeFocus = function () {
+    document.getElementById('focusOverlay').classList.remove('active');
+    document.body.style.overflow = '';
+  };
+
+  function renderFocusFrame() {
+    const isQ = activeTab === 'questions';
+    const modeQ  = document.getElementById('focusModeQuestion');
+    const modeFC = document.getElementById('focusModeFlashcard');
+    const spaceHint = document.getElementById('focusSpaceHint');
+
+    modeQ.style.display  = isQ ? 'block' : 'none';
+    modeFC.style.display = isQ ? 'none'  : 'block';
+    spaceHint.style.display = isQ ? 'none' : 'inline';
+
+    if (isQ) {
+      if (!questions.length) return;
+      const q = questions[qIdx];
+      document.getElementById('focusLabel').textContent   = 'Questões';
+      document.getElementById('focusCounter').textContent = `${qIdx + 1} / ${questions.length}`;
+      document.getElementById('focusPrev').disabled = qIdx === 0;
+      document.getElementById('focusNext').disabled = qIdx === questions.length - 1;
+      document.getElementById('focusQTopic').textContent  = q.topic || '';
+      document.getElementById('focusQText').textContent   = q.text;
+      document.getElementById('focusQAnswer').style.display = 'none';
+
+      const fCorUp = (q.correct_answer || '').charAt(0).toUpperCase();
+      const correctAlt = (q.alternatives || []).find(a => a.charAt(0).toUpperCase() === fCorUp) || q.correct_answer;
+      document.getElementById('focusQAnswerText').textContent = 'Resposta: ' + correctAlt;
+
+      const opts = document.getElementById('focusQOpts');
+      opts.innerHTML = '';
+      (q.alternatives || []).forEach((alt, idx) => {
+        const b = document.createElement('button');
+        b.style.cssText = 'width:100%;text-align:left;padding:10px 14px;font-size:13px;border:1px solid #334155;border-radius:10px;background:#0F172A;color:#CBD5E1;cursor:pointer;transition:background .15s,border-color .15s;';
+        b.textContent = alt;
+        b.dataset.idx = idx;
+        b.onmouseenter = () => { if (!b.disabled) b.style.borderColor = '#3B82F6'; };
+        b.onmouseleave = () => { if (!b.disabled) b.style.borderColor = '#334155'; };
+        b.onclick = () => focusPickOpt(idx, q.correct_answer, q.alternatives || []);
+        opts.appendChild(b);
+      });
+    } else {
+      if (!flashcards.length) return;
+      const f = flashcards[fcIdx];
+      document.getElementById('focusLabel').textContent   = 'Flashcards';
+      document.getElementById('focusCounter').textContent = `${fcIdx + 1} / ${flashcards.length}`;
+      document.getElementById('focusPrev').disabled = fcIdx === 0;
+      document.getElementById('focusNext').disabled = fcIdx === flashcards.length - 1;
+      document.getElementById('focusFCFront').textContent = f.front || '';
+      document.getElementById('focusFCBack').textContent  = f.back  || '';
+      document.getElementById('focusFlip').classList.remove('flipped');
+    }
+  }
+
+  window.focusNav = function (d) {
+    if (activeTab === 'questions') {
+      const n = qIdx + d;
+      if (n < 0 || n >= questions.length) return;
+      qIdx = n; renderQ(); renderFocusFrame();
+    } else {
+      const n = fcIdx + d;
+      if (n < 0 || n >= flashcards.length) return;
+      fcIdx = n; renderFC(); renderFocusFrame();
+    }
+  };
+
+  window.focusFlipCard = function () {
+    document.getElementById('focusFlip').classList.toggle('flipped');
+  };
+
+  window.focusReveal = function () {
+    const box = document.getElementById('focusQAnswer');
+    box.style.display = box.style.display === 'none' ? 'block' : 'none';
+  };
+
+  function focusPickOpt(selectedIdx, correct, alternatives) {
+    const corUp = (correct || '').charAt(0).toUpperCase();
+    const correctIdx = (alternatives || []).findIndex(
+      a => a === correct || a.charAt(0).toUpperCase() === corUp
+    );
+    document.querySelectorAll('#focusQOpts button').forEach(b => {
+      b.onclick = null; b.disabled = true;
+      const idx = parseInt(b.dataset.idx, 10);
+      if (idx === correctIdx)
+        b.style.cssText += 'background:#052E16;border-color:#166534;color:#4ADE80;';
+      else if (idx === selectedIdx && selectedIdx !== correctIdx)
+        b.style.cssText += 'background:#450A0A;border-color:#7F1D1D;color:#F87171;';
+      else
+        b.style.opacity = '.35';
+    });
+    document.getElementById('focusQAnswer').style.display = 'block';
+  }
+
+  /* ── Load data from Supabase ───────────────────────────── */
+  async function loadData() {
+    const id = new URLSearchParams(window.location.search).get('id');
+    if (!id) { window.location.href = '/dashboard.html'; return; }
+
+    try {
+      const [genRes, qRes, fRes] = await Promise.all([
+        db.from('generations').select('*').eq('id', id).single(),
+        db.from('questions').select('*').eq('generation_id', id).order('order_index'),
+        db.from('flashcards').select('*').eq('generation_id', id).order('order_index'),
+      ]);
+
+      if (genRes.error) { window.location.href = '/dashboard.html'; return; }
+
+      const gen  = genRes.data;
+      questions  = qRes.data  || [];
+      flashcards = fRes.data  || [];
+
+      console.log(`📊 ${questions.length} questões, ${flashcards.length} flashcards`);
+
+      // Header
+      document.getElementById('pageTitle').textContent =
+        gen.title || gen.pdf_name || 'Material de estudo';
+
+      if (questions.length) {
+        document.getElementById('badgeQ').textContent = questions.length + ' questões';
+        document.getElementById('badgeQ').classList.remove('hidden');
+        document.getElementById('tabQuestions').textContent = `Questões (${questions.length})`;
+      }
+      if (flashcards.length) {
+        document.getElementById('badgeFC').textContent = flashcards.length + ' flashcards';
+        document.getElementById('badgeFC').classList.remove('hidden');
+        document.getElementById('tabFlashcards').textContent = `Flashcards (${flashcards.length})`;
+      }
+
+      // Summary
+      document.getElementById('summaryText').textContent =
+        gen.summary || 'Resumo não disponível.';
+      document.getElementById('topicsList').innerHTML =
+        (gen.topics || []).map(t =>
+          `<span class="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-full text-xs font-medium">${t}</span>`
+        ).join('');
+
+      renderQ();
+      renderFC();
+
+      document.getElementById('loading').classList.add('hidden');
+      document.getElementById('app').classList.remove('hidden');
+      switchTab('questions');
+
+      // Show focus mode button
+      document.getElementById('focusBtn').classList.remove('hidden');
+      document.getElementById('focusBtn').style.display = 'inline-flex';
+
+    } catch (err) {
+      console.error('Erro ao carregar:', err);
+      document.getElementById('loading').innerHTML =
+        '<div class="text-center py-20">' +
+        '<p class="text-red-500 mb-3">Erro ao carregar os dados.</p>' +
+        '<a href="/dashboard.html" class="text-sm text-blue-600 hover:underline">← Voltar ao dashboard</a>' +
+        '</div>';
+    }
+  }
+
+  loadData();
+})();
+</script>
+</body>
+</html>

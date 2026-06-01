@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Minhas Criações — QuestõesCardsAI</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    /* ── CSS variables (light / dark) ─────────────────────── */
+    :root {
+      --bg:        #F8FAFC;
+      --surface:   #FFFFFF;
+      --surface-2: #F1F5F9;
+      --border:    #E2E8F0;
+      --text:      #1E293B;
+      --text-2:    #475569;
+      --text-3:    #94A3B8;
+      --blue:      #2563EB;
+      --blue-bg:   #EFF6FF;
+      --blue-bd:   #BFDBFE;
+      --green-bg:  #F0FDF4;
+      --green:     #15803D;
+      --green-bd:  #BBF7D0;
+      --red-bg:    #FEF2F2;
+      --red:       #DC2626;
+      --red-bd:    #FECACA;
+      --amber-bg:  #FFFBEB;
+      --amber:     #92400E;
+      --amber-bd:  #FDE68A;
+      --shadow:    0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+      --shadow-md: 0 4px 12px rgba(0,0,0,.08);
+    }
+    [data-theme="dark"] {
+      --bg:        #0F172A;
+      --surface:   #1E293B;
+      --surface-2: #0F172A;
+      --border:    #334155;
+      --text:      #F1F5F9;
+      --text-2:    #94A3B8;
+      --text-3:    #64748B;
+      --blue:      #3B82F6;
+      --blue-bg:   #1E3A5F;
+      --blue-bd:   #1D4ED8;
+      --green-bg:  #052E16;
+      --green:     #4ADE80;
+      --green-bd:  #166534;
+      --red-bg:    #450A0A;
+      --red:       #F87171;
+      --red-bd:    #7F1D1D;
+      --amber-bg:  #451A03;
+      --amber:     #FCD34D;
+      --amber-bd:  #78350F;
+      --shadow:    0 1px 3px rgba(0,0,0,.3);
+      --shadow-md: 0 4px 12px rgba(0,0,0,.4);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, 'Inter', sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+      color: var(--text);
+      background: var(--bg);
+      -webkit-font-smoothing: antialiased;
+      transition: background .2s, color .2s;
+    }
+    a { color: inherit; text-decoration: none; }
+    button { font-family: inherit; cursor: pointer; }
+    input  { font-family: inherit; }
+
+    /* ── Layout ─────────────────────────────────────────── */
+    .max-w { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+    main { padding: 28px 0 64px; }
+
+    /* ── Header ─────────────────────────────────────────── */
+    header {
+      position: sticky; top: 0; z-index: 40;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      height: 56px;
+    }
+    .header-inner {
+      display: flex; align-items: center;
+      justify-content: space-between; gap: 16px;
+      height: 100%;
+    }
+    .header-left { display: flex; align-items: center; gap: 12px; }
+    .logo { font-size: 17px; font-weight: 700; color: var(--text); }
+    .header-right { display: flex; align-items: center; gap: 10px; }
+
+    /* ── Buttons ─────────────────────────────────────────── */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: 6px; border-radius: 8px; font-weight: 600;
+      font-size: 13px; cursor: pointer; border: none;
+      transition: opacity .15s, background .15s; white-space: nowrap;
+      text-decoration: none;
+    }
+    .btn-primary { background: var(--blue); color: #fff; padding: 9px 18px; }
+    .btn-primary:hover { opacity: .88; }
+    .btn-ghost {
+      background: transparent; color: var(--text-2);
+      border: 1px solid var(--border); padding: 7px 14px;
+      font-weight: 500;
+    }
+    .btn-ghost:hover { border-color: var(--text-3); color: var(--text); background: var(--surface-2); }
+    .btn-icon {
+      background: transparent; border: 1px solid var(--border);
+      border-radius: 8px; padding: 7px; color: var(--text-2);
+      display: inline-flex; align-items: center; justify-content: center;
+    }
+    .btn-icon:hover { border-color: var(--text-3); color: var(--text); background: var(--surface-2); }
+    .btn-danger {
+      background: var(--red-bg); color: var(--red);
+      border: 1px solid var(--red-bd); padding: 6px 12px;
+      border-radius: 7px; font-size: 12px; font-weight: 500;
+    }
+    .btn-danger:hover { opacity: .8; }
+
+    /* ── Status badges ───────────────────────────────────── */
+    .badge {
+      display: inline-block; font-size: 11px; font-weight: 600;
+      padding: 2px 9px; border-radius: 99px; border: 1px solid;
+    }
+    .badge-completed  { background: var(--green-bg); color: var(--green); border-color: var(--green-bd); }
+    .badge-processing { background: var(--blue-bg);  color: var(--blue);  border-color: var(--blue-bd); }
+    .badge-pending    { background: var(--surface-2);color: var(--text-2);border-color: var(--border); }
+    .badge-failed     { background: var(--red-bg);   color: var(--red);   border-color: var(--red-bd); }
+
+    /* ── Gen cards grid ──────────────────────────────────── */
+    .gen-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
+    @media (min-width: 640px)  { .gen-grid { grid-template-columns: 1fr 1fr; } }
+    @media (min-width: 900px)  { .gen-grid { grid-template-columns: 1fr 1fr 1fr; } }
+
+    .gen-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 16px;
+      transition: border-color .15s, box-shadow .15s;
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .gen-card:hover { border-color: var(--text-3); box-shadow: var(--shadow-md); }
+
+    /* ── Inline title edit ───────────────────────────────── */
+    .title-edit-input {
+      background: var(--surface-2); border: 1px solid var(--blue);
+      border-radius: 6px; padding: 2px 8px; font-size: 14px;
+      font-weight: 500; color: var(--text); outline: none; width: 100%;
+    }
+    .pencil-btn {
+      background: none; border: none; color: var(--text-3);
+      cursor: pointer; padding: 2px; border-radius: 4px;
+      display: inline-flex; align-items: center; opacity: 0;
+      transition: opacity .15s, color .15s;
+    }
+    .gen-card:hover .pencil-btn { opacity: 1; }
+    .pencil-btn:hover { color: var(--blue); }
+
+    /* ── Skeleton ────────────────────────────────────────── */
+    @keyframes shimmer {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+    .skeleton {
+      background: linear-gradient(90deg, var(--surface-2) 25%, var(--border) 50%, var(--surface-2) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: 12px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spin { animation: spin 1s linear infinite; }
+
+    /* ── Card / section ──────────────────────────────────── */
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 20px;
+      box-shadow: var(--shadow);
+    }
+    .section-title { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 14px; }
+
+    /* ── Back link ───────────────────────────────────────── */
+    .back-link {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 13px; color: var(--text-2); font-weight: 500;
+    }
+    .back-link:hover { color: var(--text); }
+
+    /* ── Utility ─────────────────────────────────────────── */
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+<!-- ── Header ───────────────────────────────────────────────── -->
+<header>
+  <div class="max-w header-inner">
+    <div class="header-left">
+      <a href="/dashboard.html" class="back-link">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+        </svg>
+        Dashboard
+      </a>
+      <span style="color:var(--border);font-size:16px;">|</span>
+      <span class="logo">Minhas Criações</span>
+    </div>
+    <div class="header-right">
+      <button id="darkToggle" class="btn-icon" onclick="toggleDark()" title="Alternar tema">
+        <svg id="iconSun" class="hidden" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="5"/>
+          <path stroke-linecap="round" d="M12 2v2m0 16v2M4.22 4.22l1.42 1.42m12.72 12.72 1.42 1.42M2 12h2m16 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+        </svg>
+        <svg id="iconMoon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+      </button>
+      <button onclick="signOut()" class="btn-ghost">Sair</button>
+    </div>
+  </div>
+</header>
+
+<!-- ── Main ─────────────────────────────────────────────────── -->
+<main>
+  <div class="max-w">
+
+    <!-- Page heading -->
+    <div style="margin-bottom:24px;">
+      <h1 style="font-size:19px;font-weight:700;color:var(--text);">Minhas Criações</h1>
+      <p style="font-size:13px;color:var(--text-2);margin-top:2px;">
+        Todos os materiais gerados a partir dos seus PDFs
+      </p>
+    </div>
+
+    <!-- Skeleton -->
+    <div id="genSkeleton" class="gen-grid">
+      <div class="skeleton" style="height:130px;"></div>
+      <div class="skeleton" style="height:130px;"></div>
+      <div class="skeleton" style="height:130px;"></div>
+      <div class="skeleton" style="height:130px;"></div>
+      <div class="skeleton" style="height:130px;"></div>
+      <div class="skeleton" style="height:130px;"></div>
+    </div>
+
+    <!-- Empty state -->
+    <div id="genEmpty" class="hidden" style="padding:20px 0;">
+      <p style="font-size:13px;color:var(--text-2);margin-bottom:14px;">Nenhum material de estudo gerado. Faça upload de um PDF no dashboard para começar.</p>
+      <a href="/dashboard.html" class="btn btn-ghost" style="font-size:13px;">Ir para o dashboard</a>
+    </div>
+
+    <!-- Grid -->
+    <div id="genGrid" class="gen-grid hidden"></div>
+
+  </div>
+</main>
+
+<script src="/js/config.js"></script>
+<script src="/js/auth.js"></script>
+<script>
+  /* ── Dark mode ──────────────────────────────────────────── */
+  (function () {
+    const saved = localStorage.getItem('cardsai-theme');
+    if (saved === 'dark') applyDark(true);
+  })();
+
+  function applyDark(on) {
+    document.documentElement.setAttribute('data-theme', on ? 'dark' : 'light');
+    document.getElementById('iconSun').classList.toggle('hidden', !on);
+    document.getElementById('iconMoon').classList.toggle('hidden', on);
+  }
+
+  window.toggleDark = function () {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    applyDark(!isDark);
+    localStorage.setItem('cardsai-theme', isDark ? 'light' : 'dark');
+  };
+
+  /* ── State ──────────────────────────────────────────────── */
+  let profile = null;
+  let pollTimer = null;
+
+  /* ── Init ───────────────────────────────────────────────── */
+  async function init() {
+    const session = await requireAuth();
+    if (!session) return;
+
+    profile = await getProfile();
+    if (!profile) return;
+
+    await loadGenerations();
+  }
+
+  /* ── Load generations ───────────────────────────────────── */
+  async function loadGenerations() {
+    const { data: { user } } = await db.auth.getUser();
+    const { data: gens, error } = await db
+      .from('generations')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(200);
+
+    if (error) { console.error('loadGenerations:', error); return; }
+
+    document.getElementById('genSkeleton').style.display = 'none';
+    const grid  = document.getElementById('genGrid');
+    const empty = document.getElementById('genEmpty');
+
+    if (!gens || gens.length === 0) {
+      empty.classList.remove('hidden');
+      grid.classList.add('hidden');
+    } else {
+      empty.classList.add('hidden');
+      grid.classList.remove('hidden');
+      grid.innerHTML = gens.map(g => renderGenCard(g)).join('');
+    }
+
+    const hasActive = (gens || []).some(g => g.status === 'processing' || g.status === 'pending');
+    if (hasActive && !pollTimer) {
+      pollTimer = setInterval(loadGenerations, 4000);
+    } else if (!hasActive && pollTimer) {
+      clearInterval(pollTimer); pollTimer = null;
+    }
+  }
+
+  /* ── Render generation card ─────────────────────────────── */
+  function renderGenCard(g) {
+    const isCompleted  = g.status === 'completed';
+    const isProcessing = g.status === 'processing' || g.status === 'pending';
+    const title = escHtml(g.title || g.pdf_name || 'Material de estudo');
+    const date  = formatDate(g.created_at);
+
+    const spinnerSVG = `<svg class="spin" width="13" height="13" fill="none" viewBox="0 0 24 24" style="color:var(--blue);">
+      <circle opacity=".25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+      <path opacity=".75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+    </svg>`;
+
+    const pencilSVG = `<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+    </svg>`;
+
+    return `
+    <div class="gen-card" id="card-${g.id}">
+      <!-- Title row -->
+      <div style="display:flex;align-items:flex-start;gap:6px;min-width:0;">
+        <div style="flex:1;min-width:0;">
+          <div id="titleDisplay-${g.id}" style="display:flex;align-items:center;gap:4px;">
+            <span style="font-size:14px;font-weight:600;color:var(--text);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">
+              ${title}
+            </span>
+            <button class="pencil-btn" onclick="startEditTitle('${g.id}','${title.replace(/'/g,"&#39;")}')" title="Editar nome">
+              ${pencilSVG}
+            </button>
+          </div>
+          <div id="titleEdit-${g.id}" style="display:none;margin-top:4px;">
+            <input type="text" class="title-edit-input" id="titleInput-${g.id}"
+              value="${title}"
+              onblur="saveTitle('${g.id}')"
+              onkeydown="if(event.key==='Enter')saveTitle('${g.id}');if(event.key==='Escape')cancelEditTitle('${g.id}');"
+            />
+          </div>
+        </div>
+        <span class="badge badge-${g.status}" style="flex-shrink:0;margin-top:2px;">
+          ${statusLabel(g.status)}
+        </span>
+      </div>
+
+      <!-- Meta row -->
+      <div style="font-size:12px;color:var(--text-3);display:flex;gap:10px;flex-wrap:wrap;">
+        <span>${date}</span>
+        ${isProcessing ? `<span style="display:flex;align-items:center;gap:4px;">${spinnerSVG} Processando...</span>` : ''}
+      </div>
+
+      ${g.status === 'failed' ? `<p style="font-size:12px;color:var(--red);">${escHtml(g.error_message || 'Erro ao processar')}</p>` : ''}
+
+      <!-- Actions -->
+      <div style="display:flex;align-items:center;gap:8px;margin-top:auto;">
+        ${isCompleted
+          ? `<a href="/results.html?id=${g.id}" class="btn btn-primary" style="font-size:12px;padding:7px 14px;flex:1;text-align:center;">Ver resultados</a>`
+          : isProcessing
+          ? `<a href="/results.html?id=${g.id}" class="btn btn-ghost" style="font-size:12px;padding:7px 14px;flex:1;text-align:center;">Acompanhar</a>`
+          : `<span style="flex:1;"></span>`
+        }
+        <button class="btn-danger" onclick="deleteGeneration('${g.id}')">Excluir</button>
+      </div>
+    </div>`;
+  }
+
+  /* ── Inline title editing ───────────────────────────────── */
+  window.startEditTitle = function (id, currentTitle) {
+    document.getElementById('titleDisplay-' + id).style.display = 'none';
+    const editRow = document.getElementById('titleEdit-' + id);
+    editRow.style.display = 'block';
+    const input = document.getElementById('titleInput-' + id);
+    input.value = currentTitle;
+    input.focus();
+    input.select();
+  };
+
+  window.cancelEditTitle = function (id) {
+    document.getElementById('titleDisplay-' + id).style.display = 'flex';
+    document.getElementById('titleEdit-' + id).style.display    = 'none';
+  };
+
+  window.saveTitle = async function (id) {
+    const input = document.getElementById('titleInput-' + id);
+    if (!input) return;
+    const newTitle = input.value.trim() || 'Material de estudo';
+
+    const displayEl = document.getElementById('titleDisplay-' + id);
+    const span = displayEl?.querySelector('span');
+    if (span) span.textContent = newTitle;
+    cancelEditTitle(id);
+
+    const { error } = await db
+      .from('generations')
+      .update({ title: newTitle })
+      .eq('id', id);
+
+    if (error) {
+      console.error('Erro ao salvar titulo:', error);
+      showToast('Erro ao salvar o nome.', 'error');
+    }
+  };
+
+  /* ── Delete generation ──────────────────────────────────── */
+  window.deleteGeneration = async function (id) {
+    if (!confirm('Excluir esta geração e todos os seus dados? Esta ação não pode ser desfeita.')) return;
+
+    await db.from('questions').delete().eq('generation_id', id);
+    await db.from('flashcards').delete().eq('generation_id', id);
+    const { error } = await db.from('generations').delete().eq('id', id);
+
+    if (error) {
+      showToast('Erro ao excluir. Tente novamente.', 'error');
+      return;
+    }
+
+    const card = document.getElementById('card-' + id);
+    if (card) card.remove();
+
+    const grid = document.getElementById('genGrid');
+    if (grid && grid.children.length === 0) {
+      grid.classList.add('hidden');
+      document.getElementById('genEmpty').classList.remove('hidden');
+    }
+  };
+
+  /* ── Helpers ────────────────────────────────────────────── */
+  function statusLabel(s) {
+    return { completed: 'Concluído', processing: 'Processando', pending: 'Aguardando', failed: 'Erro' }[s] || s;
+  }
+
+  function escHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  init();
+</script>
+</body>
+</html>

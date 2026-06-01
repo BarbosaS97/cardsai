@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% block title %}Admin — QuestõesCardsAI{% endblock %}
+
+{% block content %}
+
+<div class="flex items-center justify-between mb-6">
+  <div>
+    <h1 class="text-xl font-semibold text-slate-900">Painel Admin</h1>
+    <p class="text-sm text-slate-500 mt-0.5">{{ users|length }} usuário{{ users|length|pluralize:"s" }} cadastrado{{ users|length|pluralize:"s" }}</p>
+  </div>
+</div>
+
+{% if messages %}
+{% for message in messages %}
+<div class="alert {% if message.tags == 'success' %}alert-success{% else %}alert-error{% endif %} mb-4">
+  {{ message }}
+</div>
+{% endfor %}
+{% endif %}
+
+{% if users %}
+<div class="card" style="padding: 0; overflow: hidden;">
+  <table class="w-full">
+    <thead>
+      <tr style="background: #F8FAFC; border-bottom: 1px solid #E2E8F0;">
+        <th class="text-left px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Email</th>
+        <th class="text-left px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden md:table-cell">Gerações usadas</th>
+        <th class="text-left px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Créditos</th>
+        <th class="text-left px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Ações</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for u in users %}
+      <tr style="border-bottom: 1px solid #F1F5F9;" class="hover:bg-slate-50 transition-colors">
+
+        <td class="px-6 py-4">
+          <div>
+            <p class="text-sm font-medium text-slate-900">{{ u.email }}</p>
+            <p class="text-xs text-slate-400">
+              Cadastro: {{ u.date_joined|date:"d/m/Y" }}
+              {% if u.is_staff %} · <span class="text-blue-600">Staff</span>{% endif %}
+            </p>
+          </div>
+        </td>
+
+        <td class="px-6 py-4 text-sm text-slate-600 hidden md:table-cell">
+          {{ u.total_generations }}
+        </td>
+
+        <td class="px-6 py-4">
+          <span class="status-badge {% if u.credits == 0 %}status-failed{% elif u.credits <= 2 %}status-processing{% else %}status-completed{% endif %}">
+            {{ u.credits }}
+          </span>
+        </td>
+
+        <td class="px-6 py-4">
+          <div class="flex items-center gap-2 flex-wrap">
+            <a href="{% url 'documents' %}?user={{ u.id }}"
+               class="text-xs text-blue-600 hover:underline font-medium">
+              Ver gerações
+            </a>
+            <form method="post" action="{% url 'admin_panel' %}" class="inline">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="reset_credits" />
+              <input type="hidden" name="user_id" value="{{ u.id }}" />
+              <button type="submit"
+                      class="text-xs text-amber-600 hover:underline font-medium"
+                      onclick="return confirm('Resetar créditos de {{ u.email }}?')">
+                Resetar créditos
+              </button>
+            </form>
+            {% if not u.is_staff %}
+            <form method="post" action="{% url 'admin_panel' %}" class="inline">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="delete_user" />
+              <input type="hidden" name="user_id" value="{{ u.id }}" />
+              <button type="submit"
+                      class="text-xs text-red-500 hover:underline font-medium"
+                      onclick="return confirm('Deletar conta de {{ u.email }}? Esta ação é irreversível.')">
+                Deletar
+              </button>
+            </form>
+            {% endif %}
+          </div>
+        </td>
+
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% else %}
+<div class="card text-center py-16">
+  <p class="text-slate-400">Nenhum usuário cadastrado.</p>
+</div>
+{% endif %}
+
+{% endblock %}

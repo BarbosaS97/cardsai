@@ -1,0 +1,232 @@
+{% extends 'base.html' %}
+{% block title %}{{ generation.document.title }} — QuestõesCardsAI{% endblock %}
+
+{% block extra_head %}
+<style>
+  .card-flip { perspective: 1000px; cursor: pointer; }
+  .card-flip-inner { transition: transform .45s; transform-style: preserve-3d; position: relative; }
+  .card-flip.flipped .card-flip-inner { transform: rotateY(180deg); }
+  .card-front, .card-back { backface-visibility: hidden; -webkit-backface-visibility: hidden; position: absolute; inset: 0; border-radius: 12px; padding: 20px; }
+  .card-back { transform: rotateY(180deg); }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ===== PROCESSING ===== -->
+{% if generation.status == 'pending' or generation.status == 'processing' %}
+<div class="max-w-md mx-auto text-center py-20">
+  <div class="w-16 h-16 mx-auto mb-5 rounded-full bg-blue-50 flex items-center justify-center">
+    <svg class="w-8 h-8 text-blue-600 spin" fill="none" viewBox="0 0 24 24">
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+    </svg>
+  </div>
+  <h2 class="text-lg font-semibold text-slate-900 mb-2">A IA está trabalhando…</h2>
+  <p class="text-sm text-slate-500 mb-1" id="statusText">
+    {% if generation.status == 'pending' %}Aguardando na fila de processamento…{% else %}Gerando questões e flashcards…{% endif %}
+  </p>
+  <p class="text-xs text-slate-400">Isso leva em média 1–3 minutos dependendo do tamanho do PDF.</p>
+
+  <div class="grid grid-cols-2 gap-4 mt-8 max-w-xs mx-auto">
+    <div class="card text-center py-4">
+      <p class="text-2xl font-bold text-slate-900">50</p>
+      <p class="text-xs text-slate-400">Questões</p>
+    </div>
+    <div class="card text-center py-4">
+      <p class="text-2xl font-bold text-slate-900">100</p>
+      <p class="text-xs text-slate-400">Flashcards</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== FAILED ===== -->
+{% elif generation.status == 'failed' %}
+<div class="max-w-md mx-auto text-center py-20">
+  <div class="w-16 h-16 mx-auto mb-5 rounded-full bg-red-50 flex items-center justify-center">
+    <svg class="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+    </svg>
+  </div>
+  <h2 class="text-lg font-semibold text-slate-900 mb-2">Geração falhou</h2>
+  {% if generation.error_message %}
+  <div class="alert alert-error text-left mb-4">{{ generation.error_message }}</div>
+  {% endif %}
+  <p class="text-sm text-slate-400 mb-6">Nenhum crédito foi debitado.</p>
+  <a href="{% url 'upload' %}" class="btn btn-primary btn-sm">Tentar novamente</a>
+</div>
+
+<!-- ===== COMPLETED ===== -->
+{% elif generation.status == 'completed' %}
+
+<!-- Header stats -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+  <div class="card text-center py-4">
+    <p class="text-2xl font-bold text-slate-900">{{ generation.questions_count }}</p>
+    <p class="text-xs text-slate-500 mt-1">Questões</p>
+  </div>
+  <div class="card text-center py-4">
+    <p class="text-2xl font-bold text-slate-900">{{ generation.flashcards_count }}</p>
+    <p class="text-xs text-slate-500 mt-1">Flashcards</p>
+  </div>
+  <div class="card text-center py-4">
+    <p class="text-2xl font-bold text-slate-900">{{ generation.document.page_count }}</p>
+    <p class="text-xs text-slate-500 mt-1">Páginas do PDF</p>
+  </div>
+  <div class="card text-center py-4">
+    <p class="text-base font-bold text-slate-900">{{ generation.completed_at|date:"H:i" }}</p>
+    <p class="text-xs text-slate-500 mt-1">Concluído às</p>
+  </div>
+</div>
+
+<!-- Topics -->
+{% if generation.topics %}
+<div class="card mb-4">
+  <p class="text-sm font-semibold text-slate-700 mb-3">Tópicos identificados</p>
+  <div class="flex flex-wrap gap-2">
+    {% for topic in generation.topics %}
+    <span class="text-xs px-3 py-1 rounded-full font-medium bg-blue-50 text-blue-700 border border-blue-100">{{ topic }}</span>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<!-- Summary -->
+{% if generation.summary %}
+<div class="card mb-4">
+  <p class="text-sm font-semibold text-slate-700 mb-2">Resumo do conteúdo</p>
+  <p class="text-sm text-slate-600 leading-relaxed">{{ generation.summary }}</p>
+</div>
+{% endif %}
+
+<!-- Tabs -->
+<div class="card" style="padding: 0; overflow: hidden;">
+  <div style="border-bottom: 1px solid #E2E8F0;" class="flex">
+    <button id="tabQuestions" class="tab-btn active" onclick="switchTab('questions')">
+      Questões ({{ generation.questions_count }})
+    </button>
+    <button id="tabFlashcards" class="tab-btn" onclick="switchTab('flashcards')">
+      Flashcards ({{ generation.flashcards_count }})
+    </button>
+  </div>
+
+  <!-- Questions panel -->
+  <div id="panelQuestions" class="p-6 space-y-4">
+    {% for q in questions %}
+    <div class="card card-hover" style="padding: 20px;">
+      <div class="flex items-start gap-3 mb-4">
+        <span class="status-badge" style="background:#EFF6FF;color:#1D4ED8;border-color:#BFDBFE;flex-shrink:0;">
+          Q{{ q.order|add:1 }}
+        </span>
+        <p class="text-sm font-medium text-slate-900 leading-relaxed">{{ q.question_text }}</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-4" id="opts_{{ q.id }}">
+        <button class="option-btn" onclick="selectOption(this,'{{ q.id }}','a','{{ q.correct_option }}')" data-val="a">
+          <span class="font-bold text-slate-400 flex-shrink-0">A)</span><span>{{ q.option_a }}</span>
+        </button>
+        <button class="option-btn" onclick="selectOption(this,'{{ q.id }}','b','{{ q.correct_option }}')" data-val="b">
+          <span class="font-bold text-slate-400 flex-shrink-0">B)</span><span>{{ q.option_b }}</span>
+        </button>
+        <button class="option-btn" onclick="selectOption(this,'{{ q.id }}','c','{{ q.correct_option }}')" data-val="c">
+          <span class="font-bold text-slate-400 flex-shrink-0">C)</span><span>{{ q.option_c }}</span>
+        </button>
+        <button class="option-btn" onclick="selectOption(this,'{{ q.id }}','d','{{ q.correct_option }}')" data-val="d">
+          <span class="font-bold text-slate-400 flex-shrink-0">D)</span><span>{{ q.option_d }}</span>
+        </button>
+      </div>
+
+      {% if q.explanation %}
+      <div id="exp_{{ q.id }}" class="hidden alert alert-info text-sm">
+        <strong>Explicação:</strong> {{ q.explanation }}
+      </div>
+      {% endif %}
+
+      <div class="flex gap-2 mt-2">
+        <span class="status-badge
+          {% if q.difficulty == 'easy' %}status-completed
+          {% elif q.difficulty == 'hard' %}status-failed
+          {% else %}status-processing{% endif %}">
+          {{ q.get_difficulty_display }}
+        </span>
+        {% if q.topic %}
+        <span class="status-badge status-pending">{{ q.topic }}</span>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Flashcards panel -->
+  <div id="panelFlashcards" class="hidden p-6">
+    <p class="text-sm text-slate-400 mb-4">Clique em um card para ver a resposta</p>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {% for card in flashcards %}
+      <div class="card-flip" style="height: 180px;" onclick="this.classList.toggle('flipped')" title="Clique para virar">
+        <div class="card-flip-inner" style="width:100%;height:100%;">
+          <div class="card-front" style="border: 1px solid #E2E8F0; background: #fff; display:flex; flex-direction:column; justify-content:space-between;">
+            <div class="flex items-start justify-between gap-2">
+              <p class="text-sm font-medium text-slate-900 leading-relaxed">{{ card.front }}</p>
+              <span class="text-xs text-slate-300 flex-shrink-0">{{ card.order|add:1 }}</span>
+            </div>
+            {% if card.topic %}
+            <span class="status-badge status-processing self-start mt-2">{{ card.topic }}</span>
+            {% endif %}
+            <p class="text-xs text-slate-300 text-right mt-1">Clique para ver →</p>
+          </div>
+          <div class="card-back" style="background: #2563EB; display:flex; align-items:center; justify-content:center;">
+            <p class="text-sm text-white leading-relaxed text-center">{{ card.back }}</p>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+{% endif %}
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+{% if generation.status == 'pending' or generation.status == 'processing' %}
+(function poll() {
+  setTimeout(async function() {
+    try {
+      const r = await fetch('/api/documents/generations/{{ generation.id }}/status/');
+      const d = await r.json();
+      if (d.status === 'completed' || d.status === 'failed') {
+        window.location.reload();
+      } else {
+        const el = document.getElementById('statusText');
+        if (el) el.textContent = d.status === 'processing' ? 'Gerando questões e flashcards com IA…' : 'Aguardando na fila…';
+        poll();
+      }
+    } catch(e) { poll(); }
+  }, 4000);
+})();
+{% endif %}
+
+function switchTab(tab) {
+  const isQ = tab === 'questions';
+  document.getElementById('panelQuestions').classList.toggle('hidden', !isQ);
+  document.getElementById('panelFlashcards').classList.toggle('hidden', isQ);
+  document.getElementById('tabQuestions').className = 'tab-btn' + (isQ ? ' active' : '');
+  document.getElementById('tabFlashcards').className = 'tab-btn' + (!isQ ? ' active' : '');
+}
+
+function selectOption(el, questionId, selected, correct) {
+  const container = document.getElementById('opts_' + questionId);
+  container.querySelectorAll('.option-btn').forEach(btn => {
+    btn.classList.remove('correct', 'wrong', 'locked');
+    const val = btn.dataset.val;
+    if (val === correct) btn.classList.add('correct');
+    else if (val === selected && selected !== correct) btn.classList.add('wrong');
+    btn.classList.add('locked');
+  });
+  const exp = document.getElementById('exp_' + questionId);
+  if (exp) exp.classList.remove('hidden');
+}
+</script>
+{% endblock %}

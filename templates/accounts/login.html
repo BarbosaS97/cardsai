@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block title %}Entrar — QuestõesCardsAI{% endblock %}
+
+{% block auth_content %}
+<div class="min-h-screen bg-white flex flex-col items-center justify-center px-4 py-12">
+
+  <!-- Logo -->
+  <a href="/" class="app-logo mb-8" style="font-size: 24px;">QuestõesCardsAI</a>
+
+  <!-- Card -->
+  <div class="card w-full max-w-sm">
+    <h1 class="text-xl font-semibold text-slate-900 mb-1">Entrar na conta</h1>
+    <p class="text-sm text-slate-500 mb-6">Bem-vindo de volta</p>
+
+    {% if error %}
+    <div class="alert alert-error mb-4">{{ error }}</div>
+    {% endif %}
+
+    <form method="post" class="space-y-4">
+      {% csrf_token %}
+
+      <div>
+        <label class="block text-sm font-medium text-slate-700 mb-1.5">Email</label>
+        <input type="email" name="email" value="{{ email|default:'' }}" required
+               placeholder="seu@email.com"
+               class="input-field" />
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-slate-700 mb-1.5">Senha</label>
+        <input type="password" name="password" required
+               placeholder="••••••••"
+               class="input-field" />
+      </div>
+
+      <button type="submit" class="btn btn-primary w-full mt-2" style="justify-content: center;">
+        Entrar
+      </button>
+    </form>
+
+    <p class="text-sm text-slate-500 text-center mt-5">
+      Não tem conta?
+      <a href="{% url 'register' %}" class="text-blue-600 font-medium hover:underline">Criar conta grátis</a>
+    </p>
+  </div>
+
+</div>
+{% endblock %}

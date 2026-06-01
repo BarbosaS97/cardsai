@@ -1,0 +1,273 @@
+/* QuestõesCardsAI — Design System */
+
+:root {
+  --primary: #2563EB;
+  --primary-dark: #1D4ED8;
+  --text-primary: #1E293B;
+  --text-secondary: #475569;
+  --border: #E2E8F0;
+  --background: #FFFFFF;
+  --background-alt: #F8FAFC;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: system-ui, -apple-system, 'Inter', sans-serif;
+  color: var(--text-primary);
+  background: var(--background);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---- Buttons ---- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 8px;
+  padding: 12px 24px;
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  text-decoration: none;
+  border: none;
+  transition: opacity 0.15s, background 0.15s, border-color 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-primary:hover { opacity: 0.9; }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-secondary { background: transparent; color: var(--primary); border: 1px solid var(--primary); }
+.btn-secondary:hover { background: #EFF6FF; }
+.btn-sm { padding: 8px 16px; font-size: 13px; }
+.btn-lg { padding: 16px 32px; font-size: 16px; }
+
+/* ---- Card ---- */
+.card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  background: #fff;
+}
+.card-hover:hover { border-color: var(--primary); }
+
+/* ---- Form inputs ---- */
+.input-field {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--text-primary);
+  background: #fff;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  outline: none;
+}
+.input-field:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+.input-field::placeholder { color: #94A3B8; }
+
+/* ---- Status badges ---- */
+.status-badge { font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 99px; }
+.status-completed  { background: #F0FDF4; color: #15803D; border: 1px solid #BBF7D0; }
+.status-processing { background: #EFF6FF; color: #1D4ED8; border: 1px solid #BFDBFE; }
+.status-pending    { background: #F8FAFC; color: #64748B; border: 1px solid #E2E8F0; }
+.status-failed     { background: #FEF2F2; color: #DC2626; border: 1px solid #FECACA; }
+
+/* ---- Card flip (flashcards) ---- */
+.card-flip { perspective: 1000px; }
+.card-flip-inner { transition: transform .5s; transform-style: preserve-3d; }
+.card-flip.flipped .card-flip-inner { transform: rotateY(180deg); }
+.card-front, .card-back { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.card-back { transform: rotateY(180deg); }
+
+/* ---- Skeleton ---- */
+.skeleton {
+  background: linear-gradient(90deg, #F1F5F9 25%, #E2E8F0 50%, #F1F5F9 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 8px;
+}
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ---- Spinner ---- */
+@keyframes spin { to { transform: rotate(360deg); } }
+.spin { animation: spin 1s linear infinite; }
+
+/* ---- Landing page header ---- */
+.landing-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border);
+}
+.landing-logo { font-size: 20px; font-weight: 700; color: var(--text-primary); text-decoration: none; }
+.landing-nav-link { font-size: 14px; color: var(--text-secondary); text-decoration: none; transition: color 0.15s; }
+.landing-nav-link:hover { color: var(--text-primary); }
+
+/* ---- Hero ---- */
+.hero-title {
+  font-size: clamp(32px, 5vw, 56px);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+.hero-subtitle {
+  font-size: 18px;
+  color: var(--text-secondary);
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+/* ---- Pricing ---- */
+.pricing-card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.pricing-card.popular { border-color: var(--primary); }
+.pricing-card .price { font-size: 28px; font-weight: 700; color: var(--text-primary); }
+.pricing-card .per-gen { font-size: 12px; color: var(--text-secondary); }
+.pricing-free {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 32px;
+  background: var(--background-alt);
+  text-align: center;
+}
+
+/* ---- Step card ---- */
+.step-number {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  font-weight: 700;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ---- App header (authenticated) ---- */
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: #fff;
+  border-bottom: 1px solid var(--border);
+  height: 56px;
+  display: flex;
+  align-items: center;
+}
+.app-logo { font-size: 18px; font-weight: 700; color: var(--text-primary); text-decoration: none; }
+.app-nav-link {
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+}
+.app-nav-link:hover { background: var(--background-alt); color: var(--text-primary); }
+.app-nav-link.active { background: var(--background-alt); color: var(--text-primary); }
+
+/* ---- Credits badge ---- */
+.credits-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 99px;
+  border: 1px solid;
+}
+.credits-ok   { background: #EFF6FF; color: #1D4ED8; border-color: #BFDBFE; }
+.credits-low  { background: #FFFBEB; color: #92400E; border-color: #FDE68A; }
+.credits-zero { background: #FEF2F2; color: #DC2626; border-color: #FECACA; }
+
+/* ---- Upload drop zone ---- */
+.drop-zone {
+  border: 2px dashed var(--border);
+  border-radius: 12px;
+  padding: 48px 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.drop-zone:hover, .drop-zone.drag-over {
+  border-color: var(--primary);
+  background: #EFF6FF;
+}
+
+/* ---- Tab bar ---- */
+.tab-btn {
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: color 0.15s, border-color 0.15s;
+}
+.tab-btn:hover { color: var(--text-primary); }
+.tab-btn.active { color: var(--primary); border-color: var(--primary); font-weight: 600; }
+
+/* ---- Option buttons (quiz) ---- */
+.option-btn {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.1s, border-color 0.1s;
+  text-align: left;
+  width: 100%;
+  background: #fff;
+}
+.option-btn:hover:not(.locked) { background: var(--background-alt); }
+.option-btn.correct { background: #F0FDF4; border-color: #4ADE80; }
+.option-btn.wrong   { background: #FEF2F2; border-color: #F87171; }
+.option-btn.locked  { cursor: default; }
+
+/* ---- Alert messages ---- */
+.alert {
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  margin-bottom: 16px;
+  border: 1px solid;
+}
+.alert-success { background: #F0FDF4; color: #15803D; border-color: #BBF7D0; }
+.alert-error   { background: #FEF2F2; color: #DC2626; border-color: #FECACA; }
+.alert-info    { background: #EFF6FF; color: #1D4ED8; border-color: #BFDBFE; }
+
+/* ---- Divider ---- */
+.divider { height: 1px; background: var(--border); }
+
+/* ---- Footer ---- */
+.landing-footer { border-top: 1px solid var(--border); background: #fff; }

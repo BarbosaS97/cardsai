@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — QuestõesCardsAI</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <style>
+    /* ── Variables ──────────────────────────────────────────── */
+    :root {
+      --bg:        #F8FAFC;
+      --surface:   #FFFFFF;
+      --surface-2: #F1F5F9;
+      --border:    #E2E8F0;
+      --text:      #1E293B;
+      --text-2:    #475569;
+      --text-3:    #94A3B8;
+      --blue:      #2563EB;
+      --blue-bg:   #EFF6FF;
+      --blue-bd:   #BFDBFE;
+      --green-bg:  #F0FDF4;
+      --green:     #15803D;
+      --green-bd:  #BBF7D0;
+      --red-bg:    #FEF2F2;
+      --red:       #DC2626;
+      --red-bd:    #FECACA;
+      --amber-bg:  #FFFBEB;
+      --amber:     #92400E;
+      --amber-bd:  #FDE68A;
+      --shadow:    0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+      --shadow-md: 0 4px 12px rgba(0,0,0,.08);
+    }
+    [data-theme="dark"] {
+      --bg:        #0F172A;
+      --surface:   #1E293B;
+      --surface-2: #0F172A;
+      --border:    #334155;
+      --text:      #F1F5F9;
+      --text-2:    #94A3B8;
+      --text-3:    #64748B;
+      --blue:      #3B82F6;
+      --blue-bg:   #1E3A5F;
+      --blue-bd:   #1D4ED8;
+      --green-bg:  #052E16;
+      --green:     #4ADE80;
+      --green-bd:  #166534;
+      --red-bg:    #450A0A;
+      --red:       #F87171;
+      --red-bd:    #7F1D1D;
+      --amber-bg:  #451A03;
+      --amber:     #FCD34D;
+      --amber-bd:  #78350F;
+      --shadow:    0 1px 3px rgba(0,0,0,.3);
+      --shadow-md: 0 4px 12px rgba(0,0,0,.4);
+    }
+
+    /* ── Reset ──────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, 'Inter', sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+      color: var(--text);
+      background: var(--bg);
+      -webkit-font-smoothing: antialiased;
+      transition: background .2s, color .2s;
+    }
+    a { color: inherit; text-decoration: none; }
+    button { font-family: inherit; cursor: pointer; }
+    input  { font-family: inherit; }
+
+    /* ── Layout ─────────────────────────────────────────────── */
+    .max-w { max-width: 680px; margin: 0 auto; padding: 0 24px; }
+    main { padding: 40px 0 80px; }
+
+    /* ── Header ─────────────────────────────────────────────── */
+    header {
+      position: sticky; top: 0; z-index: 40;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      height: 54px;
+    }
+    .header-inner {
+      display: flex; align-items: center;
+      justify-content: space-between;
+      height: 100%;
+    }
+    .logo { font-size: 16px; font-weight: 700; letter-spacing: -.3px; color: var(--text); }
+    .header-right { display: flex; align-items: center; gap: 8px; }
+
+    /* ── Credits pill ───────────────────────────────────────── */
+    .credits-pill {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 12px; font-weight: 600;
+      padding: 4px 11px; border-radius: 99px; border: 1px solid;
+      cursor: pointer; text-decoration: none;
+      transition: opacity .15s;
+    }
+    .credits-pill:hover { opacity: .8; }
+    .credits-ok   { background: var(--blue-bg);  color: var(--blue);  border-color: var(--blue-bd); }
+    .credits-low  { background: var(--amber-bg); color: var(--amber); border-color: var(--amber-bd); }
+    .credits-zero { background: var(--red-bg);   color: var(--red);   border-color: var(--red-bd); }
+
+    /* ── Icon buttons ───────────────────────────────────────── */
+    .btn-icon {
+      background: transparent; border: 1px solid var(--border);
+      border-radius: 8px; padding: 6px;
+      color: var(--text-2);
+      display: inline-flex; align-items: center; justify-content: center;
+      transition: background .15s, color .15s, border-color .15s;
+    }
+    .btn-icon:hover { border-color: var(--text-3); color: var(--text); background: var(--surface-2); }
+
+    /* ── User menu ──────────────────────────────────────────── */
+    .user-menu { position: relative; }
+    .user-dropdown {
+      position: absolute; top: calc(100% + 8px); right: 0;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; box-shadow: var(--shadow-md);
+      overflow: hidden; min-width: 120px; z-index: 50;
+    }
+    .user-dropdown button {
+      display: block; width: 100%;
+      padding: 9px 14px; text-align: left;
+      font-size: 13px; font-weight: 500; color: var(--text-2);
+      background: none; border: none;
+      transition: background .12s, color .12s;
+    }
+    .user-dropdown button:hover { background: var(--surface-2); color: var(--text); }
+
+    /* ── Buttons ────────────────────────────────────────────── */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: 6px; border-radius: 8px; font-weight: 600;
+      font-size: 13px; cursor: pointer; border: none;
+      transition: opacity .15s, background .15s;
+      white-space: nowrap; text-decoration: none;
+    }
+    .btn-primary { background: var(--blue); color: #fff; padding: 9px 22px; }
+    .btn-primary:hover { opacity: .88; }
+    .btn-primary:disabled { opacity: .4; cursor: not-allowed; }
+    .btn-ghost {
+      background: transparent; color: var(--text-2);
+      border: 1px solid var(--border); padding: 7px 14px; font-weight: 500;
+    }
+    .btn-ghost:hover { border-color: var(--text-3); color: var(--text); background: var(--surface-2); }
+
+    /* ── Upload card ────────────────────────────────────────── */
+    .upload-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: var(--shadow);
+      margin-bottom: 32px;
+    }
+
+    /* ── Drop zone ──────────────────────────────────────────── */
+    .drop-zone {
+      border: 2px dashed var(--border);
+      border-radius: 12px;
+      padding: 40px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color .15s, background .15s;
+    }
+    .drop-zone:hover, .drop-zone.drag-over {
+      border-color: var(--blue); background: var(--blue-bg);
+    }
+    .drop-zone.has-file {
+      border-color: var(--green); border-style: solid; background: var(--green-bg);
+    }
+
+    /* ── Progress ───────────────────────────────────────────── */
+    .progress-track { height: 3px; background: var(--border); border-radius: 99px; overflow: hidden; margin-bottom: 10px; }
+    .progress-fill  { height: 100%; background: var(--blue); border-radius: 99px; transition: width .4s ease; }
+
+    /* ── Alert ──────────────────────────────────────────────── */
+    .alert-error {
+      background: var(--red-bg); color: var(--red);
+      border: 1px solid var(--red-bd); border-radius: 8px;
+      padding: 10px 14px; font-size: 13px; margin-top: 12px;
+    }
+
+    /* ── Status badges ──────────────────────────────────────── */
+    .badge {
+      display: inline-block; font-size: 11px; font-weight: 600;
+      padding: 2px 9px; border-radius: 99px; border: 1px solid;
+      white-space: nowrap;
+    }
+    .badge-completed  { background: var(--green-bg); color: var(--green); border-color: var(--green-bd); }
+    .badge-processing { background: var(--blue-bg);  color: var(--blue);  border-color: var(--blue-bd); }
+    .badge-pending    { background: var(--surface-2); color: var(--text-2); border-color: var(--border); }
+    .badge-failed     { background: var(--red-bg);   color: var(--red);   border-color: var(--red-bd); }
+
+    /* ── Section header ─────────────────────────────────────── */
+    .section-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .section-label { font-size: 13px; font-weight: 600; color: var(--text-2); text-transform: uppercase; letter-spacing: .05em; }
+    .link-muted { font-size: 13px; color: var(--text-3); font-weight: 500; transition: color .15s; }
+    .link-muted:hover { color: var(--text-2); }
+
+    /* ── Generation card (clickable) ────────────────────────── */
+    .gen-card-link { display: block; text-decoration: none; border-radius: 12px; }
+    .gen-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 16px 18px;
+      display: flex; align-items: center; gap: 12px;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .gen-card-link:hover .gen-card { border-color: var(--text-3); box-shadow: var(--shadow-md); }
+    .gen-card-body { flex: 1; min-width: 0; }
+    .gen-card-title {
+      font-size: 14px; font-weight: 600; color: var(--text);
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      margin-bottom: 3px;
+    }
+    .gen-card-date { font-size: 12px; color: var(--text-3); }
+    .gen-card-processing {
+      display: flex; align-items: center; gap: 5px;
+      font-size: 12px; color: var(--text-2); margin-top: 4px;
+    }
+
+    /* ── Skeleton ───────────────────────────────────────────── */
+    @keyframes shimmer {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+    .skeleton {
+      background: linear-gradient(90deg, var(--surface-2) 25%, var(--border) 50%, var(--surface-2) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: 12px;
+    }
+
+    /* ── Spinner ────────────────────────────────────────────── */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spin { animation: spin 1s linear infinite; }
+
+    /* ── Utility ────────────────────────────────────────────── */
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+<!-- ── Header ───────────────────────────────────────────────── -->
+<header>
+  <div class="max-w header-inner">
+    <a href="/index.html" class="logo">QuestõesCardsAI</a>
+    <div class="header-right">
+
+      <!-- Credits pill — clicável para comprar -->
+      <a id="creditsPill" href="/pricing.html" class="credits-pill credits-ok">
+        <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="10"/>
+          <path stroke-linecap="round" d="M12 6v12M8 10h5.5a2.5 2.5 0 010 5H8"/>
+        </svg>
+        <span id="creditsText">—</span>
+      </a>
+
+      <!-- Dark mode toggle -->
+      <button id="darkToggle" class="btn-icon" onclick="toggleDark()" title="Alternar tema">
+        <svg id="iconSun" class="hidden" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="5"/>
+          <path stroke-linecap="round" d="M12 2v2m0 16v2M4.22 4.22l1.42 1.42m12.72 12.72 1.42 1.42M2 12h2m16 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+        </svg>
+        <svg id="iconMoon" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+      </button>
+
+      <!-- User menu -->
+      <div class="user-menu">
+        <button class="btn-icon" onclick="toggleUserMenu()" title="Conta" id="userMenuBtn">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+        </button>
+        <div id="userDropdown" class="user-dropdown hidden">
+          <button onclick="signOut()">Sair</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</header>
+
+<!-- ── Main ─────────────────────────────────────────────────── -->
+<main>
+  <div class="max-w">
+
+    <!-- ── UPLOAD ────────────────────────────────────────────── -->
+    <div class="upload-card">
+
+      <!-- Drop zone -->
+      <div id="dropZone" class="drop-zone" onclick="document.getElementById('fileInput').click()">
+        <input type="file" id="fileInput" accept=".pdf" style="display:none;" />
+
+        <!-- Estado padrão -->
+        <div id="dropDefault">
+          <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"
+            style="color:var(--text-3);margin:0 auto 12px;display:block;">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+          </svg>
+          <p style="font-size:14px;font-weight:500;color:var(--text);margin-bottom:4px;">Arraste seu PDF aqui</p>
+          <p style="font-size:12px;color:var(--text-3);">ou <span style="color:var(--blue);cursor:pointer;">clique para selecionar</span></p>
+        </div>
+
+        <!-- Arquivo selecionado -->
+        <div id="dropFileInfo" style="display:none;">
+          <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
+            style="color:var(--green);margin:0 auto 10px;display:block;">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          <p id="dropFileName" style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:3px;"></p>
+          <p id="dropFileSize" style="font-size:12px;color:var(--text-2);margin-bottom:10px;"></p>
+          <button onclick="clearFile(event)"
+            style="font-size:12px;color:var(--red);background:none;border:none;cursor:pointer;font-weight:500;">
+            Remover
+          </button>
+        </div>
+      </div>
+
+      <!-- Erro -->
+      <div id="uploadError" class="alert-error hidden"></div>
+
+      <!-- Progress (oculto até iniciar) -->
+      <div id="uploadProgress" style="display:none;margin-top:16px;">
+        <div class="progress-track">
+          <div id="progressBar" class="progress-fill" style="width:0%"></div>
+        </div>
+        <p id="statusText" style="font-size:12px;color:var(--text-2);text-align:center;"></p>
+        <p id="pageProgress" style="font-size:12px;color:var(--text-3);text-align:center;margin-top:2px;display:none;">
+          Lendo página <span id="curPage">0</span> de <span id="totPage">0</span>
+        </p>
+      </div>
+
+      <!-- Acao -->
+      <div style="display:flex;justify-content:flex-end;margin-top:14px;">
+        <button id="generateBtn" onclick="startGeneration()" disabled class="btn btn-primary">
+          Gerar
+        </button>
+      </div>
+    </div>
+
+    <!-- ── ULTIMA CRIACAO ─────────────────────────────────────── -->
+    <div class="section-header">
+      <span class="section-label">Última criação</span>
+      <a href="/criacoes.html" class="link-muted">Ver todas</a>
+    </div>
+
+    <!-- Skeleton -->
+    <div id="latestSkeleton" class="skeleton" style="height:72px;"></div>
+
+    <!-- Vazio -->
+    <div id="latestEmpty" class="hidden">
+      <p style="font-size:13px;color:var(--text-3);padding:4px 0;">
+        Nenhum material gerado. Faça upload de um PDF acima para começar.
+      </p>
+    </div>
+
+    <!-- Card da ultima geracao -->
+    <div id="latestGenCard" class="hidden"></div>
+
+  </div>
+</main>
+
+<script src="/js/config.js"></script>
+<script src="/js/auth.js"></script>
+<script>
+  pdfjsLib.GlobalWorkerOptions.workerSrc =
+    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+  /* ── Dark mode ──────────────────────────────────────────── */
+  (function () {
+    const saved = localStorage.getItem('cardsai-theme');
+    if (saved === 'dark') applyDark(true);
+  })();
+
+  function applyDark(on) {
+    document.documentElement.setAttribute('data-theme', on ? 'dark' : 'light');
+    document.getElementById('iconSun').classList.toggle('hidden', !on);
+    document.getElementById('iconMoon').classList.toggle('hidden', on);
+  }
+
+  window.toggleDark = function () {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    applyDark(!isDark);
+    localStorage.setItem('cardsai-theme', isDark ? 'light' : 'dark');
+  };
+
+  /* ── User menu ──────────────────────────────────────────── */
+  window.toggleUserMenu = function () {
+    document.getElementById('userDropdown').classList.toggle('hidden');
+  };
+  document.addEventListener('click', function (e) {
+    const btn = document.getElementById('userMenuBtn');
+    const drop = document.getElementById('userDropdown');
+    if (drop && btn && !btn.contains(e.target) && !drop.contains(e.target)) {
+      drop.classList.add('hidden');
+    }
+  });
+
+  /* ── State ──────────────────────────────────────────────── */
+  let profile = null;
+  let selectedFile = null;
+  let pollTimer = null;
+  let isUploading = false;
+
+  /* ── Init ───────────────────────────────────────────────── */
+  async function init() {
+    const session = await requireAuth();
+    if (!session) return;
+
+    profile = await getProfile();
+    if (!profile) return;
+
+    updateCreditsPill(profile.credits);
+
+    setupDrop();
+    document.getElementById('fileInput').addEventListener('change', e => {
+      if (e.target.files[0]) processFile(e.target.files[0]);
+    });
+
+    await loadGenerations();
+  }
+
+  function updateCreditsPill(credits) {
+    const pill = document.getElementById('creditsPill');
+    const text = document.getElementById('creditsText');
+    const label = formatCredits(credits);
+    text.textContent = label + (credits === 1 ? ' crédito' : ' créditos');
+    pill.className = 'credits-pill ' +
+      (credits === 0 ? 'credits-zero' : credits <= 2 ? 'credits-low' : 'credits-ok');
+  }
+
+  /* ── Drop zone ──────────────────────────────────────────── */
+  function setupDrop() {
+    const zone = document.getElementById('dropZone');
+    zone.addEventListener('dragover',  e => { e.preventDefault(); zone.classList.add('drag-over'); });
+    zone.addEventListener('dragleave', ()  => zone.classList.remove('drag-over'));
+    zone.addEventListener('drop', e => {
+      e.preventDefault(); zone.classList.remove('drag-over');
+      const f = e.dataTransfer.files[0];
+      if (f) processFile(f);
+    });
+  }
+
+  function processFile(file) {
+    document.getElementById('uploadError').classList.add('hidden');
+
+    if (!file.name.toLowerCase().endsWith('.pdf')) {
+      showErr('Apenas arquivos PDF são aceitos.'); return;
+    }
+    if (file.size > 50 * 1024 * 1024) {
+      showErr('Arquivo muito grande. Limite: 50 MB.'); return;
+    }
+
+    selectedFile = file;
+    document.getElementById('dropDefault').style.display  = 'none';
+    document.getElementById('dropFileInfo').style.display = 'block';
+    document.getElementById('dropFileName').textContent   = file.name;
+    document.getElementById('dropFileSize').textContent   =
+      (file.size / 1024 / 1024).toFixed(2) + ' MB';
+    document.getElementById('dropZone').classList.add('has-file');
+    document.getElementById('generateBtn').disabled =
+      !profile?.is_admin && !(profile?.credits > 0);
+  }
+
+  window.clearFile = function (e) {
+    e.stopPropagation();
+    selectedFile = null;
+    document.getElementById('dropDefault').style.display  = 'block';
+    document.getElementById('dropFileInfo').style.display = 'none';
+    document.getElementById('dropZone').classList.remove('has-file');
+    document.getElementById('fileInput').value = '';
+    document.getElementById('generateBtn').disabled = true;
+    document.getElementById('uploadError').classList.add('hidden');
+  };
+
+  function showErr(msg) {
+    const el = document.getElementById('uploadError');
+    el.textContent = msg;
+    el.classList.remove('hidden');
+  }
+
+  /* ── Generation ─────────────────────────────────────────── */
+  window.startGeneration = async function () {
+    if (!selectedFile || !profile || isUploading) return;
+    isUploading = true;
+
+    const btn = document.getElementById('generateBtn');
+    btn.disabled = true;
+    btn.textContent = 'Processando...';
+
+    document.getElementById('uploadError').classList.add('hidden');
+    document.getElementById('uploadProgress').style.display = 'block';
+    document.getElementById('dropZone').style.pointerEvents = 'none';
+    document.getElementById('dropZone').style.opacity = '.55';
+
+    try {
+      document.getElementById('statusText').textContent = 'Lendo o PDF...';
+      document.getElementById('pageProgress').style.display = 'block';
+      document.getElementById('progressBar').style.width = '10%';
+
+      const { text, pageCount, titleText } = await extractPDFText(selectedFile, (cur, tot) => {
+        document.getElementById('curPage').textContent = cur;
+        document.getElementById('totPage').textContent = tot;
+        document.getElementById('progressBar').style.width = `${10 + (cur / tot) * 30}%`;
+      });
+
+      if (!text || text.trim().length < 100) {
+        throw new Error('Não foi possível extrair texto. O PDF pode estar protegido ou ser uma imagem.');
+      }
+
+      document.getElementById('statusText').textContent = 'Enviando para a IA...';
+      document.getElementById('progressBar').style.width = '45%';
+      document.getElementById('pageProgress').style.display = 'none';
+
+      const { data: { user } } = await db.auth.getUser();
+      const { data: gen, error: genErr } = await db
+        .from('generations')
+        .insert({
+          user_id:    user.id,
+          title:      titleText || selectedFile.name.replace(/\.pdf$/i, ''),
+          pdf_name:   selectedFile.name,
+          page_count: pageCount,
+          status:     'pending',
+        })
+        .select().single();
+
+      if (genErr) throw new Error('Erro ao criar registro: ' + genErr.message);
+
+      const { data: { session } } = await db.auth.getSession();
+      document.getElementById('progressBar').style.width = '55%';
+      document.getElementById('statusText').textContent = 'IA gerando questões e flashcards...';
+
+      const response = await fetch(EDGE_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type':  'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ generationId: gen.id, pdfText: text, pdfName: selectedFile.name, pageCount }),
+      });
+
+      const result = await response.json();
+      if (!response.ok || !result.success) throw new Error(result.error || 'Erro ao processar com IA');
+
+      document.getElementById('progressBar').style.width = '100%';
+      document.getElementById('statusText').textContent = 'Concluído! Redirecionando...';
+
+      setTimeout(() => { window.location.href = `/results.html?id=${gen.id}`; }, 1000);
+
+    } catch (err) {
+      console.error(err);
+      isUploading = false;
+      btn.disabled = false;
+      btn.textContent = 'Gerar';
+      document.getElementById('uploadProgress').style.display = 'none';
+      document.getElementById('dropZone').style.pointerEvents = '';
+      document.getElementById('dropZone').style.opacity = '';
+      showErr(err.message || 'Erro inesperado. Tente novamente.');
+    }
+  };
+
+  /* ── PDF extraction ─────────────────────────────────────── */
+  async function extractPDFText(file, onProgress) {
+    const buf = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+
+    if (pdf.numPages > 150) {
+      throw new Error(`O PDF tem ${pdf.numPages} páginas. Limite máximo: 150.`);
+    }
+
+    let fullText = '', titleText = '';
+    for (let i = 1; i <= pdf.numPages; i++) {
+      if (onProgress) onProgress(i, pdf.numPages);
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      const pageText = content.items.map(x => x.str).join(' ').replace(/\s+/g, ' ').trim();
+      fullText += pageText + '\n';
+      if (i === 1 && pageText.length > 0) titleText = pageText.substring(0, 80).split('.')[0];
+    }
+
+    return { text: fullText.trim(), pageCount: pdf.numPages, titleText };
+  }
+
+  /* ── Load generations ───────────────────────────────────── */
+  async function loadGenerations() {
+    const { data: { user } } = await db.auth.getUser();
+    const { data: gens, error } = await db
+      .from('generations')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(1);
+
+    if (error) { console.error('loadGenerations:', error); return; }
+
+    document.getElementById('latestSkeleton').style.display = 'none';
+
+    if (!gens || gens.length === 0) {
+      document.getElementById('latestEmpty').classList.remove('hidden');
+      document.getElementById('latestGenCard').classList.add('hidden');
+      return;
+    }
+
+    document.getElementById('latestEmpty').classList.add('hidden');
+    const cardEl = document.getElementById('latestGenCard');
+    cardEl.classList.remove('hidden');
+    cardEl.innerHTML = renderLatestCard(gens[0]);
+
+    const g = gens[0];
+    const hasActive = g.status === 'processing' || g.status === 'pending';
+    if (hasActive && !pollTimer) {
+      pollTimer = setInterval(loadGenerations, 4000);
+    } else if (!hasActive && pollTimer) {
+      clearInterval(pollTimer); pollTimer = null;
+    }
+  }
+
+  function renderLatestCard(g) {
+    const isProcessing = g.status === 'processing' || g.status === 'pending';
+    const isCompleted  = g.status === 'completed';
+    const title = escHtml(g.title || g.pdf_name || 'Material de estudo');
+    const date  = formatDate(g.created_at);
+
+    const href = isCompleted || isProcessing ? `/results.html?id=${g.id}` : '#';
+
+    const spinnerSVG = `<svg class="spin" width="12" height="12" fill="none" viewBox="0 0 24 24" style="color:var(--blue);">
+      <circle opacity=".25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+      <path opacity=".75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+    </svg>`;
+
+    const arrowSVG = `<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color:var(--text-3);flex-shrink:0;">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+    </svg>`;
+
+    return `
+    <a href="${href}" class="gen-card-link" ${href === '#' ? 'onclick="return false"' : ''}>
+      <div class="gen-card">
+        <div class="gen-card-body">
+          <p class="gen-card-title">${title}</p>
+          <p class="gen-card-date">${date}</p>
+          ${isProcessing ? `<div class="gen-card-processing">${spinnerSVG} Processando...</div>` : ''}
+          ${g.status === 'failed' ? `<p style="font-size:12px;color:var(--red);margin-top:3px;">${escHtml(g.error_message || 'Erro ao processar')}</p>` : ''}
+        </div>
+        <span class="badge badge-${g.status}">${statusLabel(g.status)}</span>
+        ${isCompleted || isProcessing ? arrowSVG : ''}
+      </div>
+    </a>`;
+  }
+
+  /* ── Helpers ────────────────────────────────────────────── */
+  function statusLabel(s) {
+    return { completed: 'Concluído', processing: 'Processando', pending: 'Aguardando', failed: 'Erro' }[s] || s;
+  }
+
+  function escHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  init();
+</script>
+</body>
+</html>

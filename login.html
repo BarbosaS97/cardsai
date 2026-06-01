@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Entrar — QuestõesCardsAI</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family: system-ui, -apple-system, sans-serif; color: #1E293B; background: #fff; -webkit-font-smoothing: antialiased; }
+
+    .card { border: 1px solid #E2E8F0; border-radius: 12px; padding: 32px; background: #fff; }
+
+    .input-field { width: 100%; padding: 11px 14px; border: 1px solid #E2E8F0; border-radius: 8px; font-size: 14px; color: #1E293B; background: #fff; outline: none; transition: border-color .15s, box-shadow .15s; font-family: inherit; }
+    .input-field:focus { border-color: #2563EB; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+    .input-field::placeholder { color: #94A3B8; }
+
+    .btn-primary { display: block; width: 100%; background: #2563EB; color: #fff; border: none; border-radius: 8px; padding: 12px 24px; font-weight: 600; font-size: 14px; cursor: pointer; transition: opacity .15s; text-align: center; }
+    .btn-primary:hover { opacity: 0.9; }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .alert-error { background: #FEF2F2; color: #DC2626; border: 1px solid #FECACA; border-radius: 8px; padding: 12px 14px; font-size: 13px; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col" style="background:#F8FAFC;">
+
+  <!-- Header minimal -->
+  <header style="background:#fff;border-bottom:1px solid #E2E8F0;">
+    <div class="max-w-screen-xl mx-auto px-6 h-14 flex items-center justify-between">
+      <a href="/index.html" style="font-size:18px;font-weight:700;color:#1E293B;text-decoration:none;">QuestõesCardsAI</a>
+      <a href="/register.html" style="font-size:14px;color:#2563EB;text-decoration:none;font-weight:500;">Criar conta →</a>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <main class="flex-1 flex items-center justify-center px-4 py-16">
+    <div style="width:100%;max-width:380px;">
+
+      <div class="text-center mb-8">
+        <h1 style="font-size:22px;font-weight:700;color:#1E293B;margin-bottom:6px;">Entrar na conta</h1>
+        <p style="font-size:14px;color:#475569;">Bem-vindo de volta</p>
+      </div>
+
+      <div class="card">
+        <form id="loginForm" class="space-y-4">
+          <div>
+            <label style="display:block;font-size:13px;font-weight:600;color:#1E293B;margin-bottom:6px;">Email</label>
+            <input id="email" type="email" required placeholder="seu@email.com" class="input-field" />
+          </div>
+
+          <div>
+            <label style="display:block;font-size:13px;font-weight:600;color:#1E293B;margin-bottom:6px;">Senha</label>
+            <input id="password" type="password" required placeholder="••••••••" class="input-field" />
+          </div>
+
+          <div id="errorMsg" class="hidden alert-error"></div>
+
+          <button type="submit" id="submitBtn" class="btn-primary" style="margin-top:8px;">Entrar</button>
+        </form>
+
+        <p style="font-size:13px;color:#475569;text-align:center;margin-top:24px;padding-top:24px;border-top:1px solid #E2E8F0;">
+          Não tem conta?
+          <a href="/register.html" style="color:#2563EB;font-weight:600;text-decoration:none;"> Criar conta grátis</a>
+        </p>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer style="border-top:1px solid #E2E8F0;padding:20px 24px;text-align:center;">
+    <p style="font-size:12px;color:#94A3B8;">© 2025 QuestõesCardsAI</p>
+  </footer>
+
+  <script src="/js/config.js"></script>
+  <script>
+    db.auth.getSession().then(({ data: { session } }) => {
+      if (session) window.location.href = '/dashboard.html';
+    });
+
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('submitBtn');
+      const errDiv = document.getElementById('errorMsg');
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+
+      btn.disabled = true;
+      btn.innerHTML = '<svg style="display:inline;width:16px;height:16px;animation:spin 1s linear infinite;margin-right:8px;vertical-align:-3px" viewBox="0 0 24 24" fill="none"><circle opacity=".25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path opacity=".75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>Entrando…';
+      errDiv.classList.add('hidden');
+
+      const { error } = await db.auth.signInWithPassword({ email, password });
+
+      if (error) {
+        errDiv.textContent = error.message === 'Invalid login credentials'
+          ? 'E-mail ou senha incorretos.'
+          : error.message;
+        errDiv.classList.remove('hidden');
+        btn.disabled = false;
+        btn.textContent = 'Entrar';
+        return;
+      }
+
+      window.location.href = '/dashboard.html';
+    });
+  </script>
+  <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
+</body>
+</html>

@@ -1,0 +1,73 @@
+async function requireAuth(adminRequired = false) {
+  const { data: { session } } = await db.auth.getSession();
+  if (!session) {
+    window.location.href = '/login.html';
+    return null;
+  }
+  if (adminRequired) {
+    const profile = await getProfile();
+    if (!profile?.is_admin) {
+      window.location.href = '/dashboard.html';
+      return null;
+    }
+    return { session, profile };
+  }
+  return session;
+}
+
+async function getProfile() {
+  const { data: { user } } = await db.auth.getUser();
+  if (!user) return null;
+  const { data } = await db.from('profiles').select('*').eq('id', user.id).single();
+  return data;
+}
+
+async function signOut() {
+  await db.auth.signOut();
+  window.location.href = '/login.html';
+}
+
+function showToast(message, type = 'error') {
+  const existing = document.getElementById('toast');
+  if (existing) existing.remove();
+
+  const toast = document.createElement('div');
+  toast.id = 'toast';
+  const colors = {
+    error: 'bg-red-500/90 border-red-400',
+    success: 'bg-emerald-500/90 border-emerald-400',
+    info: 'bg-blue-500/90 border-blue-400',
+    warning: 'bg-amber-500/90 border-amber-400',
+  };
+  toast.className = `fixed top-6 right-6 z-50 px-5 py-3 rounded-xl border text-white text-sm font-medium shadow-2xl backdrop-blur-sm transition-all duration-300 max-w-sm ${colors[type] || colors.error}`;
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateY(-10px)';
+    setTimeout(() => toast.remove(), 300);
+  }, 4000);
+}
+
+function setLoading(btn, loading, text = null) {
+  if (!btn) return;
+  btn.disabled = loading;
+  if (loading) {
+    btn.dataset.originalText = btn.innerHTML;
+    btn.innerHTML = `<svg class="animate-spin h-4 w-4 mr-2 inline" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>${text || 'Aguarde...'}`;
+  } else {
+    btn.innerHTML = btn.dataset.originalText || text || btn.innerHTML;
+  }
+}
+
+function formatDate(dateStr) {
+  return new Date(dateStr).toLocaleDateString('pt-BR', {
+    day: '2-digit', month: '2-digit', year: 'numeric',
+    hour: '2-digit', minute: '2-digit',
+  });
+}
+
+function formatCredits(credits) {
+  if (credits >= 999990) return '∞';
+  return credits.toString();
+}

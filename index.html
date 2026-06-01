@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Transforme qualquer PDF em 50 questões e 100 flashcards com IA em menos de 2 minutos." />
+  <title>QuestõesCardsAI — PDF para Questões e Flashcards em 1 minuto</title>
+  <style>
+    /* ── Variables ────────────────────────────────────────────── */
+    :root {
+      --bg:        #F8FAFC;
+      --surface:   #FFFFFF;
+      --border:    #E2E8F0;
+      --text:      #1E293B;
+      --text-2:    #475569;
+      --text-3:    #94A3B8;
+      --blue:      #2563EB;
+      --blue-bg:   #EFF6FF;
+      --blue-bd:   #BFDBFE;
+      --blue-dark: #1D4ED8;
+      --amber-bg:  #FEF9C3;
+      --amber:     #713F12;
+    }
+    [data-theme="dark"] {
+      --bg:        #0F172A;
+      --surface:   #1E293B;
+      --border:    #334155;
+      --text:      #F1F5F9;
+      --text-2:    #94A3B8;
+      --text-3:    #64748B;
+      --blue:      #3B82F6;
+      --blue-bg:   #1E3A5F;
+      --blue-bd:   #1D4ED8;
+      --blue-dark: #2563EB;
+      --amber-bg:  #422006;
+      --amber:     #FCD34D;
+    }
+
+    /* ── Reset ────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, 'Inter', sans-serif;
+      font-size: 15px; line-height: 1.6;
+      color: var(--text); background: var(--bg);
+      -webkit-font-smoothing: antialiased;
+      transition: background .2s, color .2s;
+    }
+    a { color: inherit; text-decoration: none; }
+    button { font-family: inherit; cursor: pointer; }
+
+    /* ── Layout ───────────────────────────────────────────────── */
+    .container { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+
+    /* ── Buttons ──────────────────────────────────────────────── */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: 8px; border-radius: 8px; font-weight: 600;
+      cursor: pointer; text-decoration: none; border: none;
+      transition: opacity .15s, background .15s;
+      white-space: nowrap; font-family: inherit;
+    }
+    .btn-primary { background: var(--blue); color: #fff; }
+    .btn-primary:hover { background: var(--blue-dark); }
+    .btn-secondary { background: transparent; color: var(--blue); border: 1.5px solid var(--blue); }
+    .btn-secondary:hover { background: var(--blue-bg); }
+    .btn-sm  { padding: 8px 18px; font-size: 13px; }
+    .btn-md  { padding: 10px 22px; font-size: 14px; }
+    .btn-lg  { padding: 14px 30px; font-size: 15px; }
+
+    /* ── Header ───────────────────────────────────────────────── */
+    header {
+      position: sticky; top: 0; z-index: 50;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      height: 56px;
+      transition: background .2s;
+    }
+    .header-inner {
+      display: flex; align-items: center;
+      justify-content: space-between; gap: 16px;
+      height: 100%;
+    }
+    .logo { font-size: 18px; font-weight: 700; color: var(--text); letter-spacing: -.3px; }
+    .nav-links { display: flex; align-items: center; gap: 2px; }
+    .nav-link {
+      font-size: 14px; color: var(--text-2); font-weight: 500;
+      padding: 6px 12px; border-radius: 6px;
+      transition: color .15s, background .15s;
+    }
+    .nav-link:hover { color: var(--text); background: var(--bg); }
+    .btn-icon {
+      background: transparent; border: 1px solid var(--border);
+      border-radius: 8px; padding: 7px; color: var(--text-2);
+      display: inline-flex; align-items: center; justify-content: center;
+      transition: background .15s, color .15s, border-color .15s;
+    }
+    .btn-icon:hover { border-color: var(--text-3); color: var(--text); background: var(--bg); }
+
+    /* ── Hero ─────────────────────────────────────────────────── */
+    .hero {
+      padding: 80px 0 72px;
+      text-align: center;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+    }
+    .hero h1 {
+      font-size: clamp(28px, 4.5vw, 52px);
+      font-weight: 700; line-height: 1.1;
+      letter-spacing: -0.025em;
+      color: var(--text); margin-bottom: 20px;
+    }
+    .hero h1 .accent { color: var(--blue); }
+    .hero-sub {
+      font-size: 17px; color: var(--text-2);
+      max-width: 480px; margin: 0 auto 32px;
+      line-height: 1.65;
+    }
+    .hero-sub strong { color: var(--text); font-weight: 600; }
+    .hero-cta {
+      display: flex; flex-wrap: wrap; gap: 12px;
+      justify-content: center; margin-bottom: 18px;
+    }
+    .hero-note { font-size: 13px; color: var(--text-3); }
+
+    /* ── Section base ─────────────────────────────────────────── */
+    section { padding: 72px 0; }
+    .section-eyebrow {
+      font-size: 12px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: .1em; color: var(--blue); margin-bottom: 10px;
+    }
+    .section-title {
+      font-size: clamp(20px, 2.5vw, 26px); font-weight: 700;
+      color: var(--text); margin-bottom: 10px; letter-spacing: -0.02em;
+    }
+    .section-sub { font-size: 15px; color: var(--text-2); }
+
+    /* ── Como funciona ────────────────────────────────────────── */
+    .steps-section {
+      background: var(--bg);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .steps-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+      margin-top: 44px;
+    }
+    @media (min-width: 680px) { .steps-grid { grid-template-columns: repeat(3, 1fr); } }
+
+    .step-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px 24px;
+    }
+    .step-number {
+      width: 40px; height: 40px; border-radius: 10px;
+      background: var(--blue-bg); border: 1px solid var(--blue-bd);
+      color: var(--blue); font-size: 16px; font-weight: 800;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 18px;
+    }
+    .step-title { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+    .step-desc { font-size: 14px; color: var(--text-2); line-height: 1.6; }
+
+    /* ── Planos ───────────────────────────────────────────────── */
+    .pricing-section {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+    }
+    .plans-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+      margin-top: 44px;
+    }
+    @media (min-width: 500px) { .plans-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (min-width: 900px) { .plans-grid { grid-template-columns: repeat(5, 1fr); } }
+
+    .plan-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px 18px 20px;
+      display: flex; flex-direction: column;
+      align-items: center; text-align: center;
+      position: relative;
+      transition: box-shadow .2s, border-color .2s, transform .2s;
+    }
+    .plan-card:hover {
+      box-shadow: 0 4px 16px rgba(0,0,0,.08);
+      transform: translateY(-2px);
+    }
+    .plan-card.featured {
+      background: var(--surface);
+      border: 2px solid var(--blue);
+      box-shadow: 0 4px 20px rgba(37,99,235,.14);
+    }
+    .plan-card.featured:hover {
+      box-shadow: 0 8px 28px rgba(37,99,235,.22);
+      transform: translateY(-3px);
+    }
+    .plan-badge {
+      position: absolute; top: -12px; left: 50%;
+      transform: translateX(-50%);
+      background: var(--amber-bg); color: var(--amber);
+      font-size: 10px; font-weight: 700;
+      padding: 3px 12px; border-radius: 99px;
+      white-space: nowrap; letter-spacing: .04em;
+    }
+    .plan-qty {
+      font-size: 40px; font-weight: 800; line-height: 1;
+      color: var(--text); margin-bottom: 2px; letter-spacing: -1px;
+    }
+    .plan-card.featured .plan-qty { color: var(--blue); }
+    .plan-unit { font-size: 12px; color: var(--text-3); margin-bottom: 18px; }
+    .plan-price { font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 3px; letter-spacing: -.3px; }
+    .plan-per { font-size: 11px; color: var(--text-3); margin-bottom: 18px; }
+
+    .btn-plan {
+      width: 100%; padding: 9px 0;
+      border-radius: 9px; border: 1px solid var(--border);
+      background: transparent; color: var(--text-2);
+      font-size: 13px; font-weight: 600; font-family: inherit;
+      transition: background .15s, color .15s, border-color .15s;
+      display: block; text-align: center; text-decoration: none;
+    }
+    .btn-plan:hover { background: var(--surface); border-color: var(--text-3); color: var(--text); }
+    .btn-plan.featured { background: var(--blue); color: #fff; border-color: var(--blue); }
+    .btn-plan.featured:hover { background: var(--blue-dark); border-color: var(--blue-dark); }
+
+    /* ── Trust row ────────────────────────────────────────────── */
+    .trust-row {
+      display: flex; flex-wrap: wrap; justify-content: center;
+      gap: 8px 28px; margin-top: 32px;
+    }
+    .trust-item {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 12px; color: var(--text-3);
+    }
+    .trust-item svg { color: var(--blue); flex-shrink: 0; }
+
+    /* ── Modal ────────────────────────────────────────────────── */
+    .modal-backdrop {
+      position: fixed; inset: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: center;
+      padding: 24px;
+      background: rgba(15,23,42,.55);
+      backdrop-filter: blur(4px);
+    }
+    .modal-box {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 18px; padding: 28px;
+      width: 100%; max-width: 400px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.2);
+    }
+    .modal-header {
+      display: flex; align-items: flex-start;
+      justify-content: space-between; gap: 12px;
+      margin-bottom: 18px;
+    }
+    .modal-title { font-size: 16px; font-weight: 700; color: var(--text); }
+    .modal-subtitle { font-size: 13px; color: var(--text-2); margin-top: 3px; }
+    .modal-close {
+      background: none; border: none; font-size: 20px;
+      color: var(--text-3); line-height: 1;
+      transition: color .15s; cursor: pointer; padding: 0;
+    }
+    .modal-close:hover { color: var(--text); }
+    .modal-notice {
+      background: var(--amber-bg); border: 1px solid #FDE68A;
+      border-radius: 10px; padding: 12px 14px; margin-bottom: 18px;
+    }
+    [data-theme="dark"] .modal-notice { border-color: #78350F; }
+    .modal-notice-title {
+      font-size: 12px; font-weight: 700; color: var(--amber); margin-bottom: 4px;
+    }
+    .modal-notice-body { font-size: 12px; color: var(--text-2); }
+    .modal-facts { margin-bottom: 20px; }
+    .modal-fact {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 13px; color: var(--text-2); padding: 4px 0;
+    }
+    .modal-fact svg { color: var(--blue); flex-shrink: 0; }
+    .modal-actions { display: flex; gap: 10px; }
+    .btn-modal-secondary {
+      flex: 1; padding: 10px 0;
+      border-radius: 10px; border: 1px solid var(--border);
+      background: transparent; color: var(--text-2);
+      font-size: 13px; font-weight: 600; font-family: inherit;
+      transition: background .15s, color .15s; cursor: pointer;
+    }
+    .btn-modal-secondary:hover { background: var(--bg); color: var(--text); }
+    .btn-modal-primary {
+      flex: 1; padding: 10px 0;
+      border-radius: 10px; border: none;
+      background: var(--blue); color: #fff;
+      font-size: 13px; font-weight: 600;
+      transition: opacity .15s; cursor: pointer;
+      text-align: center; display: inline-block; text-decoration: none;
+    }
+    .btn-modal-primary:hover { opacity: .88; }
+
+    /* ── Footer ───────────────────────────────────────────────── */
+    footer {
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+      padding: 32px 0;
+    }
+    .footer-inner {
+      display: flex; flex-wrap: wrap;
+      align-items: center; justify-content: space-between;
+      gap: 16px;
+    }
+    .footer-logo { font-weight: 700; font-size: 15px; color: var(--text); }
+    .footer-copy { font-size: 13px; color: var(--text-3); }
+    .footer-nav { display: flex; align-items: center; gap: 20px; }
+    .footer-nav a { font-size: 13px; color: var(--text-3); transition: color .15s; }
+    .footer-nav a:hover { color: var(--text-2); }
+
+    /* ── Utility ──────────────────────────────────────────────── */
+    .hidden { display: none !important; }
+    .text-center { text-align: center; }
+  </style>
+</head>
+<body>
+
+<!-- ── Header ─────────────────────────────────────────────────── -->
+<header>
+  <div class="container header-inner">
+    <a href="/index.html" class="logo">QuestõesCardsAI</a>
+    <div class="nav-links">
+      <a href="#como-funciona" class="nav-link">Como funciona</a>
+      <a href="#planos" class="nav-link">Preços</a>
+      <a href="/login.html" class="nav-link">Entrar</a>
+      <button id="darkToggle" class="btn-icon" onclick="toggleDark()" title="Alternar tema" style="margin-left:6px;">
+        <svg id="iconSun" class="hidden" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="5"/>
+          <path stroke-linecap="round" d="M12 2v2m0 16v2M4.22 4.22l1.42 1.42m12.72 12.72 1.42 1.42M2 12h2m16 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+        </svg>
+        <svg id="iconMoon" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+      </button>
+      <a href="/register.html" class="btn btn-primary btn-sm" style="margin-left:6px;">Começar</a>
+    </div>
+  </div>
+</header>
+
+<!-- ── Hero ───────────────────────────────────────────────────── -->
+<section class="hero">
+  <div class="container">
+    <h1>PDF → <span class="accent">Questões</span> e Flashcards<br>em 1 minuto</h1>
+    <p class="hero-sub">
+      Faça upload, a IA gera <strong>50 questões</strong> de múltipla escolha
+      + <strong>100 flashcards</strong> automaticamente
+    </p>
+    <div class="hero-cta">
+      <a href="/register.html" class="btn btn-primary btn-lg">Começar grátis</a>
+      <a href="#planos" class="btn btn-secondary btn-lg">Ver planos</a>
+    </div>
+    <p class="hero-note">2 gerações grátis · Sem cartão de crédito</p>
+  </div>
+</section>
+
+<!-- ── Como funciona ──────────────────────────────────────────── -->
+<section id="como-funciona" class="steps-section">
+  <div class="container">
+    <div class="text-center">
+      <p class="section-eyebrow">Como funciona</p>
+      <h2 class="section-title">Três passos simples</h2>
+      <p class="section-sub">Do PDF ao material de estudo completo em menos de 2 minutos.</p>
+    </div>
+
+    <div class="steps-grid">
+      <div class="step-card">
+        <div class="step-number">1</div>
+        <p class="step-title">Envie o PDF</p>
+        <p class="step-desc">Arraste ou selecione seu PDF. Aceitamos até 150 páginas por geração.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">2</div>
+        <p class="step-title">IA processa</p>
+        <p class="step-desc">Nossa IA extrai o conteúdo e gera o material de estudo automaticamente.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">3</div>
+        <p class="step-title">Estude</p>
+        <p class="step-desc">Acesse 50 questões interativas e 100 flashcards prontos para revisar.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Planos ─────────────────────────────────────────────────── -->
+<section id="planos" class="pricing-section">
+  <div class="container">
+    <div class="text-center">
+      <p class="section-eyebrow">Planos</p>
+      <h2 class="section-title">Pague uma vez. Use quando quiser.</h2>
+      <p class="section-sub">1 geração = 50 questões + 100 flashcards de um PDF</p>
+    </div>
+
+    <div class="plans-grid">
+
+      <!-- Grátis -->
+      <div class="plan-card">
+        <div class="plan-qty" style="font-size:28px;letter-spacing:0;">Grátis</div>
+        <div class="plan-unit">2 gerações incluídas</div>
+        <div class="plan-price">R$ 0</div>
+        <div class="plan-per">sem cartão de crédito</div>
+        <a href="/register.html" class="btn-plan">Criar conta</a>
+      </div>
+
+      <!-- 5 gerações -->
+      <div class="plan-card">
+        <div class="plan-qty">5</div>
+        <div class="plan-unit">gerações</div>
+        <div class="plan-price">R$ 14,90</div>
+        <div class="plan-per">R$ 2,98 por geração</div>
+        <button class="btn-plan" onclick="openModal(5, 'R$ 14,90')">Comprar</button>
+      </div>
+
+      <!-- 10 gerações — destaque -->
+      <div class="plan-card featured">
+        <span class="plan-badge">Mais vendido</span>
+        <div class="plan-qty">10</div>
+        <div class="plan-unit">gerações</div>
+        <div class="plan-price">R$ 24,90</div>
+        <div class="plan-per">R$ 2,49 por geração</div>
+        <button class="btn-plan featured" onclick="openModal(10, 'R$ 24,90')">Comprar</button>
+      </div>
+
+      <!-- 20 gerações -->
+      <div class="plan-card">
+        <div class="plan-qty">20</div>
+        <div class="plan-unit">gerações</div>
+        <div class="plan-price">R$ 39,90</div>
+        <div class="plan-per">R$ 2,00 por geração</div>
+        <button class="btn-plan" onclick="openModal(20, 'R$ 39,90')">Comprar</button>
+      </div>
+
+      <!-- 50 gerações -->
+      <div class="plan-card">
+        <div class="plan-qty">50</div>
+        <div class="plan-unit">gerações</div>
+        <div class="plan-price">R$ 79,90</div>
+        <div class="plan-per">R$ 1,60 por geração</div>
+        <button class="btn-plan" onclick="openModal(50, 'R$ 79,90')">Comprar</button>
+      </div>
+
+    </div>
+
+    <!-- Trust -->
+    <div class="trust-row">
+      <div class="trust-item">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+        </svg>
+        Créditos sem expiração
+      </div>
+      <div class="trust-item">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+        </svg>
+        Só debita após sucesso
+      </div>
+      <div class="trust-item">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+        </svg>
+        Erro na IA = sem débito
+      </div>
+      <div class="trust-item">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+        </svg>
+        Sem assinatura
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Footer ─────────────────────────────────────────────────── -->
+<footer>
+  <div class="container footer-inner">
+    <p class="footer-logo">QuestõesCardsAI</p>
+    <p class="footer-copy">© 2025 QuestõesCardsAI. Todos os direitos reservados.</p>
+    <nav class="footer-nav">
+      <a href="#">Termos</a>
+      <a href="#">Privacidade</a>
+      <a href="#">Contato</a>
+    </nav>
+  </div>
+</footer>
+
+<!-- ── Modal de compra ────────────────────────────────────────── -->
+<div id="paymentModal" class="modal-backdrop hidden">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div>
+        <p class="modal-title" id="modalTitle">Pacote de — gerações</p>
+        <p class="modal-subtitle" id="modalSubtitle">—</p>
+      </div>
+      <button class="modal-close" onclick="closeModal()">&#x2715;</button>
+    </div>
+    <div class="modal-notice">
+      <p class="modal-notice-title">Integração de pagamento pendente</p>
+      <p class="modal-notice-body">
+        Configure o Stripe ou PagSeguro e adicione os links de checkout.
+        Por enquanto, entre em contato — o admin adiciona os créditos manualmente.
+      </p>
+    </div>
+    <div class="modal-facts">
+      <div class="modal-fact">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+        </svg>
+        Pagamento único, sem assinatura
+      </div>
+      <div class="modal-fact">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+        </svg>
+        Créditos não expiram
+      </div>
+      <div class="modal-fact">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+        </svg>
+        Falha na geração = sem débito
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-modal-secondary" onclick="closeModal()">Fechar</button>
+      <a href="mailto:contato@cardsai.com?subject=Compra de Créditos QuestõesCardsAI"
+        class="btn-modal-primary">
+        Entrar em contato
+      </a>
+    </div>
+  </div>
+</div>
+
+<script src="/js/config.js"></script>
+<script>
+  /* ── Dark mode ──────────────────────────────────────────────── */
+  (function () {
+    const saved = localStorage.getItem('cardsai-theme');
+    if (saved === 'dark') applyDark(true);
+  })();
+
+  function applyDark(on) {
+    document.documentElement.setAttribute('data-theme', on ? 'dark' : 'light');
+    document.getElementById('iconSun').classList.toggle('hidden', !on);
+    document.getElementById('iconMoon').classList.toggle('hidden', on);
+  }
+
+  window.toggleDark = function () {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    applyDark(!isDark);
+    localStorage.setItem('cardsai-theme', isDark ? 'light' : 'dark');
+  };
+
+  /* ── Smooth scroll para âncoras ─────────────────────────────── */
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', e => {
+      const id = a.getAttribute('href').slice(1);
+      const el = document.getElementById(id);
+      if (el) { e.preventDefault(); el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+    });
+  });
+
+  /* ── Modal ──────────────────────────────────────────────────── */
+  window.openModal = function (qty, price) {
+    document.getElementById('modalTitle').textContent = 'Pacote de ' + qty + ' gerações';
+    document.getElementById('modalSubtitle').textContent = qty + ' gerações por ' + price;
+    document.getElementById('paymentModal').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+  };
+
+  window.closeModal = function () {
+    document.getElementById('paymentModal').classList.add('hidden');
+    document.body.style.overflow = '';
+  };
+
+  document.getElementById('paymentModal').addEventListener('click', function (e) {
+    if (e.target === this) closeModal();
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') closeModal();
+  });
+
+  /* ── Redirecionar se já logado ──────────────────────────────── */
+  db.auth.getSession().then(({ data: { session } }) => {
+    if (session) window.location.href = '/dashboard.html';
+  });
+</script>
+</body>
+</html>
