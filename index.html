@@ -16,6 +16,7 @@
   <style>
     :root {
       --bg:      #F8FAFC;
+      --bg-alt:  #E8EEF6;
       --border:  #E2E8F0;
       --text:    #1E293B;
       --text-2:  #475569;
@@ -25,6 +26,7 @@
     }
     [data-theme="dark"] {
       --bg:      #0F172A;
+      --bg-alt:  #19263D;
       --border:  #1E293B;
       --text:    #F1F5F9;
       --text-2:  #94A3B8;
@@ -123,7 +125,6 @@
     /* ── Hero ────────────────────────────────────────────────────── */
     .hero {
       padding: 80px 0 88px;
-      border-bottom: 1px solid var(--border);
     }
     .hero-inner {
       display: grid;
@@ -183,7 +184,7 @@
     /* ── Como funciona ───────────────────────────────────────────── */
     .steps-section {
       padding: 72px 0;
-      border-bottom: 1px solid var(--border);
+      background: var(--bg-alt);
     }
     .sec-label {
       display: block;
@@ -228,7 +229,6 @@
     /* ── Funcionalidades ────────────────────────────────────────── */
     .features-section {
       padding: 72px 0;
-      border-bottom: 1px solid var(--border);
     }
     .features-grid {
       display: grid;
@@ -263,7 +263,7 @@
     .feature-list li::before { content: '—'; color: var(--text-3); flex-shrink: 0; }
 
     /* ── Planos ──────────────────────────────────────────────────── */
-    .pricing-section { padding: 72px 0; }
+    .pricing-section { padding: 72px 0; background: var(--bg-alt); }
     .pricing-head { margin-bottom: 36px; }
     .pricing-title {
       font-size: clamp(20px, 2.5vw, 26px); font-weight: 700;
@@ -306,7 +306,6 @@
 
     /* ── Footer ──────────────────────────────────────────────────── */
     footer {
-      border-top: 1px solid var(--border);
       padding: 24px 0;
     }
     .footer-inner {
@@ -369,6 +368,14 @@
       transition: opacity .15s;
     }
     .btn-m-pri:hover { opacity: .72; }
+
+    /* ── Wave Dividers ───────────────────────────────────────────── */
+    .wave-divider { display: block; line-height: 0; overflow: hidden; margin: 0; padding: 0; }
+    .wave-divider svg { display: block; width: 100%; height: 100px; }
+    .wave-to-alt { background: var(--bg); }
+    .wave-to-alt path { fill: var(--bg-alt); }
+    .wave-to-bg { background: var(--bg-alt); }
+    .wave-to-bg path { fill: var(--bg); }
 
     /* ── Responsive ──────────────────────────────────────────────── */
     @media (max-width: 800px) {
@@ -509,6 +516,13 @@
   </div>
 </section>
 
+<!-- ── Wave 1: Hero → Como funciona ───────────────────────────────── -->
+<div class="wave-divider wave-to-alt" aria-hidden="true">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 100" preserveAspectRatio="none">
+    <path d="M0,50 C131,15 229,15 360,50 C491,85 589,85 720,50 C851,15 949,15 1080,50 C1211,85 1309,85 1440,50 L1440,100 L0,100 Z"/>
+  </svg>
+</div>
+
 <!-- ── Como funciona ──────────────────────────────────────────────── -->
 <section id="como-funciona" class="steps-section">
   <div class="container">
@@ -534,6 +548,13 @@
     </div>
   </div>
 </section>
+
+<!-- ── Wave 2: Como funciona → Funcionalidades ────────────────────── -->
+<div class="wave-divider wave-to-bg" aria-hidden="true">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 100" preserveAspectRatio="none">
+    <path d="M0,50 C131,85 229,85 360,50 C491,15 589,15 720,50 C851,85 949,85 1080,50 C1211,15 1309,15 1440,50 L1440,100 L0,100 Z"/>
+  </svg>
+</div>
 
 <!-- ── Funcionalidades ────────────────────────────────────────────── -->
 <section id="funcionalidades" class="features-section">
@@ -579,6 +600,13 @@
     </div>
   </div>
 </section>
+
+<!-- ── Wave 3: Funcionalidades → Planos ───────────────────────────── -->
+<div class="wave-divider wave-to-alt" aria-hidden="true">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 100" preserveAspectRatio="none">
+    <path d="M0,50 C131,15 229,15 360,50 C491,85 589,85 720,50 C851,15 949,15 1080,50 C1211,85 1309,85 1440,50 L1440,100 L0,100 Z"/>
+  </svg>
+</div>
 
 <!-- ── Planos ─────────────────────────────────────────────────────── -->
 <section id="planos" class="pricing-section">
@@ -650,6 +678,13 @@
     <p class="trust-line">Sem assinatura · Créditos não expiram · Só debita após sucesso · Compre mais quando precisar</p>
   </div>
 </section>
+
+<!-- ── Wave 4: Planos → Footer ────────────────────────────────────── -->
+<div class="wave-divider wave-to-bg" aria-hidden="true">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 100" preserveAspectRatio="none">
+    <path d="M0,50 C131,85 229,85 360,50 C491,15 589,15 720,50 C851,85 949,85 1080,50 C1211,15 1309,15 1440,50 L1440,100 L0,100 Z"/>
+  </svg>
+</div>
 
 <!-- ── Footer ─────────────────────────────────────────────────────── -->
 <footer>
