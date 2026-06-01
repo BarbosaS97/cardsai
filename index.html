@@ -1,10 +1,19 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="Transforme qualquer PDF em 50 questões e 100 flashcards com IA em menos de 2 minutos." />
-  <title>QuestõesCardsAI — PDF para Questões e Flashcards em 1 minuto</title>
+  <!-- Intercepta callbacks do Supabase Auth antes de qualquer outro script -->
+  <script>
+    (function () {
+      var h = window.location.hash;
+      if (h.indexOf('type=recovery') !== -1) {
+        window.location.replace('/reset-password.html' + h);
+      }
+    })();
+  </script>
+  <title>CardsQuestõesAI — PDF para Questões e Flashcards em 1 minuto</title>
   <style>
     /* ── Variables ────────────────────────────────────────────── */
     :root {
@@ -389,13 +398,22 @@
       .plans-grid { grid-template-columns: 1fr; }
     }
   </style>
+  <!-- PWA -->
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#2563EB" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="CardsQuestõesAI" />
+  <link rel="apple-touch-icon" href="/static/images/icons/icon-192.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/static/images/favicon.png" />
 </head>
 <body>
 
 <!-- ── Header ─────────────────────────────────────────────────── -->
 <header>
   <div class="container header-inner">
-    <a href="/index.html" class="logo">QuestõesCardsAI</a>
+    <a href="/index.html" class="logo">CardsQuestõesAI</a>
     <div style="display:flex;align-items:center;gap:8px;">
       <!-- Nav links — desktop only -->
       <div class="nav-links">
@@ -561,8 +579,8 @@
 <!-- ── Footer ─────────────────────────────────────────────────── -->
 <footer>
   <div class="container footer-inner">
-    <p class="footer-logo">QuestõesCardsAI</p>
-    <p class="footer-copy">© 2025 QuestõesCardsAI. Todos os direitos reservados.</p>
+    <p class="footer-logo">CardsQuestõesAI</p>
+    <p class="footer-copy">© 2025 CardsQuestõesAI. Todos os direitos reservados.</p>
     <nav class="footer-nav">
       <a href="#">Termos</a>
       <a href="#">Privacidade</a>
@@ -610,7 +628,7 @@
     </div>
     <div class="modal-actions">
       <button class="btn-modal-secondary" onclick="closeModal()">Fechar</button>
-      <a href="mailto:contato@cardsai.com?subject=Compra de Créditos QuestõesCardsAI"
+      <a href="mailto:contato@cardsai.com?subject=Compra de Créditos CardsQuestõesAI"
         class="btn-modal-primary">
         Entrar em contato
       </a>
@@ -688,6 +706,7 @@
     if (session) window.location.href = '/dashboard.html';
   });
 </script>
+  <script>if('serviceWorker'in navigator){navigator.serviceWorker.register('/sw.js');}</script>
 </body>
 </html>
 < ! - -   A t u a l i z a c a o   f o r � a d a   - - >  
