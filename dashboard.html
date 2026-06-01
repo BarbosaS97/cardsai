@@ -242,6 +242,33 @@
 
     /* ── Utility ────────────────────────────────────────────── */
     .hidden { display: none !important; }
+
+    /* ── Responsive ─────────────────────────────────────────── */
+    @media (max-width: 540px) {
+      .max-w { padding: 0 14px; }
+      main { padding: 24px 0 56px; }
+
+      /* Header: encolhe logo e pill */
+      .logo { font-size: 14px; letter-spacing: 0; }
+      .credits-pill { font-size: 11px; padding: 3px 8px; }
+      .credits-pill span { max-width: 70px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+      /* Upload card */
+      .upload-card { padding: 14px; margin-bottom: 24px; }
+      .drop-zone { padding: 28px 14px; }
+
+      /* Section header wrapping */
+      .section-header { flex-wrap: wrap; gap: 6px; }
+
+      /* Gen card */
+      .gen-card { padding: 14px 14px; }
+      .gen-card-title { font-size: 13px; }
+    }
+
+    @media (max-width: 380px) {
+      .logo { font-size: 13px; }
+      .btn-icon { padding: 5px; }
+    }
   </style>
 </head>
 <body>

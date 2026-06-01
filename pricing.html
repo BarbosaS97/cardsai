@@ -309,6 +309,34 @@
 
     /* ── Utility ─────────────────────────────────────────────── */
     .hidden { display: none !important; }
+
+    /* ── Responsive ─────────────────────────────────────────── */
+    @media (max-width: 540px) {
+      .max-w { padding: 0 16px; }
+      main { padding: 36px 0 60px; }
+
+      .page-head { margin-bottom: 32px; }
+      .page-head h1 { font-size: 22px; }
+      .page-head p { font-size: 14px; }
+
+      /* Cards: 1 coluna em telas muito pequenas */
+      .cards-grid { grid-template-columns: 1fr; }
+
+      /* Modal responsivo */
+      .modal-backdrop { padding: 12px; align-items: flex-end; }
+      .modal-box { max-width: 100%; border-radius: 18px 18px 10px 10px; padding: 22px 18px; }
+      .modal-actions { flex-direction: column; gap: 8px; }
+      .btn-modal-primary, .btn-modal-secondary { width: 100%; padding: 13px; }
+
+      /* Header */
+      .logo { font-size: 15px; }
+      .back-link { font-size: 12px; }
+    }
+
+    @media (max-width: 400px) {
+      .pkg-qty { font-size: 36px; }
+      .pkg-price { font-size: 18px; }
+    }
   </style>
 </head>
 <body>

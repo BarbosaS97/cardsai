@@ -219,6 +219,37 @@
       to   { opacity: 1; transform: translateX(0); }
     }
     .card-in { animation: fadeSlide 0.22s ease both; }
+
+    /* ── Responsive ─────────────────────────────────────── */
+    @media (max-width: 540px) {
+      /* Tabs scroll horizontal */
+      nav.flex { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+      nav.flex::-webkit-scrollbar { display: none; }
+      nav.flex button { padding: 12px 14px; font-size: 12px; flex-shrink: 0; }
+
+      /* Padding geral */
+      main.flex-1 { padding-left: 14px !important; padding-right: 14px !important; padding-top: 18px !important; }
+
+      /* Flashcard menor em mobile */
+      .flip-wrap { height: 210px !important; }
+      #focusFlip { height: 220px; }
+
+      /* Botões de navegação menores */
+      #qPrev, #qNext, #fcPrev, #fcNext { padding: 10px 12px !important; font-size: 12px !important; }
+      #qReveal { padding: 10px 14px !important; font-size: 12px !important; }
+
+      /* Texto da questão */
+      #qText { font-size: 15px !important; }
+
+      /* Focus mode: ocupa mais tela */
+      #focusBox { padding: 20px 16px; }
+      #focusClose { top: 12px; right: 12px; }
+    }
+
+    @media (max-width: 380px) {
+      #qPrev, #qNext { gap: 0 !important; }
+      #qPrev svg, #qNext svg { display: none; }
+    }
   </style>
 </head>
 <body>

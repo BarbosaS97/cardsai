@@ -322,6 +322,72 @@
     /* ── Utility ──────────────────────────────────────────────── */
     .hidden { display: none !important; }
     .text-center { text-align: center; }
+
+    /* ── Hamburger menu ───────────────────────────────────────── */
+    .hamburger {
+      display: none; flex-direction: column; gap: 5px;
+      background: none; border: none; cursor: pointer; padding: 6px;
+      border-radius: 8px; border: 1px solid var(--border);
+    }
+    .hamburger span {
+      display: block; width: 20px; height: 2px;
+      background: var(--text); border-radius: 2px;
+      transition: transform .2s, opacity .2s;
+    }
+    .hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .hamburger.open span:nth-child(2) { opacity: 0; }
+    .hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+    .nav-mobile {
+      display: none; position: fixed;
+      top: 56px; left: 0; right: 0; bottom: 0; z-index: 48;
+      background: var(--surface);
+      padding: 20px 24px 32px;
+      flex-direction: column; gap: 0;
+      border-top: 1px solid var(--border);
+      overflow-y: auto;
+    }
+    .nav-mobile.open { display: flex; }
+    .nav-mobile-link {
+      display: block; font-size: 16px; color: var(--text-2); font-weight: 500;
+      padding: 14px 0; border-bottom: 1px solid var(--border);
+      transition: color .15s;
+    }
+    .nav-mobile-link:hover { color: var(--text); }
+    .nav-mobile .btn {
+      margin-top: 20px; padding: 14px;
+      border-radius: 10px; text-align: center;
+      font-size: 15px; width: 100%;
+    }
+
+    /* ── Responsive ───────────────────────────────────────────── */
+    @media (max-width: 640px) {
+      .nav-links { display: none; }
+      .hamburger { display: flex; }
+
+      .container { padding: 0 16px; }
+
+      .hero { padding: 44px 0 40px; }
+      .hero-sub { font-size: 15px; }
+      .hero-cta { flex-direction: column; align-items: stretch; }
+      .hero-cta .btn { width: 100%; justify-content: center; }
+
+      section { padding: 48px 0; }
+
+      .plans-grid { grid-template-columns: 1fr 1fr; }
+
+      .modal-backdrop { padding: 12px; align-items: flex-end; }
+      .modal-box { max-width: 100%; border-radius: 18px 18px 10px 10px; }
+      .modal-actions { flex-direction: column; }
+      .btn-modal-primary, .btn-modal-secondary { flex: none; width: 100%; padding: 13px; }
+
+      .footer-inner { flex-direction: column; align-items: flex-start; gap: 12px; }
+      .footer-nav { flex-wrap: wrap; gap: 12px 18px; }
+    }
+
+    @media (max-width: 400px) {
+      .plans-grid { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
@@ -330,11 +396,16 @@
 <header>
   <div class="container header-inner">
     <a href="/index.html" class="logo">QuestõesCardsAI</a>
-    <div class="nav-links">
-      <a href="#como-funciona" class="nav-link">Como funciona</a>
-      <a href="#planos" class="nav-link">Preços</a>
-      <a href="/login.html" class="nav-link">Entrar</a>
-      <button id="darkToggle" class="btn-icon" onclick="toggleDark()" title="Alternar tema" style="margin-left:6px;">
+    <div style="display:flex;align-items:center;gap:8px;">
+      <!-- Nav links — desktop only -->
+      <div class="nav-links">
+        <a href="#como-funciona" class="nav-link">Como funciona</a>
+        <a href="#planos" class="nav-link">Preços</a>
+        <a href="/login.html" class="nav-link">Entrar</a>
+        <a href="/register.html" class="btn btn-primary btn-sm" style="margin-left:6px;">Começar</a>
+      </div>
+      <!-- Dark toggle — always visible -->
+      <button id="darkToggle" class="btn-icon" onclick="toggleDark()" title="Alternar tema">
         <svg id="iconSun" class="hidden" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <circle cx="12" cy="12" r="5"/>
           <path stroke-linecap="round" d="M12 2v2m0 16v2M4.22 4.22l1.42 1.42m12.72 12.72 1.42 1.42M2 12h2m16 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
@@ -343,10 +414,21 @@
           <path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
         </svg>
       </button>
-      <a href="/register.html" class="btn btn-primary btn-sm" style="margin-left:6px;">Começar</a>
+      <!-- Hamburger — mobile only -->
+      <button id="hamburgerBtn" class="hamburger" onclick="toggleMobileNav()" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
     </div>
   </div>
 </header>
+
+<!-- Mobile nav -->
+<div id="mobileNav" class="nav-mobile">
+  <a href="#como-funciona" class="nav-mobile-link" onclick="toggleMobileNav()">Como funciona</a>
+  <a href="#planos" class="nav-mobile-link" onclick="toggleMobileNav()">Preços</a>
+  <a href="/login.html" class="nav-mobile-link">Entrar</a>
+  <a href="/register.html" class="btn btn-primary">Começar grátis</a>
+</div>
 
 <!-- ── Hero ───────────────────────────────────────────────────── -->
 <section class="hero">
@@ -360,7 +442,7 @@
       <a href="/register.html" class="btn btn-primary btn-lg">Começar grátis</a>
       <a href="#planos" class="btn btn-secondary btn-lg">Ver planos</a>
     </div>
-    <p class="hero-note">2 gerações grátis · Sem cartão de crédito</p>
+    <p class="hero-note">2 gerações grátis para testar</p>
   </div>
 </section>
 
@@ -465,12 +547,6 @@
           <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
         </svg>
         Só debita após sucesso
-      </div>
-      <div class="trust-item">
-        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
-        </svg>
-        Erro na IA = sem débito
       </div>
       <div class="trust-item">
         <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
@@ -592,6 +668,21 @@
     if (e.key === 'Escape') closeModal();
   });
 
+  /* ── Mobile nav ─────────────────────────────────────────────── */
+  window.toggleMobileNav = function () {
+    const nav = document.getElementById('mobileNav');
+    const btn = document.getElementById('hamburgerBtn');
+    nav.classList.toggle('open');
+    btn.classList.toggle('open');
+  };
+  // Fecha ao clicar em link âncora
+  document.querySelectorAll('.nav-mobile-link[href^="#"]').forEach(a => {
+    a.addEventListener('click', () => {
+      document.getElementById('mobileNav').classList.remove('open');
+      document.getElementById('hamburgerBtn').classList.remove('open');
+    });
+  });
+
   /* ── Redirecionar se já logado ──────────────────────────────── */
   db.auth.getSession().then(({ data: { session } }) => {
     if (session) window.location.href = '/dashboard.html';
@@ -599,5 +690,5 @@
 </script>
 </body>
 </html>
-< ! - -   A t u a l i z a c a o   f o r � a d a   - - >  
+< ! - -   A t u a l i z a c a o   f o r � a d a   - - >  
  

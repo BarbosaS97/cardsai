@@ -24,15 +24,21 @@
     .alert-success { background: #F0FDF4; color: #15803D; border: 1px solid #BBF7D0; border-radius: 8px; padding: 12px 14px; font-size: 13px; }
 
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    @media (max-width: 480px) {
+      .card { padding: 20px 16px; }
+      main { padding: 20px 16px !important; }
+      h1 { font-size: 20px !important; }
+    }
   </style>
 </head>
 <body class="min-h-screen flex flex-col">
 
   <!-- Header minimal -->
   <header style="background:#fff;border-bottom:1px solid #E2E8F0;">
-    <div class="max-w-screen-xl mx-auto px-6 h-14 flex items-center justify-between">
-      <a href="/index.html" style="font-size:18px;font-weight:700;color:#1E293B;text-decoration:none;">QuestõesCardsAI</a>
-      <a href="/login.html" style="font-size:14px;color:#2563EB;text-decoration:none;font-weight:500;">Já tenho conta →</a>
+    <div class="max-w-screen-xl mx-auto px-4 h-14 flex items-center justify-between">
+      <a href="/index.html" style="font-size:17px;font-weight:700;color:#1E293B;text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:60%;">QuestõesCardsAI</a>
+      <a href="/login.html" style="font-size:13px;color:#2563EB;text-decoration:none;font-weight:500;white-space:nowrap;">Já tenho conta →</a>
     </div>
   </header>
 

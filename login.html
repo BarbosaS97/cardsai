@@ -21,15 +21,21 @@
     .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
 
     .alert-error { background: #FEF2F2; color: #DC2626; border: 1px solid #FECACA; border-radius: 8px; padding: 12px 14px; font-size: 13px; }
+
+    @media (max-width: 480px) {
+      .card { padding: 20px 16px; }
+      main { padding: 24px 16px !important; }
+      h1 { font-size: 20px !important; }
+    }
   </style>
 </head>
 <body class="min-h-screen flex flex-col" style="background:#F8FAFC;">
 
   <!-- Header minimal -->
   <header style="background:#fff;border-bottom:1px solid #E2E8F0;">
-    <div class="max-w-screen-xl mx-auto px-6 h-14 flex items-center justify-between">
-      <a href="/index.html" style="font-size:18px;font-weight:700;color:#1E293B;text-decoration:none;">QuestõesCardsAI</a>
-      <a href="/register.html" style="font-size:14px;color:#2563EB;text-decoration:none;font-weight:500;">Criar conta →</a>
+    <div class="max-w-screen-xl mx-auto px-4 h-14 flex items-center justify-between">
+      <a href="/index.html" style="font-size:17px;font-weight:700;color:#1E293B;text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:60%;">QuestõesCardsAI</a>
+      <a href="/register.html" style="font-size:13px;color:#2563EB;text-decoration:none;font-weight:500;white-space:nowrap;">Criar conta →</a>
     </div>
   </header>
 

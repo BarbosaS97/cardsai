@@ -36,6 +36,41 @@
     tr:hover { background: #F8FAFC; }
     th { text-align: left; padding: 12px 20px; font-size: 11px; font-weight: 600; color: #475569; text-transform: uppercase; letter-spacing: 0.05em; }
     td { padding: 14px 20px; font-size: 14px; }
+
+    /* ── Responsive ──────────────────────────────────────── */
+    @media (max-width: 640px) {
+      /* Header */
+      header .max-w-screen-xl { padding-left: 14px; padding-right: 14px; }
+
+      /* Main padding */
+      main.max-w-screen-xl { padding-left: 14px; padding-right: 14px; padding-top: 20px; }
+
+      /* Stats: 2 colunas em mobile (já está com grid-cols-2) */
+
+      /* Tabela: scroll horizontal */
+      .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      th, td { padding: 10px 14px; font-size: 13px; white-space: nowrap; }
+
+      /* Search inputs 100% */
+      #userSearch, #genSearch { width: 100% !important; }
+
+      /* Tab buttons menores */
+      .tab-btn { padding: 10px 14px; font-size: 13px; }
+
+      /* Card padding */
+      .card { padding: 16px; }
+
+      /* Generation cards */
+      #generationsTable > div { flex-direction: column; align-items: flex-start; gap: 10px; }
+      #generationsTable > div > div:last-child { align-self: flex-start; }
+
+      /* Modal de créditos */
+      #creditsModal > div { padding: 20px 16px; }
+    }
+
+    @media (max-width: 400px) {
+      .grid.grid-cols-2 { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body class="min-h-screen">
@@ -86,8 +121,8 @@
         <input id="userSearch" type="text" placeholder="Buscar por email…" oninput="filterUsers()"
           class="input-field" style="width:240px;" />
       </div>
-      <div class="card" style="padding:0;overflow:hidden;">
-        <table class="w-full">
+      <div class="card table-wrap" style="padding:0;overflow:hidden;">
+        <table class="w-full" style="min-width:520px;">
           <thead style="background:#F8FAFC;border-bottom:1px solid #E2E8F0;">
             <tr>
               <th>Usuário</th>

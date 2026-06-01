@@ -32,6 +32,31 @@
 
     .progress-bar { transition: width .5s ease; }
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Responsive ──────────────────────────────────────── */
+    @media (max-width: 540px) {
+      /* Header: esconde logo central em telas pequenas */
+      .upload-header-logo { display: none; }
+      header .max-w-3xl { padding-left: 14px; padding-right: 14px; }
+
+      main.max-w-3xl { padding-left: 14px; padding-right: 14px; padding-top: 24px; }
+
+      /* Drop zone menor */
+      .drop-zone { padding: 32px 16px; }
+
+      /* Stage indicators: texto menor */
+      .stage-dot { width: 26px; height: 26px; font-size: 11px; }
+
+      /* Card */
+      .card { padding: 16px; }
+
+      h1 { font-size: 20px !important; }
+    }
+
+    @media (max-width: 380px) {
+      /* Stage connector lines menores */
+      .stage-connector { margin: 0 4px !important; }
+    }
   </style>
 </head>
 <body class="min-h-screen">
@@ -39,9 +64,9 @@
   <!-- Header -->
   <header style="background:#fff;border-bottom:1px solid #E2E8F0;">
     <div class="max-w-3xl mx-auto px-6 h-14 flex items-center justify-between">
-      <a href="/dashboard.html" style="font-size:14px;color:#475569;text-decoration:none;font-weight:500;">← Dashboard</a>
-      <a href="/index.html" style="font-size:18px;font-weight:700;color:#1E293B;text-decoration:none;">QuestõesCardsAI</a>
-      <div style="display:flex;align-items:center;gap:6px;font-size:14px;">
+      <a href="/dashboard.html" style="font-size:14px;color:#475569;text-decoration:none;font-weight:500;white-space:nowrap;">← Dashboard</a>
+      <a href="/index.html" class="upload-header-logo" style="font-size:17px;font-weight:700;color:#1E293B;text-decoration:none;">QuestõesCardsAI</a>
+      <div style="display:flex;align-items:center;gap:5px;font-size:13px;white-space:nowrap;">
         <span style="color:#2563EB;font-weight:700;" id="creditsCount">—</span>
         <span style="color:#94A3B8;">gerações</span>
       </div>
@@ -100,17 +125,17 @@
             <div id="stage1" class="stage-dot waiting">1</div>
             <p style="font-size:11px;color:#94A3B8;margin-top:6px;text-align:center;">Lendo PDF</p>
           </div>
-          <div style="flex:1;height:1px;background:#E2E8F0;margin:0 8px;"></div>
+          <div class="stage-connector" style="flex:1;height:1px;background:#E2E8F0;margin:0 8px;"></div>
           <div style="display:flex;flex-direction:column;align-items:center;">
             <div id="stage2" class="stage-dot waiting">2</div>
             <p style="font-size:11px;color:#94A3B8;margin-top:6px;text-align:center;">IA processando</p>
           </div>
-          <div style="flex:1;height:1px;background:#E2E8F0;margin:0 8px;"></div>
+          <div class="stage-connector" style="flex:1;height:1px;background:#E2E8F0;margin:0 8px;"></div>
           <div style="display:flex;flex-direction:column;align-items:center;">
             <div id="stage3" class="stage-dot waiting">3</div>
             <p style="font-size:11px;color:#94A3B8;margin-top:6px;text-align:center;">Salvando</p>
           </div>
-          <div style="flex:1;height:1px;background:#E2E8F0;margin:0 8px;"></div>
+          <div class="stage-connector" style="flex:1;height:1px;background:#E2E8F0;margin:0 8px;"></div>
           <div style="display:flex;flex-direction:column;align-items:center;">
             <div id="stage4" class="stage-dot waiting">✓</div>
             <p style="font-size:11px;color:#94A3B8;margin-top:6px;text-align:center;">Pronto!</p>
