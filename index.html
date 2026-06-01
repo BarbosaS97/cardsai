@@ -1,10 +1,9 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="Transforme qualquer PDF em 50 questões e 100 flashcards com IA em menos de 2 minutos." />
-  <!-- Intercepta callbacks do Supabase Auth antes de qualquer outro script -->
   <script>
     (function () {
       var h = window.location.hash;
@@ -15,37 +14,25 @@
   </script>
   <title>CardsQuestõesAI — PDF para Questões e Flashcards em 1 minuto</title>
   <style>
-    /* ── Variables ────────────────────────────────────────────── */
     :root {
-      --bg:        #F8FAFC;
-      --surface:   #FFFFFF;
-      --border:    #E2E8F0;
-      --text:      #1E293B;
-      --text-2:    #475569;
-      --text-3:    #94A3B8;
-      --blue:      #2563EB;
-      --blue-bg:   #EFF6FF;
-      --blue-bd:   #BFDBFE;
-      --blue-dark: #1D4ED8;
-      --amber-bg:  #FEF9C3;
-      --amber:     #713F12;
+      --bg:      #F8FAFC;
+      --border:  #E2E8F0;
+      --text:    #1E293B;
+      --text-2:  #475569;
+      --text-3:  #94A3B8;
+      --blue:    #2563EB;
+      --blue-dk: #1D4ED8;
     }
     [data-theme="dark"] {
-      --bg:        #0F172A;
-      --surface:   #1E293B;
-      --border:    #334155;
-      --text:      #F1F5F9;
-      --text-2:    #94A3B8;
-      --text-3:    #64748B;
-      --blue:      #3B82F6;
-      --blue-bg:   #1E3A5F;
-      --blue-bd:   #1D4ED8;
-      --blue-dark: #2563EB;
-      --amber-bg:  #422006;
-      --amber:     #FCD34D;
+      --bg:      #0F172A;
+      --border:  #1E293B;
+      --text:    #F1F5F9;
+      --text-2:  #94A3B8;
+      --text-3:  #475569;
+      --blue:    #3B82F6;
+      --blue-dk: #2563EB;
     }
 
-    /* ── Reset ────────────────────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: system-ui, -apple-system, 'Inter', sans-serif;
@@ -56,349 +43,353 @@
     }
     a { color: inherit; text-decoration: none; }
     button { font-family: inherit; cursor: pointer; }
+    .container { max-width: 1080px; margin: 0 auto; padding: 0 28px; }
+    .hidden { display: none !important; }
 
-    /* ── Layout ───────────────────────────────────────────────── */
-    .container { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
-
-    /* ── Buttons ──────────────────────────────────────────────── */
-    .btn {
-      display: inline-flex; align-items: center; justify-content: center;
-      gap: 8px; border-radius: 8px; font-weight: 600;
-      cursor: pointer; text-decoration: none; border: none;
-      transition: opacity .15s, background .15s;
-      white-space: nowrap; font-family: inherit;
-    }
-    .btn-primary { background: var(--blue); color: #fff; }
-    .btn-primary:hover { background: var(--blue-dark); }
-    .btn-secondary { background: transparent; color: var(--blue); border: 1.5px solid var(--blue); }
-    .btn-secondary:hover { background: var(--blue-bg); }
-    .btn-sm  { padding: 8px 18px; font-size: 13px; }
-    .btn-md  { padding: 10px 22px; font-size: 14px; }
-    .btn-lg  { padding: 14px 30px; font-size: 15px; }
-
-    /* ── Header ───────────────────────────────────────────────── */
+    /* ── Header ─────────────────────────────────────────────────── */
     header {
       position: sticky; top: 0; z-index: 50;
-      background: var(--surface);
+      background: var(--bg);
       border-bottom: 1px solid var(--border);
-      height: 56px;
+      height: 52px;
       transition: background .2s;
     }
     .header-inner {
       display: flex; align-items: center;
-      justify-content: space-between; gap: 16px;
-      height: 100%;
+      justify-content: space-between; height: 100%;
     }
-    .logo { font-size: 18px; font-weight: 700; color: var(--text); letter-spacing: -.3px; }
-    .nav-links { display: flex; align-items: center; gap: 2px; }
+    .logo {
+      font-size: 14px; font-weight: 700;
+      color: var(--text); letter-spacing: -.2px;
+    }
+    .header-right { display: flex; align-items: center; gap: 0; }
+    .nav-links { display: flex; align-items: center; }
     .nav-link {
-      font-size: 14px; color: var(--text-2); font-weight: 500;
-      padding: 6px 12px; border-radius: 6px;
-      transition: color .15s, background .15s;
+      font-size: 13px; color: var(--text-3); font-weight: 400;
+      padding: 4px 12px; transition: color .15s;
     }
-    .nav-link:hover { color: var(--text); background: var(--bg); }
-    .btn-icon {
-      background: transparent; border: 1px solid var(--border);
-      border-radius: 8px; padding: 7px; color: var(--text-2);
+    .nav-link:hover { color: var(--text); }
+    .nav-divider {
+      width: 1px; height: 14px;
+      background: var(--border); margin: 0 4px;
+    }
+    .nav-cta {
+      font-size: 13px; font-weight: 600;
+      color: var(--blue); padding: 4px 12px;
+      transition: opacity .15s;
+    }
+    .nav-cta:hover { opacity: .72; }
+    .btn-theme {
       display: inline-flex; align-items: center; justify-content: center;
-      transition: background .15s, color .15s, border-color .15s;
+      background: none; border: 1px solid var(--border);
+      padding: 5px; color: var(--text-3); margin-left: 12px;
+      transition: color .15s, border-color .15s;
     }
-    .btn-icon:hover { border-color: var(--text-3); color: var(--text); background: var(--bg); }
+    .btn-theme:hover { color: var(--text); border-color: var(--text-3); }
 
-    /* ── Hero ─────────────────────────────────────────────────── */
+    .hamburger {
+      display: none; flex-direction: column; gap: 4px;
+      background: none; border: none; cursor: pointer; padding: 4px;
+      margin-left: 10px;
+    }
+    .hamburger span {
+      display: block; width: 18px; height: 1.5px;
+      background: var(--text); transition: transform .2s, opacity .2s;
+    }
+    .hamburger.open span:nth-child(1) { transform: translateY(5.5px) rotate(45deg); }
+    .hamburger.open span:nth-child(2) { opacity: 0; }
+    .hamburger.open span:nth-child(3) { transform: translateY(-5.5px) rotate(-45deg); }
+
+    .nav-mobile {
+      display: none; position: fixed;
+      top: 52px; left: 0; right: 0; bottom: 0; z-index: 48;
+      background: var(--bg); border-top: 1px solid var(--border);
+      padding: 0 28px 40px; flex-direction: column; overflow-y: auto;
+    }
+    .nav-mobile.open { display: flex; }
+    .nav-mobile-link {
+      display: block; font-size: 17px; color: var(--text-2);
+      padding: 18px 0; border-bottom: 1px solid var(--border);
+      transition: color .15s;
+    }
+    .nav-mobile-link:hover { color: var(--text); }
+    .nav-mobile-cta {
+      display: block; margin-top: 28px;
+      font-size: 17px; font-weight: 600; color: var(--blue);
+      transition: opacity .15s;
+    }
+    .nav-mobile-cta:hover { opacity: .72; }
+
+    /* ── Hero ────────────────────────────────────────────────────── */
     .hero {
-      padding: 80px 0 72px;
-      text-align: center;
-      background: var(--surface);
+      padding: 80px 0 88px;
       border-bottom: 1px solid var(--border);
+    }
+    .hero-inner {
+      display: grid;
+      grid-template-columns: 1fr 240px;
+      gap: 72px;
+      align-items: start;
     }
     .hero h1 {
-      font-size: clamp(28px, 4.5vw, 52px);
-      font-weight: 700; line-height: 1.1;
-      letter-spacing: -0.025em;
-      color: var(--text); margin-bottom: 20px;
+      font-size: clamp(40px, 5.2vw, 68px);
+      font-weight: 700; line-height: 1.03;
+      letter-spacing: -0.035em;
+      color: var(--text); margin-bottom: 24px;
     }
-    .hero h1 .accent { color: var(--blue); }
-    .hero-sub {
-      font-size: 17px; color: var(--text-2);
-      max-width: 480px; margin: 0 auto 32px;
-      line-height: 1.65;
+    .hero h1 em {
+      font-style: normal;
+      color: var(--blue);
     }
-    .hero-sub strong { color: var(--text); font-weight: 600; }
-    .hero-cta {
-      display: flex; flex-wrap: wrap; gap: 12px;
-      justify-content: center; margin-bottom: 18px;
+    .hero-desc {
+      font-size: 16px; color: var(--text-2);
+      line-height: 1.72; margin-bottom: 36px;
+      max-width: 400px;
     }
-    .hero-note { font-size: 13px; color: var(--text-3); }
+    .hero-actions {
+      display: flex; align-items: center; gap: 28px;
+      margin-bottom: 20px;
+    }
+    .a-primary {
+      font-size: 15px; font-weight: 600;
+      color: var(--blue); transition: opacity .15s;
+    }
+    .a-primary:hover { opacity: .72; }
+    .a-secondary {
+      font-size: 14px; color: var(--text-3);
+      transition: color .15s;
+    }
+    .a-secondary:hover { color: var(--text-2); }
+    .hero-note { font-size: 12px; color: var(--text-3); }
 
-    /* ── Section base ─────────────────────────────────────────── */
-    section { padding: 72px 0; }
-    .section-eyebrow {
-      font-size: 12px; font-weight: 600; text-transform: uppercase;
-      letter-spacing: .1em; color: var(--blue); margin-bottom: 10px;
+    .hero-stats {
+      border-left: 1px solid var(--border);
+      padding-left: 32px; padding-top: 4px;
     }
-    .section-title {
-      font-size: clamp(20px, 2.5vw, 26px); font-weight: 700;
-      color: var(--text); margin-bottom: 10px; letter-spacing: -0.02em;
-    }
-    .section-sub { font-size: 15px; color: var(--text-2); }
-
-    /* ── Como funciona ────────────────────────────────────────── */
-    .steps-section {
-      background: var(--bg);
-      border-top: 1px solid var(--border);
+    .hero-stat {
+      padding: 20px 0;
       border-bottom: 1px solid var(--border);
+    }
+    .hero-stat:first-child { padding-top: 0; }
+    .hero-stat:last-child  { border-bottom: none; padding-bottom: 0; }
+    .stat-n {
+      display: block;
+      font-size: 32px; font-weight: 700;
+      color: var(--text); letter-spacing: -0.02em;
+      line-height: 1; margin-bottom: 5px;
+    }
+    .stat-l { font-size: 12px; color: var(--text-3); }
+
+    /* ── Como funciona ───────────────────────────────────────────── */
+    .steps-section {
+      padding: 72px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .sec-label {
+      display: block;
+      font-size: 11px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: .12em;
+      color: var(--text-3); margin-bottom: 48px;
     }
     .steps-grid {
       display: grid;
-      grid-template-columns: 1fr;
-      gap: 14px;
-      margin-top: 44px;
-    }
-    @media (min-width: 680px) { .steps-grid { grid-template-columns: repeat(3, 1fr); } }
-
-    .step-card {
-      background: var(--surface);
+      grid-template-columns: 1.65fr 1fr;
       border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 28px 24px;
     }
-    .step-number {
-      width: 40px; height: 40px; border-radius: 10px;
-      background: var(--blue-bg); border: 1px solid var(--blue-bd);
-      color: var(--blue); font-size: 16px; font-weight: 800;
-      display: flex; align-items: center; justify-content: center;
-      margin-bottom: 18px;
+    .step-main {
+      padding: 44px 40px;
+      border-right: 1px solid var(--border);
     }
-    .step-title { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
-    .step-desc { font-size: 14px; color: var(--text-2); line-height: 1.6; }
+    .step-side { display: flex; flex-direction: column; }
+    .step-sub {
+      padding: 32px 28px;
+      border-bottom: 1px solid var(--border);
+      flex: 1;
+    }
+    .step-sub:last-child { border-bottom: none; }
+    .step-n {
+      display: block;
+      font-size: 11px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: .1em;
+      color: var(--text-3); margin-bottom: 14px;
+    }
+    .step-h {
+      font-size: 17px; font-weight: 700;
+      color: var(--text); letter-spacing: -0.02em;
+      margin-bottom: 10px;
+    }
+    .step-main .step-h {
+      font-size: clamp(20px, 2vw, 24px);
+      margin-bottom: 14px;
+    }
+    .step-p { font-size: 14px; color: var(--text-2); line-height: 1.7; }
+    .step-main .step-p { font-size: 15px; max-width: 300px; }
 
-    /* ── Planos ───────────────────────────────────────────────── */
-    .pricing-section {
-      background: var(--surface);
-      border-top: 1px solid var(--border);
+    /* ── Planos ──────────────────────────────────────────────────── */
+    .pricing-section { padding: 72px 0; }
+    .pricing-head { margin-bottom: 36px; }
+    .pricing-title {
+      font-size: clamp(20px, 2.5vw, 26px); font-weight: 700;
+      color: var(--text); letter-spacing: -0.022em; margin-bottom: 8px;
     }
-    .plans-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 14px;
-      margin-top: 44px;
-    }
-    @media (min-width: 500px) { .plans-grid { grid-template-columns: repeat(2, 1fr); } }
-    @media (min-width: 900px) { .plans-grid { grid-template-columns: repeat(5, 1fr); } }
+    .pricing-sub { font-size: 14px; color: var(--text-3); }
 
-    .plan-card {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 24px 18px 20px;
-      display: flex; flex-direction: column;
-      align-items: center; text-align: center;
-      position: relative;
-      transition: box-shadow .2s, border-color .2s, transform .2s;
+    .pricing-list { border-top: 1px solid var(--border); }
+    .p-row {
+      display: flex; justify-content: space-between;
+      align-items: center; padding: 20px 0;
+      border-bottom: 1px solid var(--border);
     }
-    .plan-card:hover {
-      box-shadow: 0 4px 16px rgba(0,0,0,.08);
-      transform: translateY(-2px);
+    .p-name {
+      font-size: 15px; font-weight: 500;
+      color: var(--text); display: block;
     }
-    .plan-card.featured {
-      background: var(--surface);
-      border: 2px solid var(--blue);
-      box-shadow: 0 4px 20px rgba(37,99,235,.14);
-    }
-    .plan-card.featured:hover {
-      box-shadow: 0 8px 28px rgba(37,99,235,.22);
-      transform: translateY(-3px);
-    }
-    .plan-badge {
-      position: absolute; top: -12px; left: 50%;
-      transform: translateX(-50%);
-      background: var(--amber-bg); color: var(--amber);
+    .p-pop {
       font-size: 10px; font-weight: 700;
-      padding: 3px 12px; border-radius: 99px;
-      white-space: nowrap; letter-spacing: .04em;
+      color: var(--blue); text-transform: uppercase;
+      letter-spacing: .06em; margin-left: 7px;
     }
-    .plan-qty {
-      font-size: 40px; font-weight: 800; line-height: 1;
-      color: var(--text); margin-bottom: 2px; letter-spacing: -1px;
+    .p-meta { font-size: 12px; color: var(--text-3); display: block; margin-top: 2px; }
+    .p-right { display: flex; align-items: center; gap: 24px; flex-shrink: 0; }
+    .p-price {
+      font-size: 15px; font-weight: 600;
+      color: var(--text); min-width: 76px; text-align: right;
     }
-    .plan-card.featured .plan-qty { color: var(--blue); }
-    .plan-unit { font-size: 12px; color: var(--text-3); margin-bottom: 18px; }
-    .plan-price { font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 3px; letter-spacing: -.3px; }
-    .plan-per { font-size: 11px; color: var(--text-3); margin-bottom: 18px; }
+    .p-btn {
+      font-size: 13px; font-weight: 500; color: var(--blue);
+      background: none; border: none;
+      transition: opacity .15s; white-space: nowrap;
+    }
+    .p-btn:hover { opacity: .68; }
 
-    .btn-plan {
-      width: 100%; padding: 9px 0;
-      border-radius: 9px; border: 1px solid var(--border);
-      background: transparent; color: var(--text-2);
-      font-size: 13px; font-weight: 600; font-family: inherit;
-      transition: background .15s, color .15s, border-color .15s;
-      display: block; text-align: center; text-decoration: none;
+    .trust-line {
+      margin-top: 28px;
+      font-size: 12px; color: var(--text-3); line-height: 1.8;
     }
-    .btn-plan:hover { background: var(--surface); border-color: var(--text-3); color: var(--text); }
-    .btn-plan.featured { background: var(--blue); color: #fff; border-color: var(--blue); }
-    .btn-plan.featured:hover { background: var(--blue-dark); border-color: var(--blue-dark); }
 
-    /* ── Trust row ────────────────────────────────────────────── */
-    .trust-row {
-      display: flex; flex-wrap: wrap; justify-content: center;
-      gap: 8px 28px; margin-top: 32px;
+    /* ── Footer ──────────────────────────────────────────────────── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 24px 0;
     }
-    .trust-item {
-      display: flex; align-items: center; gap: 6px;
-      font-size: 12px; color: var(--text-3);
+    .footer-inner {
+      display: flex; align-items: center;
+      justify-content: space-between; gap: 16px; flex-wrap: wrap;
     }
-    .trust-item svg { color: var(--blue); flex-shrink: 0; }
+    .footer-copy { font-size: 12px; color: var(--text-3); }
+    .footer-links { display: flex; align-items: center; gap: 20px; }
+    .footer-links a { font-size: 12px; color: var(--text-3); transition: color .15s; }
+    .footer-links a:hover { color: var(--text-2); }
 
-    /* ── Modal ────────────────────────────────────────────────── */
+    /* ── Modal ───────────────────────────────────────────────────── */
     .modal-backdrop {
       position: fixed; inset: 0; z-index: 100;
       display: flex; align-items: center; justify-content: center;
       padding: 24px;
-      background: rgba(15,23,42,.55);
-      backdrop-filter: blur(4px);
+      background: rgba(15,23,42,.72);
     }
     .modal-box {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 18px; padding: 28px;
-      width: 100%; max-width: 400px;
-      box-shadow: 0 20px 60px rgba(0,0,0,.2);
+      background: var(--bg); border: 1px solid var(--border);
+      padding: 28px; width: 100%; max-width: 380px;
     }
     .modal-header {
       display: flex; align-items: flex-start;
       justify-content: space-between; gap: 12px;
-      margin-bottom: 18px;
+      padding-bottom: 16px; margin-bottom: 20px;
+      border-bottom: 1px solid var(--border);
     }
-    .modal-title { font-size: 16px; font-weight: 700; color: var(--text); }
-    .modal-subtitle { font-size: 13px; color: var(--text-2); margin-top: 3px; }
+    .modal-title { font-size: 15px; font-weight: 700; color: var(--text); }
+    .modal-subtitle { font-size: 13px; color: var(--text-3); margin-top: 3px; }
     .modal-close {
-      background: none; border: none; font-size: 20px;
-      color: var(--text-3); line-height: 1;
-      transition: color .15s; cursor: pointer; padding: 0;
+      background: none; border: none; font-size: 18px;
+      color: var(--text-3); cursor: pointer; padding: 0;
+      transition: color .15s; line-height: 1;
     }
     .modal-close:hover { color: var(--text); }
     .modal-notice {
-      background: var(--amber-bg); border: 1px solid #FDE68A;
-      border-radius: 10px; padding: 12px 14px; margin-bottom: 18px;
+      border-left: 2px solid var(--blue);
+      padding: 8px 12px; margin-bottom: 20px;
     }
-    [data-theme="dark"] .modal-notice { border-color: #78350F; }
-    .modal-notice-title {
-      font-size: 12px; font-weight: 700; color: var(--amber); margin-bottom: 4px;
-    }
-    .modal-notice-body { font-size: 12px; color: var(--text-2); }
+    .modal-notice-title { font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
+    .modal-notice-body { font-size: 12px; color: var(--text-2); line-height: 1.6; }
     .modal-facts { margin-bottom: 20px; }
-    .modal-fact {
-      display: flex; align-items: center; gap: 8px;
-      font-size: 13px; color: var(--text-2); padding: 4px 0;
+    .modal-fact { font-size: 13px; color: var(--text-2); padding: 3px 0; }
+    .modal-fact::before { content: '—'; color: var(--text-3); margin-right: 8px; }
+    .modal-actions {
+      display: flex; align-items: center; gap: 24px;
+      padding-top: 16px; border-top: 1px solid var(--border);
     }
-    .modal-fact svg { color: var(--blue); flex-shrink: 0; }
-    .modal-actions { display: flex; gap: 10px; }
-    .btn-modal-secondary {
-      flex: 1; padding: 10px 0;
-      border-radius: 10px; border: 1px solid var(--border);
-      background: transparent; color: var(--text-2);
-      font-size: 13px; font-weight: 600; font-family: inherit;
-      transition: background .15s, color .15s; cursor: pointer;
+    .btn-m-sec {
+      font-size: 13px; color: var(--text-3);
+      background: none; border: none; cursor: pointer;
+      font-family: inherit; padding: 0; transition: color .15s;
     }
-    .btn-modal-secondary:hover { background: var(--bg); color: var(--text); }
-    .btn-modal-primary {
-      flex: 1; padding: 10px 0;
-      border-radius: 10px; border: none;
-      background: var(--blue); color: #fff;
-      font-size: 13px; font-weight: 600;
-      transition: opacity .15s; cursor: pointer;
-      text-align: center; display: inline-block; text-decoration: none;
+    .btn-m-sec:hover { color: var(--text); }
+    .btn-m-pri {
+      font-size: 13px; font-weight: 600; color: var(--blue);
+      background: none; border: none; cursor: pointer;
+      font-family: inherit; text-decoration: none;
+      transition: opacity .15s;
     }
-    .btn-modal-primary:hover { opacity: .88; }
+    .btn-m-pri:hover { opacity: .72; }
 
-    /* ── Footer ───────────────────────────────────────────────── */
-    footer {
-      border-top: 1px solid var(--border);
-      background: var(--surface);
-      padding: 32px 0;
-    }
-    .footer-inner {
-      display: flex; flex-wrap: wrap;
-      align-items: center; justify-content: space-between;
-      gap: 16px;
-    }
-    .footer-logo { font-weight: 700; font-size: 15px; color: var(--text); }
-    .footer-copy { font-size: 13px; color: var(--text-3); }
-    .footer-nav { display: flex; align-items: center; gap: 20px; }
-    .footer-nav a { font-size: 13px; color: var(--text-3); transition: color .15s; }
-    .footer-nav a:hover { color: var(--text-2); }
-
-    /* ── Utility ──────────────────────────────────────────────── */
-    .hidden { display: none !important; }
-    .text-center { text-align: center; }
-
-    /* ── Hamburger menu ───────────────────────────────────────── */
-    .hamburger {
-      display: none; flex-direction: column; gap: 5px;
-      background: none; border: none; cursor: pointer; padding: 6px;
-      border-radius: 8px; border: 1px solid var(--border);
-    }
-    .hamburger span {
-      display: block; width: 20px; height: 2px;
-      background: var(--text); border-radius: 2px;
-      transition: transform .2s, opacity .2s;
-    }
-    .hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
-    .hamburger.open span:nth-child(2) { opacity: 0; }
-    .hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
-
-    .nav-mobile {
-      display: none; position: fixed;
-      top: 56px; left: 0; right: 0; bottom: 0; z-index: 48;
-      background: var(--surface);
-      padding: 20px 24px 32px;
-      flex-direction: column; gap: 0;
-      border-top: 1px solid var(--border);
-      overflow-y: auto;
-    }
-    .nav-mobile.open { display: flex; }
-    .nav-mobile-link {
-      display: block; font-size: 16px; color: var(--text-2); font-weight: 500;
-      padding: 14px 0; border-bottom: 1px solid var(--border);
-      transition: color .15s;
-    }
-    .nav-mobile-link:hover { color: var(--text); }
-    .nav-mobile .btn {
-      margin-top: 20px; padding: 14px;
-      border-radius: 10px; text-align: center;
-      font-size: 15px; width: 100%;
+    /* ── Responsive ──────────────────────────────────────────────── */
+    @media (max-width: 800px) {
+      .hero-inner {
+        grid-template-columns: 1fr;
+        gap: 44px;
+      }
+      .hero-stats {
+        border-left: none;
+        border-top: 1px solid var(--border);
+        padding-left: 0; padding-top: 32px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+      }
+      .hero-stat {
+        padding: 0 20px 0 0;
+        border-bottom: none;
+        border-right: 1px solid var(--border);
+      }
+      .hero-stat:last-child { border-right: none; padding-right: 0; }
     }
 
-    /* ── Responsive ───────────────────────────────────────────── */
     @media (max-width: 640px) {
-      .nav-links { display: none; }
+      .nav-links, .nav-divider { display: none; }
       .hamburger { display: flex; }
+      .container { padding: 0 18px; }
 
-      .container { padding: 0 16px; }
+      .hero { padding: 52px 0 60px; }
+      .hero h1 { font-size: 38px; }
+      .hero-desc { font-size: 15px; }
+      .hero-actions { flex-direction: column; align-items: flex-start; gap: 18px; }
 
-      .hero { padding: 44px 0 40px; }
-      .hero-sub { font-size: 15px; }
-      .hero-cta { flex-direction: column; align-items: stretch; }
-      .hero-cta .btn { width: 100%; justify-content: center; }
+      .steps-grid { grid-template-columns: 1fr; }
+      .step-main { border-right: none; border-bottom: 1px solid var(--border); padding: 32px 24px; }
+      .step-sub { padding: 24px; }
 
-      section { padding: 48px 0; }
-
-      .plans-grid { grid-template-columns: 1fr 1fr; }
+      .p-right { gap: 16px; }
+      .p-price { min-width: auto; }
 
       .modal-backdrop { padding: 12px; align-items: flex-end; }
-      .modal-box { max-width: 100%; border-radius: 18px 18px 10px 10px; }
-      .modal-actions { flex-direction: column; }
-      .btn-modal-primary, .btn-modal-secondary { flex: none; width: 100%; padding: 13px; }
+      .modal-box { max-width: 100%; }
+      .modal-actions { flex-direction: column; align-items: flex-start; gap: 14px; }
 
-      .footer-inner { flex-direction: column; align-items: flex-start; gap: 12px; }
-      .footer-nav { flex-wrap: wrap; gap: 12px 18px; }
+      .footer-inner { flex-direction: column; align-items: flex-start; }
     }
 
-    @media (max-width: 400px) {
-      .plans-grid { grid-template-columns: 1fr; }
+    @media (max-width: 480px) {
+      .hero-stats {
+        grid-template-columns: 1fr;
+      }
+      .hero-stat {
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        padding: 16px 0;
+      }
+      .hero-stat:last-child { border-bottom: none; padding-bottom: 0; }
     }
   </style>
-  <!-- PWA -->
   <link rel="manifest" href="/manifest.json" />
   <meta name="theme-color" content="#2563EB" />
   <meta name="mobile-web-app-capable" content="yes" />
@@ -410,29 +401,27 @@
 </head>
 <body>
 
-<!-- ── Header ─────────────────────────────────────────────────── -->
+<!-- ── Header ────────────────────────────────────────────────────── -->
 <header>
   <div class="container header-inner">
     <a href="/index.html" class="logo">CardsQuestõesAI</a>
-    <div style="display:flex;align-items:center;gap:8px;">
-      <!-- Nav links — desktop only -->
-      <div class="nav-links">
+    <div class="header-right">
+      <nav class="nav-links">
         <a href="#como-funciona" class="nav-link">Como funciona</a>
         <a href="#planos" class="nav-link">Preços</a>
+        <div class="nav-divider"></div>
         <a href="/login.html" class="nav-link">Entrar</a>
-        <a href="/register.html" class="btn btn-primary btn-sm" style="margin-left:6px;">Começar</a>
-      </div>
-      <!-- Dark toggle — always visible -->
-      <button id="darkToggle" class="btn-icon" onclick="toggleDark()" title="Alternar tema">
-        <svg id="iconSun" class="hidden" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <a href="/register.html" class="nav-cta">Começar →</a>
+      </nav>
+      <button id="darkToggle" class="btn-theme" onclick="toggleDark()" title="Alternar tema">
+        <svg id="iconSun" class="hidden" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <circle cx="12" cy="12" r="5"/>
           <path stroke-linecap="round" d="M12 2v2m0 16v2M4.22 4.22l1.42 1.42m12.72 12.72 1.42 1.42M2 12h2m16 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
         </svg>
-        <svg id="iconMoon" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <svg id="iconMoon" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
         </svg>
       </button>
-      <!-- Hamburger — mobile only -->
       <button id="hamburgerBtn" class="hamburger" onclick="toggleMobileNav()" aria-label="Menu">
         <span></span><span></span><span></span>
       </button>
@@ -440,148 +429,147 @@
   </div>
 </header>
 
-<!-- Mobile nav -->
+<!-- ── Mobile nav ─────────────────────────────────────────────────── -->
 <div id="mobileNav" class="nav-mobile">
-  <a href="#como-funciona" class="nav-mobile-link" onclick="toggleMobileNav()">Como funciona</a>
-  <a href="#planos" class="nav-mobile-link" onclick="toggleMobileNav()">Preços</a>
+  <a href="#como-funciona" class="nav-mobile-link" onclick="closeMobileNav()">Como funciona</a>
+  <a href="#planos" class="nav-mobile-link" onclick="closeMobileNav()">Preços</a>
   <a href="/login.html" class="nav-mobile-link">Entrar</a>
-  <a href="/register.html" class="btn btn-primary">Começar grátis</a>
+  <a href="/register.html" class="nav-mobile-cta">Começar grátis →</a>
 </div>
 
-<!-- ── Hero ───────────────────────────────────────────────────── -->
+<!-- ── Hero ───────────────────────────────────────────────────────── -->
 <section class="hero">
   <div class="container">
-    <h1>PDF → <span class="accent">Questões</span> e Flashcards<br>em 1 minuto</h1>
-    <p class="hero-sub">
-      Faça upload, a IA gera <strong>50 questões</strong> de múltipla escolha
-      + <strong>100 flashcards</strong> automaticamente
-    </p>
-    <div class="hero-cta">
-      <a href="/register.html" class="btn btn-primary btn-lg">Começar grátis</a>
-      <a href="#planos" class="btn btn-secondary btn-lg">Ver planos</a>
+    <div class="hero-inner">
+      <div>
+        <h1>PDF →<br><em>Questões</em><br>e Flashcards.</h1>
+        <p class="hero-desc">Faça upload do seu PDF. A IA gera 50 questões de múltipla escolha e 100 flashcards prontos para estudar — em menos de 2 minutos.</p>
+        <div class="hero-actions">
+          <a href="/register.html" class="a-primary">Começar grátis →</a>
+          <a href="#planos" class="a-secondary">Ver preços</a>
+        </div>
+        <p class="hero-note">2 gerações gratuitas · Sem cartão de crédito</p>
+      </div>
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <span class="stat-n">50</span>
+          <span class="stat-l">questões por geração</span>
+        </div>
+        <div class="hero-stat">
+          <span class="stat-n">100</span>
+          <span class="stat-l">flashcards por geração</span>
+        </div>
+        <div class="hero-stat">
+          <span class="stat-n">&lt;2min</span>
+          <span class="stat-l">tempo de processamento</span>
+        </div>
+      </div>
     </div>
-    <p class="hero-note">2 gerações grátis para testar</p>
   </div>
 </section>
 
-<!-- ── Como funciona ──────────────────────────────────────────── -->
+<!-- ── Como funciona ──────────────────────────────────────────────── -->
 <section id="como-funciona" class="steps-section">
   <div class="container">
-    <div class="text-center">
-      <p class="section-eyebrow">Como funciona</p>
-      <h2 class="section-title">Três passos simples</h2>
-      <p class="section-sub">Do PDF ao material de estudo completo em menos de 2 minutos.</p>
-    </div>
-
+    <span class="sec-label">Como funciona</span>
     <div class="steps-grid">
-      <div class="step-card">
-        <div class="step-number">1</div>
-        <p class="step-title">Envie o PDF</p>
-        <p class="step-desc">Arraste ou selecione seu PDF. Aceitamos até 150 páginas por geração.</p>
+      <div class="step-main">
+        <span class="step-n">01</span>
+        <h3 class="step-h">Envie o PDF</h3>
+        <p class="step-p">Selecione ou arraste seu arquivo. Aceitamos PDFs de até 150 páginas. Nenhuma instalação — tudo no navegador.</p>
       </div>
-      <div class="step-card">
-        <div class="step-number">2</div>
-        <p class="step-title">IA processa</p>
-        <p class="step-desc">Nossa IA extrai o conteúdo e gera o material de estudo automaticamente.</p>
-      </div>
-      <div class="step-card">
-        <div class="step-number">3</div>
-        <p class="step-title">Estude</p>
-        <p class="step-desc">Acesse 50 questões interativas e 100 flashcards prontos para revisar.</p>
+      <div class="step-side">
+        <div class="step-sub">
+          <span class="step-n">02</span>
+          <h3 class="step-h">IA processa</h3>
+          <p class="step-p">Lê o conteúdo e gera material de estudo automaticamente.</p>
+        </div>
+        <div class="step-sub">
+          <span class="step-n">03</span>
+          <h3 class="step-h">Estude</h3>
+          <p class="step-p">50 questões interativas + 100 flashcards prontos para revisar.</p>
+        </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ── Planos ─────────────────────────────────────────────────── -->
+<!-- ── Planos ─────────────────────────────────────────────────────── -->
 <section id="planos" class="pricing-section">
   <div class="container">
-    <div class="text-center">
-      <p class="section-eyebrow">Planos</p>
-      <h2 class="section-title">Pague e use quando quiser.</h2>
-      <p class="section-sub">1 geração = 50 questões + 100 flashcards de um PDF</p>
+    <div class="pricing-head">
+      <h2 class="pricing-title">Pague e use quando quiser.</h2>
+      <p class="pricing-sub">1 geração = 50 questões + 100 flashcards a partir de um PDF</p>
     </div>
 
-    <div class="plans-grid">
+    <div class="pricing-list">
 
-      <!-- Grátis -->
-      <div class="plan-card">
-        <div class="plan-qty" style="font-size:28px;letter-spacing:0;">Grátis</div>
-        <div class="plan-unit">2 gerações incluídas</div>
-        <div class="plan-price">R$ 0</div>
-        <div class="plan-per">sem cartão de crédito</div>
-        <a href="/register.html" class="btn-plan">Criar conta</a>
+      <div class="p-row">
+        <div>
+          <span class="p-name">Grátis</span>
+          <span class="p-meta">2 gerações ao criar conta</span>
+        </div>
+        <div class="p-right">
+          <span class="p-price">R$ 0</span>
+          <a href="/register.html" class="p-btn">Criar conta →</a>
+        </div>
       </div>
 
-      <!-- 5 gerações -->
-      <div class="plan-card">
-        <div class="plan-qty">5</div>
-        <div class="plan-unit">gerações</div>
-        <div class="plan-price">R$ 14,90</div>
-        <div class="plan-per">R$ 2,98 por geração</div>
-        <button class="btn-plan" onclick="openModal(5, 'R$ 14,90')">Comprar</button>
+      <div class="p-row">
+        <div>
+          <span class="p-name">5 gerações</span>
+          <span class="p-meta">R$ 2,98 por geração</span>
+        </div>
+        <div class="p-right">
+          <span class="p-price">R$ 14,90</span>
+          <button class="p-btn" onclick="openModal(5, 'R$ 14,90')">Comprar →</button>
+        </div>
       </div>
 
-      <!-- 10 gerações — destaque -->
-      <div class="plan-card featured">
-        <span class="plan-badge">Mais vendido</span>
-        <div class="plan-qty">10</div>
-        <div class="plan-unit">gerações</div>
-        <div class="plan-price">R$ 24,90</div>
-        <div class="plan-per">R$ 2,49 por geração</div>
-        <button class="btn-plan featured" onclick="openModal(10, 'R$ 24,90')">Comprar</button>
+      <div class="p-row">
+        <div>
+          <span class="p-name">10 gerações<span class="p-pop">Popular</span></span>
+          <span class="p-meta">R$ 2,49 por geração</span>
+        </div>
+        <div class="p-right">
+          <span class="p-price">R$ 24,90</span>
+          <button class="p-btn" onclick="openModal(10, 'R$ 24,90')">Comprar →</button>
+        </div>
       </div>
 
-      <!-- 20 gerações -->
-      <div class="plan-card">
-        <div class="plan-qty">20</div>
-        <div class="plan-unit">gerações</div>
-        <div class="plan-price">R$ 39,90</div>
-        <div class="plan-per">R$ 2,00 por geração</div>
-        <button class="btn-plan" onclick="openModal(20, 'R$ 39,90')">Comprar</button>
+      <div class="p-row">
+        <div>
+          <span class="p-name">20 gerações</span>
+          <span class="p-meta">R$ 2,00 por geração</span>
+        </div>
+        <div class="p-right">
+          <span class="p-price">R$ 39,90</span>
+          <button class="p-btn" onclick="openModal(20, 'R$ 39,90')">Comprar →</button>
+        </div>
       </div>
 
-      <!-- 50 gerações -->
-      <div class="plan-card">
-        <div class="plan-qty">50</div>
-        <div class="plan-unit">gerações</div>
-        <div class="plan-price">R$ 79,90</div>
-        <div class="plan-per">R$ 1,60 por geração</div>
-        <button class="btn-plan" onclick="openModal(50, 'R$ 79,90')">Comprar</button>
+      <div class="p-row">
+        <div>
+          <span class="p-name">50 gerações</span>
+          <span class="p-meta">R$ 1,60 por geração</span>
+        </div>
+        <div class="p-right">
+          <span class="p-price">R$ 79,90</span>
+          <button class="p-btn" onclick="openModal(50, 'R$ 79,90')">Comprar →</button>
+        </div>
       </div>
 
     </div>
 
-    <!-- Trust -->
-    <div class="trust-row">
-      <div class="trust-item">
-        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
-        </svg>
-        Créditos sem expiração
-      </div>
-      <div class="trust-item">
-        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
-        </svg>
-        Só debita após sucesso
-      </div>
-      <div class="trust-item">
-        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
-        </svg>
-        Sem assinatura
-      </div>
-    </div>
+    <p class="trust-line">Sem assinatura · Créditos não expiram · Só debita após sucesso · Compre mais quando precisar</p>
   </div>
 </section>
 
-<!-- ── Footer ─────────────────────────────────────────────────── -->
+<!-- ── Footer ─────────────────────────────────────────────────────── -->
 <footer>
   <div class="container footer-inner">
-    <p class="footer-logo">CardsQuestõesAI</p>
-    <p class="footer-copy">© 2026 CardsQuestõesAI. Todos os direitos reservados.</p>
-    <nav class="footer-nav">
+    <p class="footer-copy">© 2026 CardsQuestõesAI</p>
+    <nav class="footer-links">
       <a href="/termos.html">Termos</a>
       <a href="/privacidade.html">Privacidade</a>
       <a href="mailto:contato@cardsquestoesai.com">Contato</a>
@@ -589,7 +577,7 @@
   </div>
 </footer>
 
-<!-- ── Modal de compra ────────────────────────────────────────── -->
+<!-- ── Modal de compra ────────────────────────────────────────────── -->
 <div id="paymentModal" class="modal-backdrop hidden">
   <div class="modal-box">
     <div class="modal-header">
@@ -601,44 +589,23 @@
     </div>
     <div class="modal-notice">
       <p class="modal-notice-title">Integração de pagamento pendente</p>
-      <p class="modal-notice-body">
-        Configure o Stripe ou PagSeguro e adicione os links de checkout.
-        Por enquanto, entre em contato — o admin adiciona os créditos manualmente.
-      </p>
+      <p class="modal-notice-body">Configure o Stripe ou PagSeguro e adicione os links de checkout. Por enquanto, entre em contato — o admin adiciona os créditos manualmente.</p>
     </div>
     <div class="modal-facts">
-      <div class="modal-fact">
-        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
-        </svg>
-        Pagamento único, sem assinatura
-      </div>
-      <div class="modal-fact">
-        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
-        </svg>
-        Créditos não expiram
-      </div>
-      <div class="modal-fact">
-        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
-        </svg>
-        Falha na geração = sem débito
-      </div>
+      <p class="modal-fact">Pagamento único, sem assinatura</p>
+      <p class="modal-fact">Créditos não expiram</p>
+      <p class="modal-fact">Falha na geração = sem débito</p>
     </div>
     <div class="modal-actions">
-      <button class="btn-modal-secondary" onclick="closeModal()">Fechar</button>
-      <a href="mailto:contato@cardsai.com?subject=Compra de Créditos CardsQuestõesAI"
-        class="btn-modal-primary">
-        Entrar em contato
-      </a>
+      <button class="btn-m-sec" onclick="closeModal()">Fechar</button>
+      <a href="mailto:contato@cardsquestoesai.com?subject=Compra de Créditos CardsQuestõesAI" class="btn-m-pri">Entrar em contato →</a>
     </div>
   </div>
 </div>
 
 <script src="/js/config.js"></script>
 <script>
-  /* ── Dark mode ──────────────────────────────────────────────── */
+  /* ── Dark mode ───────────────────────────────────────────────── */
   (function () {
     const saved = localStorage.getItem('cardsai-theme');
     if (saved === 'dark') applyDark(true);
@@ -656,16 +623,15 @@
     localStorage.setItem('cardsai-theme', isDark ? 'light' : 'dark');
   };
 
-  /* ── Smooth scroll para âncoras ─────────────────────────────── */
+  /* ── Smooth scroll ───────────────────────────────────────────── */
   document.querySelectorAll('a[href^="#"]').forEach(a => {
     a.addEventListener('click', e => {
-      const id = a.getAttribute('href').slice(1);
-      const el = document.getElementById(id);
+      const el = document.getElementById(a.getAttribute('href').slice(1));
       if (el) { e.preventDefault(); el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
     });
   });
 
-  /* ── Modal ──────────────────────────────────────────────────── */
+  /* ── Modal ───────────────────────────────────────────────────── */
   window.openModal = function (qty, price) {
     document.getElementById('modalTitle').textContent = 'Pacote de ' + qty + ' gerações';
     document.getElementById('modalSubtitle').textContent = qty + ' gerações por ' + price;
@@ -682,30 +648,24 @@
     if (e.target === this) closeModal();
   });
 
-  document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape') closeModal();
-  });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
-  /* ── Mobile nav ─────────────────────────────────────────────── */
-  window.toggleMobileNav = function () {
-    const nav = document.getElementById('mobileNav');
-    const btn = document.getElementById('hamburgerBtn');
-    nav.classList.toggle('open');
-    btn.classList.toggle('open');
+  /* ── Mobile nav ──────────────────────────────────────────────── */
+  window.closeMobileNav = function () {
+    document.getElementById('mobileNav').classList.remove('open');
+    document.getElementById('hamburgerBtn').classList.remove('open');
   };
-  // Fecha ao clicar em link âncora
-  document.querySelectorAll('.nav-mobile-link[href^="#"]').forEach(a => {
-    a.addEventListener('click', () => {
-      document.getElementById('mobileNav').classList.remove('open');
-      document.getElementById('hamburgerBtn').classList.remove('open');
-    });
-  });
 
-  /* ── Redirecionar se já logado ──────────────────────────────── */
+  window.toggleMobileNav = function () {
+    document.getElementById('mobileNav').classList.toggle('open');
+    document.getElementById('hamburgerBtn').classList.toggle('open');
+  };
+
+  /* ── Redirecionar se já logado ───────────────────────────────── */
   db.auth.getSession().then(({ data: { session } }) => {
     if (session) window.location.href = '/dashboard.html';
   });
 </script>
-  <script>if('serviceWorker'in navigator){navigator.serviceWorker.register('/sw.js');}</script>
+<script>if('serviceWorker'in navigator){navigator.serviceWorker.register('/sw.js');}</script>
 </body>
 </html>
