@@ -250,6 +250,17 @@
       #qPrev, #qNext { gap: 0 !important; }
       #qPrev svg, #qNext svg { display: none; }
     }
+
+    /* ── Google search button ───────────────────────────────── */
+    .google-btn {
+      background: transparent; border: none;
+      padding: 5px; border-radius: 6px; cursor: pointer;
+      line-height: 0; opacity: 0.38; display: block;
+      transition: opacity .15s, background .15s;
+    }
+    .google-btn:hover { opacity: 1; background: rgba(0,0,0,.07); }
+    .google-btn-light { opacity: 0.55; background: rgba(255,255,255,0.1); }
+    .google-btn-light:hover { opacity: 1; background: rgba(255,255,255,0.22); }
   </style>
   <!-- PWA -->
   <link rel="manifest" href="/manifest.json" />
@@ -338,7 +349,10 @@
       </div>
 
       <!-- Card -->
-      <div id="qCard" class="card-in bg-white rounded-2xl border border-slate-200 shadow-sm p-6 md:p-8 mb-4">
+      <div id="qCard" class="card-in bg-white rounded-2xl border border-slate-200 shadow-sm p-6 md:p-8 mb-4" style="position:relative;">
+        <button id="qGoogleBtn" class="google-btn" title="Pesquisar no Google" style="position:absolute;top:14px;right:14px;" onclick="void 0">
+          <img src="/static/images/google.png" alt="Pesquisar no Google" width="18" height="18" style="display:block;">
+        </button>
         <p id="qTopic" class="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mb-3"></p>
         <p id="qText" class="text-base md:text-lg font-medium text-slate-900 leading-relaxed mb-6"></p>
         <div id="qOpts" class="space-y-2.5"></div>
@@ -400,6 +414,9 @@
             </span>
             <p id="fcFront" class="text-base md:text-lg font-medium text-slate-900 leading-relaxed max-w-md"></p>
             <p class="text-xs text-slate-300 mt-6 select-none">Clique para ver a resposta</p>
+            <button id="fcGoogleFront" class="google-btn" title="Pesquisar no Google" style="position:absolute;bottom:14px;right:14px;" onclick="event.stopPropagation()">
+              <img src="/static/images/google.png" alt="Pesquisar no Google" width="18" height="18" style="display:block;">
+            </button>
           </div>
 
           <!-- Back face -->
@@ -412,6 +429,9 @@
             </span>
             <p id="fcBack" class="text-base md:text-lg font-semibold text-white leading-relaxed max-w-md"></p>
             <p class="text-xs text-blue-200 mt-6 select-none">Clique para voltar</p>
+            <button id="fcGoogleBack" class="google-btn google-btn-light" title="Pesquisar no Google" style="position:absolute;bottom:14px;right:14px;" onclick="event.stopPropagation()">
+              <img src="/static/images/google.png" alt="Pesquisar no Google" width="18" height="18" style="display:block;">
+            </button>
           </div>
 
         </div>
@@ -475,7 +495,12 @@
     <!-- ── Question mode ── -->
     <div id="focusModeQuestion" style="display:none;">
       <p id="focusQTopic" style="font-size:11px;color:#64748B;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;text-align:center;"></p>
-      <p id="focusQText"  style="font-size:17px;font-weight:600;color:#F1F5F9;line-height:1.55;text-align:center;margin-bottom:20px;"></p>
+      <p id="focusQText"  style="font-size:17px;font-weight:600;color:#F1F5F9;line-height:1.55;text-align:center;margin-bottom:10px;"></p>
+      <div style="text-align:right;margin-bottom:14px;">
+        <button id="focusQGoogleBtn" class="google-btn google-btn-light" title="Pesquisar no Google" onclick="void 0" style="display:inline-block;">
+          <img src="/static/images/google.png" alt="Pesquisar no Google" width="16" height="16" style="display:block;">
+        </button>
+      </div>
       <div id="focusQOpts" style="display:flex;flex-direction:column;gap:8px;"></div>
       <div id="focusQAnswer" style="display:none;margin-top:14px;padding:12px 14px;background:#052E16;border:1px solid #166534;border-radius:10px;">
         <p id="focusQAnswerText" style="font-size:13px;font-weight:600;color:#4ADE80;"></p>
@@ -496,11 +521,17 @@
             <span style="font-size:11px;font-weight:600;color:#3B82F6;text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px;">Pergunta</span>
             <p id="focusFCFront" style="font-size:16px;font-weight:600;color:#F1F5F9;line-height:1.5;"></p>
             <p style="font-size:11px;color:#475569;margin-top:16px;">Clique para ver a resposta</p>
+            <button id="focusFCGoogleFront" class="google-btn google-btn-light" title="Pesquisar no Google" style="position:absolute;bottom:12px;right:12px;" onclick="event.stopPropagation()">
+              <img src="/static/images/google.png" alt="Pesquisar no Google" width="16" height="16" style="display:block;">
+            </button>
           </div>
           <div class="flip-face flip-face-back" style="background:#2563EB;">
             <span style="font-size:11px;font-weight:600;color:#BFDBFE;text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px;">Resposta</span>
             <p id="focusFCBack" style="font-size:16px;font-weight:600;color:#fff;line-height:1.5;"></p>
             <p style="font-size:11px;color:#BFDBFE;margin-top:16px;">Clique para voltar</p>
+            <button id="focusFCGoogleBack" class="google-btn google-btn-light" title="Pesquisar no Google" style="position:absolute;bottom:12px;right:12px;" onclick="event.stopPropagation()">
+              <img src="/static/images/google.png" alt="Pesquisar no Google" width="16" height="16" style="display:block;">
+            </button>
           </div>
         </div>
       </div>
@@ -551,6 +582,10 @@
     localStorage.setItem('cardsai-theme', isDark ? 'light' : 'dark');
   };
 
+  window.searchOnGoogle = function (text) {
+    window.open('https://www.google.com/search?q=' + encodeURIComponent(text.trim()), '_blank', 'noopener');
+  };
+
 (function () {
   const SUPABASE_URL = 'https://gxkhmmbovlfulcxyupue.supabase.co';
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4a2htbWJvdmxmdWxjeHl1cHVlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNDAzMzcsImV4cCI6MjA5NTcxNjMzN30.BipAmuzpW_x7KhIQdgdnQma5wLOS53QVLFCMYsxmMqE';
@@ -588,6 +623,7 @@
     document.getElementById('qBar').style.width   = pct + '%';
     document.getElementById('qTopic').textContent = q.topic || '';
     document.getElementById('qText').textContent  = q.text;
+    document.getElementById('qGoogleBtn').onclick = () => searchOnGoogle(q.text);
 
     document.getElementById('qAnswer').classList.add('hidden');
     document.getElementById('qReveal').textContent = 'Ver resposta';
@@ -667,6 +703,8 @@
     document.getElementById('fcTopicBadge').textContent = f.topic || '';
     document.getElementById('fcFront').textContent      = f.front || 'Sem pergunta';
     document.getElementById('fcBack').textContent       = f.back  || 'Sem resposta';
+    document.getElementById('fcGoogleFront').onclick = (e) => { e.stopPropagation(); searchOnGoogle(f.front || ''); };
+    document.getElementById('fcGoogleBack').onclick  = (e) => { e.stopPropagation(); searchOnGoogle(f.back  || ''); };
 
     document.getElementById('fcPrev').disabled = fcIdx === 0;
     document.getElementById('fcNext').disabled = fcIdx === flashcards.length - 1;
@@ -742,6 +780,7 @@
       document.getElementById('focusNext').disabled = qIdx === questions.length - 1;
       document.getElementById('focusQTopic').textContent  = q.topic || '';
       document.getElementById('focusQText').textContent   = q.text;
+      document.getElementById('focusQGoogleBtn').onclick  = () => searchOnGoogle(q.text);
       document.getElementById('focusQAnswer').style.display = 'none';
 
       const fCorUp = (q.correct_answer || '').charAt(0).toUpperCase();
@@ -769,6 +808,8 @@
       document.getElementById('focusNext').disabled = fcIdx === flashcards.length - 1;
       document.getElementById('focusFCFront').textContent = f.front || '';
       document.getElementById('focusFCBack').textContent  = f.back  || '';
+      document.getElementById('focusFCGoogleFront').onclick = (e) => { e.stopPropagation(); searchOnGoogle(f.front || ''); };
+      document.getElementById('focusFCGoogleBack').onclick  = (e) => { e.stopPropagation(); searchOnGoogle(f.back  || ''); };
       document.getElementById('focusFlip').classList.remove('flipped');
     }
   }
@@ -880,5 +921,8 @@
 })();
 </script>
   <script>if('serviceWorker'in navigator){navigator.serviceWorker.register('/sw.js');}</script>
+  <footer style="border-top:1px solid var(--border,#E2E8F0);padding:20px 24px;text-align:center;margin-top:auto;">
+    <p style="font-size:12px;color:#94A3B8;">© 2026 CardsQuestõesAI &nbsp;·&nbsp; <a href="/termos.html" style="color:#94A3B8;text-decoration:none;">Termos</a> &nbsp;·&nbsp; <a href="/privacidade.html" style="color:#94A3B8;text-decoration:none;">Privacidade</a> &nbsp;·&nbsp; <a href="mailto:contato@cardsquestoesai.com" style="color:#94A3B8;text-decoration:none;">Contato</a></p>
+  </footer>
 </body>
 </html>
