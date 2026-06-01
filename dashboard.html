@@ -246,6 +246,54 @@
     /* ── Utility ────────────────────────────────────────────── */
     .hidden { display: none !important; }
 
+    /* ── Processing animation ──────────────────────────────── */
+    @keyframes proc-pulse {
+      0%, 100% { transform: scale(1);    opacity: .45; }
+      50%       { transform: scale(1.22); opacity: .9; }
+    }
+    @keyframes proc-fade {
+      from { opacity: 0; transform: translateY(5px); }
+      to   { opacity: 1; transform: translateY(0);   }
+    }
+    .processing-wrap {
+      flex-direction: column;
+      align-items: center;
+      padding: 32px 20px 26px;
+      text-align: center;
+    }
+    .proc-ring {
+      position: relative; width: 64px; height: 64px; margin-bottom: 22px;
+    }
+    .proc-ring::before {
+      content: ''; position: absolute; inset: 0;
+      border-radius: 50%; border: 2px solid var(--blue-bd); opacity: .4;
+    }
+    .proc-ring-spin {
+      position: absolute; inset: 0; border-radius: 50%;
+      border: 3px solid transparent; border-top-color: var(--blue);
+      animation: spin 1s linear infinite;
+    }
+    .proc-ring-dot {
+      position: absolute; inset: 16px; border-radius: 50%;
+      background: var(--blue-bg);
+      animation: proc-pulse 2s ease-in-out infinite;
+    }
+    .proc-msg {
+      font-size: 15px; font-weight: 600; color: var(--text);
+      margin-bottom: 5px; min-height: 22px;
+    }
+    .proc-sub  { font-size: 13px; color: var(--text-3); margin-bottom: 20px; }
+    .proc-bar-track {
+      width: 100%; max-width: 260px; height: 4px;
+      background: var(--border); border-radius: 99px;
+      overflow: hidden; margin: 0 auto 14px;
+    }
+    .proc-bar-fill {
+      height: 100%; background: var(--blue);
+      border-radius: 99px; transition: width 1.2s ease;
+    }
+    .proc-tip { font-size: 12px; color: var(--text-3); }
+
     /* ── Responsive ─────────────────────────────────────────── */
     @media (max-width: 540px) {
       .max-w { padding: 0 14px; }
@@ -388,10 +436,24 @@
       </div>
 
       <!-- Acao -->
-      <div style="display:flex;justify-content:flex-end;margin-top:14px;">
+      <div id="uploadActions" style="display:flex;justify-content:flex-end;margin-top:14px;">
         <button id="generateBtn" onclick="startGeneration()" disabled class="btn btn-primary">
           Gerar
         </button>
+      </div>
+
+      <!-- Animação de processamento -->
+      <div id="processingWrap" class="processing-wrap" style="display:none;">
+        <div class="proc-ring">
+          <div class="proc-ring-spin"></div>
+          <div class="proc-ring-dot"></div>
+        </div>
+        <p class="proc-msg" id="procMsg">Aquecendo os motores...</p>
+        <p class="proc-sub">A IA está trabalhando no seu material</p>
+        <div class="proc-bar-track">
+          <div class="proc-bar-fill" id="procBar" style="width:0%"></div>
+        </div>
+        <p class="proc-tip">⏱ Isso pode levar até 2 minutos</p>
       </div>
     </div>
 
@@ -458,6 +520,22 @@
   let selectedFile = null;
   let pollTimer = null;
   let isUploading = false;
+  let msgTimer = null;
+  let progressTimer = null;
+  let procMsgIndex = 0;
+
+  const PROC_MSGS = [
+    'Analisando o conteúdo...',
+    'Elaborando questões desafiadoras...',
+    'Confeccionando os cards...',
+    'Identificando os temas principais...',
+    'Organizando os flashcards...',
+    'Ajustando a dificuldade das questões...',
+    'Quase lá, finalizando o material...',
+    'Revisando as alternativas...',
+    'Seu material está quase pronto!',
+    'Últimos ajustes...',
+  ];
 
   /* ── Init ───────────────────────────────────────────────── */
   async function init() {
@@ -536,38 +614,77 @@
     el.classList.remove('hidden');
   }
 
+  /* ── Processing UI helpers ──────────────────────────────── */
+  function setProcMsg(msg) {
+    const el = document.getElementById('procMsg');
+    el.style.animation = 'none';
+    el.offsetHeight; // reflow para reiniciar animação
+    el.style.animation = 'proc-fade .35s ease';
+    el.textContent = msg;
+  }
+
+  function setProcBar(pct) {
+    document.getElementById('procBar').style.width = pct + '%';
+  }
+
+  function startMsgRotation() {
+    clearInterval(msgTimer);
+    procMsgIndex = 0;
+    msgTimer = setInterval(() => {
+      procMsgIndex = (procMsgIndex + 1) % PROC_MSGS.length;
+      setProcMsg(PROC_MSGS[procMsgIndex]);
+    }, 6500);
+  }
+
+  function startSlowProgress(from, to, seconds) {
+    clearInterval(progressTimer);
+    let cur = from;
+    const step = (to - from) / (seconds * 10);
+    progressTimer = setInterval(() => {
+      cur = Math.min(cur + step, to);
+      setProcBar(Math.round(cur));
+      if (cur >= to) { clearInterval(progressTimer); progressTimer = null; }
+    }, 100);
+  }
+
+  function showProcessingUI() {
+    document.getElementById('dropZone').style.display      = 'none';
+    document.getElementById('uploadActions').style.display = 'none';
+    document.getElementById('uploadProgress').style.display = 'none';
+    document.getElementById('uploadError').classList.add('hidden');
+    document.getElementById('processingWrap').style.display = 'flex';
+  }
+
+  function hideProcessingUI() {
+    clearInterval(msgTimer);
+    clearInterval(progressTimer);
+    msgTimer = null; progressTimer = null;
+    document.getElementById('processingWrap').style.display = 'none';
+    document.getElementById('dropZone').style.display      = '';
+    document.getElementById('uploadActions').style.display = '';
+  }
+
   /* ── Generation ─────────────────────────────────────────── */
   window.startGeneration = async function () {
     if (!selectedFile || !profile || isUploading) return;
     isUploading = true;
 
-    const btn = document.getElementById('generateBtn');
-    btn.disabled = true;
-    btn.textContent = 'Processando...';
-
-    document.getElementById('uploadError').classList.add('hidden');
-    document.getElementById('uploadProgress').style.display = 'block';
-    document.getElementById('dropZone').style.pointerEvents = 'none';
-    document.getElementById('dropZone').style.opacity = '.55';
+    document.getElementById('generateBtn').disabled = true;
+    showProcessingUI();
+    setProcMsg('Lendo seu PDF...');
+    setProcBar(5);
 
     try {
-      document.getElementById('statusText').textContent = 'Lendo o PDF...';
-      document.getElementById('pageProgress').style.display = 'block';
-      document.getElementById('progressBar').style.width = '10%';
-
       const { text, pageCount, titleText } = await extractPDFText(selectedFile, (cur, tot) => {
-        document.getElementById('curPage').textContent = cur;
-        document.getElementById('totPage').textContent = tot;
-        document.getElementById('progressBar').style.width = `${10 + (cur / tot) * 30}%`;
+        setProcBar(Math.round(5 + (cur / tot) * 37));
       });
 
       if (!text || text.trim().length < 100) {
         throw new Error('Não foi possível extrair texto. O PDF pode estar protegido ou ser uma imagem.');
       }
 
-      document.getElementById('statusText').textContent = 'Enviando para a IA...';
-      document.getElementById('progressBar').style.width = '45%';
-      document.getElementById('pageProgress').style.display = 'none';
+      setProcMsg('Enviando para a IA...');
+      setProcBar(44);
 
       const { data: { user } } = await db.auth.getUser();
       const { data: gen, error: genErr } = await db
@@ -584,8 +701,12 @@
       if (genErr) throw new Error('Erro ao criar registro: ' + genErr.message);
 
       const { data: { session } } = await db.auth.getSession();
-      document.getElementById('progressBar').style.width = '55%';
-      document.getElementById('statusText').textContent = 'IA gerando questões e flashcards...';
+
+      // Fase IA — mensagens rotativas + barra lenta 48→88% em ~100s
+      setProcMsg(PROC_MSGS[0]);
+      setProcBar(48);
+      startMsgRotation();
+      startSlowProgress(48, 88, 100);
 
       const response = await fetch(EDGE_URL, {
         method: 'POST',
@@ -599,19 +720,18 @@
       const result = await response.json();
       if (!response.ok || !result.success) throw new Error(result.error || 'Erro ao processar com IA');
 
-      document.getElementById('progressBar').style.width = '100%';
-      document.getElementById('statusText').textContent = 'Concluído! Redirecionando...';
+      clearInterval(msgTimer);
+      clearInterval(progressTimer);
+      setProcMsg('Concluído! Redirecionando...');
+      setProcBar(100);
 
-      setTimeout(() => { window.location.href = `/results.html?id=${gen.id}`; }, 1000);
+      setTimeout(() => { window.location.href = `/results.html?id=${gen.id}`; }, 1200);
 
     } catch (err) {
       console.error(err);
       isUploading = false;
-      btn.disabled = false;
-      btn.textContent = 'Gerar';
-      document.getElementById('uploadProgress').style.display = 'none';
-      document.getElementById('dropZone').style.pointerEvents = '';
-      document.getElementById('dropZone').style.opacity = '';
+      document.getElementById('generateBtn').disabled = false;
+      hideProcessingUI();
       showErr(err.message || 'Erro inesperado. Tente novamente.');
     }
   };

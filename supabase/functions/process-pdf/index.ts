@@ -18,14 +18,37 @@ serve(async (req) => {
   
   try {
     const body = await req.json()
-    const { pdfText, generationId, userId } = body
+    const { pdfText, generationId } = body
 
-    console.log(`📄 Texto: ${pdfText?.length || 0} caracteres`)
-
+    // Cliente admin para operações no banco
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     )
+
+    // Verificar JWT pelo padrão recomendado pelo Supabase para Edge Functions:
+    // criar cliente com ANON_KEY + JWT no header, depois chamar getUser()
+    const authHeader = req.headers.get('Authorization') || ''
+    if (!authHeader.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Authorization header ausente' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+    const userClient = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_ANON_KEY')!,
+      { global: { headers: { Authorization: authHeader } } }
+    )
+    const { data: { user }, error: userError } = await userClient.auth.getUser()
+    if (userError || !user) {
+      console.error('Auth error:', userError?.message)
+      return new Response(JSON.stringify({ error: 'Nao autorizado' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+    const userId = user.id
+
+    console.log(`📄 Texto: ${pdfText?.length || 0} chars | userId: ${userId}`)
 
     await supabase.from('generations').update({ status: 'processing' }).eq('id', generationId)
 
@@ -224,23 +247,14 @@ Texto: ${pdfText.substring(0, 10000)}`
       else console.log(`✅ ${batch.length} flashcards salvos`)
     }
     
-    // Debitar crédito
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('credits, is_admin, unlimited_access')
-      .eq('id', userId)
-      .single()
+    // Debitar crédito via RPC atomica
+    const { data: debitResult, error: debitErr } = await supabase
+      .rpc('debit_one_credit', { p_user_id: userId })
 
-    if (!profile?.is_admin && !profile?.unlimited_access) {
-      if (profile && profile.credits > 0) {
-        await supabase
-          .from('profiles')
-          .update({ credits: profile.credits - 1 })
-          .eq('id', userId)
-        console.log(`💳 Crédito debitado. Restam: ${profile.credits - 1}`)
-      }
+    if (debitErr) {
+      console.error(`DEBIT_ERROR userId=${userId} msg=${debitErr.message}`)
     } else {
-      console.log(`✅ Débito pulado: admin=${profile?.is_admin}, unlimited=${profile?.unlimited_access}`)
+      console.log(`DEBIT_RESULT userId=${userId} result=${JSON.stringify(debitResult)}`)
     }
     
     console.log(`🎉 Concluído em ${Math.round((Date.now() - startTime)/1000)}s!`)
