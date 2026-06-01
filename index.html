@@ -225,6 +225,43 @@
     .step-p { font-size: 14px; color: var(--text-2); line-height: 1.7; }
     .step-main .step-p { font-size: 15px; max-width: 300px; }
 
+    /* ── Funcionalidades ────────────────────────────────────────── */
+    .features-section {
+      padding: 72px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .features-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      border: 1px solid var(--border);
+    }
+    .feature-item {
+      padding: 40px 36px;
+      border-right: 1px solid var(--border);
+    }
+    .feature-item:last-child { border-right: none; }
+    .feature-icon {
+      width: 36px; height: 36px;
+      border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 22px; color: var(--text-3);
+    }
+    .feature-h {
+      font-size: clamp(18px, 1.8vw, 22px);
+      font-weight: 700; color: var(--text);
+      letter-spacing: -0.022em; margin-bottom: 12px;
+    }
+    .feature-p {
+      font-size: 14px; color: var(--text-2);
+      line-height: 1.72; margin-bottom: 20px;
+    }
+    .feature-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+    .feature-list li {
+      font-size: 13px; color: var(--text-2);
+      display: flex; align-items: baseline; gap: 8px;
+    }
+    .feature-list li::before { content: '—'; color: var(--text-3); flex-shrink: 0; }
+
     /* ── Planos ──────────────────────────────────────────────────── */
     .pricing-section { padding: 72px 0; }
     .pricing-head { margin-bottom: 36px; }
@@ -368,6 +405,10 @@
       .step-main { border-right: none; border-bottom: 1px solid var(--border); padding: 32px 24px; }
       .step-sub { padding: 24px; }
 
+      .features-grid { grid-template-columns: 1fr; }
+      .feature-item { border-right: none; border-bottom: 1px solid var(--border); padding: 28px 24px; }
+      .feature-item:last-child { border-bottom: none; }
+
       .p-right { gap: 16px; }
       .p-price { min-width: auto; }
 
@@ -490,6 +531,51 @@
           <p class="step-p">50 questões interativas + 100 flashcards prontos para revisar.</p>
         </div>
       </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Funcionalidades ────────────────────────────────────────────── -->
+<section id="funcionalidades" class="features-section">
+  <div class="container">
+    <span class="sec-label">Funcionalidades</span>
+    <div class="features-grid">
+
+      <!-- Pesquisa com um clique -->
+      <div class="feature-item">
+        <div class="feature-icon">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="8"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35"/>
+          </svg>
+        </div>
+        <h3 class="feature-h">Pesquisa com um clique</h3>
+        <p class="feature-p">Cada questão e flashcard tem um ícone do Google. Um clique abre uma nova aba já pesquisando o conteúdo do card — sem copiar, sem colar.</p>
+        <ul class="feature-list">
+          <li>Disponível em todas as questões e flashcards</li>
+          <li>Abre pesquisa no Google em nova aba</li>
+          <li>Ideal para se aprofundar no assunto na hora</li>
+          <li>Funciona no modo foco também</li>
+        </ul>
+      </div>
+
+      <!-- Anotações personalizadas -->
+      <div class="feature-item">
+        <div class="feature-icon">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+          </svg>
+        </div>
+        <h3 class="feature-h">Anotações personalizadas</h3>
+        <p class="feature-p">Adicione suas próprias observações em qualquer card. Revise tudo na página "Minhas Anotações", com filtros por questão e flashcard e o gabarito sempre visível.</p>
+        <ul class="feature-list">
+          <li>Anotação em qualquer questão ou flashcard</li>
+          <li>Campo ampliado para escrever à vontade</li>
+          <li>Página dedicada para revisar todas as anotações</li>
+          <li>Indicador visual nos cards já anotados</li>
+        </ul>
+      </div>
+
     </div>
   </div>
 </section>
