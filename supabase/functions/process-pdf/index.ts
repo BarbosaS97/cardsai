@@ -9,260 +9,681 @@ const corsHeaders = {
 
 export const timeout = 600000
 
+function extractFirstObject(text: string): string | null {
+  const start = text.indexOf('{')
+  if (start === -1) return null
+  let depth = 0
+  for (let i = start; i < text.length; i++) {
+    if (text[i] === '{') depth++
+    else if (text[i] === '}') {
+      depth--
+      if (depth === 0) return text.substring(start, i + 1)
+    }
+  }
+  return null
+}
+
+function cleanText(raw: string): string {
+  let t = raw
+    .replace(/https?:\/\/[^\s]+/gi, '')
+    .replace(/t\.me\/[^\s]*/gi, '')
+    .replace(/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g, '')
+    .replace(/(canal\s+de\s+telegram|grupo\s+de\s+whatsapp|entre\s+no\s+(canal|grupo)|siga\s+(o\s+)?canal|clique\s+aqui|inscreva[- ]se|compartilhe|acesse\s+o\s+link|siga[- ]nos|ingresse\s+neste\s+canal)/gi, '')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
+
+  // Remove linhas repetidas mais de 3 vezes (cabeçalhos/rodapés de página)
+  const lines = t.split('\n')
+  const counts = new Map<string, number>()
+  for (const l of lines) {
+    const k = l.trim().toLowerCase()
+    if (k.length > 15) counts.set(k, (counts.get(k) ?? 0) + 1)
+  }
+  return lines
+    .filter(l => {
+      const k = l.trim().toLowerCase()
+      return k.length <= 15 || (counts.get(k) ?? 0) <= 3
+    })
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
+}
+
+const JUNK_RE = [/https?:\/\//i, /t\.me\//i, /telegram/i, /whatsapp/i, /inscreva[- ]se/i, /clique\s+aqui/i, /siga[- ]nos/i, /canal\s+de/i]
+function isJunk(text: string): boolean {
+  return JUNK_RE.some(p => p.test(text))
+}
+
+async function callDeepSeek(
+  apiKey: string,
+  messages: { role: string; content: string }[],
+  maxTokens: number,
+  temperature = 0.3,
+): Promise<string> {
+  const res = await fetch('https://api.deepseek.com/v1/chat/completions', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model: 'deepseek-chat', messages, temperature, max_tokens: maxTokens }),
+  })
+  const data = await res.json()
+  return data.choices[0].message.content as string
+}
+
+interface ModeConfig {
+  alternativesCount: number
+  questionStyle: string
+  flashcardStyle: string
+  pegadinhas: string
+}
+
+interface DifficultyConfig {
+  label: string
+  questionDepth: string
+  distractorStrategy: string
+  flashcardDepth: string
+  systemSuffix: string
+}
+
+const difficultyConfig: Record<string, DifficultyConfig> = {
+  facil: {
+    label: 'Fácil',
+    questionDepth:
+      'Crie questões SIMPLES E DIRETAS sobre conceitos fundamentais. Uma questão = um conceito claro. Pergunte definições, identificações e fatos objetivos presentes explicitamente no texto. Evite qualquer ambiguidade ou inferência.',
+    distractorStrategy:
+      'Alternativas incorretas devem ser CLARAMENTE ERRADAS para quem leu o texto com atenção básica. NÃO use pegadinhas. Cada incorreta deve ser facilmente refutável com uma frase direta do texto.',
+    flashcardDepth:
+      'Definições simples e diretas. Uma ideia por flashcard. Linguagem acessível ao iniciante no assunto.',
+    systemSuffix:
+      'NÍVEL FÁCIL: priorize clareza absoluta. Questões básicas sem ambiguidade, testando conhecimento direto e explícito do texto.',
+  },
+  medio: {
+    label: 'Médio',
+    questionDepth:
+      'Crie questões que exigem COMPREENSÃO e APLICAÇÃO. Misture questões diretas com questões que relacionam dois conceitos ou exigem inferência a partir do texto. Não pergunte apenas o que está explícito — exija interpretação.',
+    distractorStrategy:
+      'Alternativas incorretas devem ser PLAUSÍVEIS para quem estudou superficialmente, diferindo da correta em pelo menos um detalhe específico. Algumas alternativas podem ser "quase corretas".',
+    flashcardDepth:
+      'Definição completa com contexto e exemplos. Inclua relações entre conceitos quando relevante.',
+    systemSuffix:
+      'NÍVEL MÉDIO: equilibre clareza e desafio. Questões que exigem compreensão real, com alternativas plausíveis mas distinguíveis pelo texto.',
+  },
+  dificil: {
+    label: 'Difícil',
+    questionDepth:
+      'Crie questões COMPLEXAS que exigem ANÁLISE e SÍNTESE de múltiplos conceitos do texto. Exija distinção entre conceitos similares, identificação de exceções, comparação de elementos. Cada questão deve ser desafiadora mesmo para quem leu com atenção.',
+    distractorStrategy:
+      'Alternativas incorretas OBRIGATORIAMENTE com pegadinhas: inversão de termos-chave, troca de ordem, elemento quase-correto. Devem ser MUITO PLAUSÍVEIS, diferindo da correta em detalhes SUTIS. Um leitor descuidado vai errar.',
+    flashcardDepth:
+      'Conteúdo aprofundado: definição técnica + exceções + casos especiais + relações com outros conceitos do texto.',
+    systemSuffix:
+      'NÍVEL DIFÍCIL: questões complexas com pegadinhas obrigatórias, alternativas muito similares entre si e análise de múltiplos conceitos combinados.',
+  },
+  expert: {
+    label: 'Expert',
+    questionDepth:
+      'Crie questões de ALTO NÍVEL que exigem DOMÍNIO COMPLETO. Combine MÚLTIPLOS CONCEITOS em uma única questão. Use casos extremos, explore nuances e contradições aparentes, exija análise crítica. NENHUMA questão deve ser respondível por memorização simples — o aluno precisa realmente entender.',
+    distractorStrategy:
+      'Alternativas incorretas EXTREMAMENTE CONVINCENTES: diferem da correta apenas em aspectos TÉCNICOS MUITO PRECISOS. Cada incorreta representa um EQUÍVOCO SOFISTICADO que um estudante avançado cometeria. O erro deve ser sutil, específico e relevante — nunca trivial.',
+    flashcardDepth:
+      'Conteúdo especializado: definição técnica precisa + exceções + casos de borda + implicações práticas + conexões com outros temas + aspectos frequentemente mal compreendidos.',
+    systemSuffix:
+      'NÍVEL EXPERT: máxima complexidade. Questões que separam quem memorizou de quem realmente entendeu. Alternativas extremamente convincentes, combinação de múltiplos conceitos, casos extremos.',
+  },
+}
+
+const modeConfig: Record<string, ModeConfig> = {
+  concurso: {
+    alternativesCount: 5,
+    questionStyle:
+      "literal, baseada em lei seca e súmulas. Use expressões como 'Segundo o art. X...', 'De acordo com a CF/88...', 'A Súmula Vinculante X do STF estabelece que...'",
+    flashcardStyle:
+      "no formato: 'Referência: [art./inciso/súmula] → Conteúdo: [dispositivo completo]'",
+    pegadinhas:
+      'Inclua pegadinhas comuns em concursos: inversão de palavras-chave, troca de números, confusão entre princípios ou institutos semelhantes.',
+  },
+  oab: {
+    alternativesCount: 5,
+    questionStyle:
+      "como casos práticos e situações-problema. Use narrativas com nomes ('João, servidor público, foi exonerado...') e pergunte qual a medida cabível ou a posição jurídica correta.",
+    flashcardStyle:
+      "no formato: 'Conceito: [definição] → Posição STF/STJ: [entendimento] → Exceções: [casos especiais]'",
+    pegadinhas:
+      'Crie situações ambíguas onde mais de um instituto poderia se aplicar, exigindo raciocínio jurídico para identificar o correto.',
+  },
+  vestibular: {
+    alternativesCount: 4,
+    questionStyle:
+      'contextualizada e interdisciplinar. Use contextos históricos ou sociais, peça causas, consequências e relações entre eventos ou conceitos.',
+    flashcardStyle:
+      "no formato: 'Conceito: [definição] → Exemplo: [caso concreto] → Contexto: [momento histórico ou social]'",
+    pegadinhas:
+      'Crie alternativas que troquem causa por consequência, ou que confundam autor com obra, época ou corrente.',
+  },
+  faculdade: {
+    alternativesCount: 4,
+    questionStyle:
+      'direta, com linguagem acadêmica, focada no conteúdo programático. Pergunte definições, classificações e aplicações diretas de conceitos teóricos.',
+    flashcardStyle:
+      "no formato: 'Conceito: [definição teórica] → Aplicação: [como usar] → Autores: [principais referências]'",
+    pegadinhas:
+      'Foco em testar conhecimento real, sem pegadinhas. As alternativas incorretas devem ser claramente distinguíveis da correta.',
+  },
+}
+
+async function generateQuestions(
+  apiKey: string,
+  partText: string,
+  partIndex: number,
+  config: ModeConfig,
+  diffConfig: DifficultyConfig,
+  targetCount: number,
+): Promise<{ questions: any[]; topics: string[] }> {
+  const letters = ['A', 'B', 'C', 'D', 'E'].slice(0, config.alternativesCount)
+
+  const prompt = `EXTRAIA do texto abaixo conceitos, definições, artigos, nomes e informações REAIS. Crie EXATAMENTE ${targetCount} questões de múltipla escolha ESPECÍFICAS e ÚNICAS.
+
+━━━ REGRAS ABSOLUTAS — VIOLAÇÃO INVALIDA A QUESTÃO ━━━
+
+REGRA 0 — QUANTIDADE OBRIGATÓRIA:
+Você DEVE gerar EXATAMENTE ${targetCount} questões — nem mais, nem menos.
+Se o texto tiver conteúdo suficiente para mais de ${targetCount} questões, escolha os ${targetCount} conceitos MAIS IMPORTANTES.
+Se o texto tiver menos de ${targetCount} conceitos distintos, crie questões sobre aspectos diferentes do mesmo conceito.
+
+REGRA 1 — INÍCIO DA PERGUNTA:
+A questão NUNCA deve começar com "Segundo o texto", "De acordo com o texto", "Conforme o texto", "O texto afirma que", "Conforme visto no texto" ou qualquer variação similar.
+A questão deve começar DIRETAMENTE com o sujeito, conceito ou instituto.
+❌ PROIBIDO: "Segundo o texto, o Direito Constitucional Comparado é aquele que:"
+❌ PROIBIDO: "De acordo com o texto, a participação do AGU na ADI é:"
+✅ CORRETO: "O Direito Constitucional Comparado é aquele que:"
+✅ CORRETO: "A participação do AGU na ADI é:"
+
+REGRA 2 — ALTERNATIVAS:
+NUNCA escreva "conforme o texto", "segundo o texto", "de acordo com o texto" dentro das alternativas.
+A alternativa deve conter APENAS a informação real, sem referenciar a fonte.
+❌ PROIBIDO: "obrigatória, conforme o texto"
+❌ PROIBIDO: "facultativa, segundo o texto"
+✅ CORRETO: "obrigatória"
+✅ CORRETO: "facultativa"
+
+REGRA 3 — DISTINÇÃO ENTRE ALTERNATIVAS:
+As alternativas devem ser CLARAMENTE DISTINTAS. Não use alternativas que diferem apenas por uma palavra de sentido próximo.
+❌ PROBLEMÁTICO: "eficácia contra todos, efeito vinculante e efeito ex tunc" vs "eficácia contra todos, efeito vinculante e efeito ex nunc" (diferença sutil demais para alternativas simples)
+✅ MELHOR: cada alternativa apresenta uma ideia ou valor claramente diferente
+
+REGRA 4 — CONTEÚDO REAL:
+Cada questão DEVE mencionar um elemento concreto do texto: nome, artigo, prazo, conceito específico.
+❌ PROIBIDO: "Questão sobre [tópico]: qual afirmação está correta?"
+❌ PROIBIDO: "A) Correta conforme o texto" / "B) Incorreta conforme o texto"
+
+REGRA 5 — O QUE NÃO EXTRAIR:
+Ignore completamente e NÃO crie questões sobre:
+- Cabeçalhos e rodapés repetitivos (ex: nome do curso, nome do professor)
+- URLs, links, endereços de Telegram, WhatsApp ou redes sociais
+- Convites para seguir canais, grupos ou se inscrever
+- Números de página, marcas de seção, linhas de pontilhado
+- Textos promocionais ou chamadas para ação ("Clique aqui", "Compartilhe")
+- E-mails e menções de contato
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Retorne APENAS este JSON (sem markdown, sem texto fora do JSON):
+{
+  "questions": [
+    {
+      "text": "Questão direta iniciando com o conceito/instituto (NUNCA com 'Segundo o texto')",
+      "alternatives": ["${letters[0]}) informação real sem referência ao texto", "${letters[1] || 'B'}) outra informação real"${config.alternativesCount >= 3 ? `, "${letters[2] || 'C'}) terceira opção distinta"` : ''}${config.alternativesCount >= 4 ? `, "${letters[3] || 'D'}) quarta opção distinta"` : ''}${config.alternativesCount === 5 ? `, "${letters[4] || 'E'}) quinta opção distinta"` : ''}],
+      "correct_answer": "A",
+      "explanation": "Explicação citando trecho do texto. Cada alternativa incorreta: por que está errada.",
+      "topic": "tópico específico do texto"
+    }
+  ],
+  "topics": ["tópico real 1", "tópico real 2"]
+}
+
+MODO (${config.questionStyle.substring(0, 120)}):
+NÍVEL ${diffConfig.label}: ${diffConfig.questionDepth.substring(0, 150)} | Distratores: ${diffConfig.distractorStrategy.substring(0, 120)}
+
+REGRAS FINAIS:
+- QUANTIDADE OBRIGATÓRIA: EXATAMENTE ${targetCount} questões no array "questions"
+- ${config.alternativesCount} alternativas (${letters.join(', ')}), todas com informação real e sem referência ao texto
+- Distribua correct_answer entre ${letters.join(', ')}
+- Cada questão deve abordar um conceito DIFERENTE das demais
+
+Texto:
+${partText.substring(0, 12000)}`
+
+  try {
+    const raw = await callDeepSeek(
+      apiKey,
+      [
+        {
+          role: 'system',
+          content:
+            'Você é um especialista em criar questões de múltipla escolha baseadas estritamente em textos fornecidos. ' +
+            'NUNCA invente informações. ' +
+            'NUNCA inicie uma questão com "Segundo o texto", "De acordo com o texto", "Conforme o texto" ou qualquer variação — a questão começa diretamente com o conceito ou sujeito. ' +
+            'NUNCA escreva "conforme o texto" ou "segundo o texto" dentro das alternativas — as alternativas contêm apenas a informação real. ' +
+            'NUNCA use alternativas genéricas como "Correta conforme o texto". ' +
+            'Cada questão DEVE mencionar um elemento concreto (nome, artigo, data, conceito) presente no texto. ' +
+            `${diffConfig.systemSuffix} Retorne APENAS JSON válido.`,
+        },
+        { role: 'user', content: prompt },
+      ],
+      7500,
+    )
+    const jsonStr = extractFirstObject(raw)
+    if (!jsonStr) {
+      console.log(`⚠️ Q parte ${partIndex + 1}: resposta sem JSON válido`)
+      return { questions: [], topics: [] }
+    }
+    const result = JSON.parse(jsonStr)
+    const questions = Array.isArray(result) ? result : (result.questions ?? [])
+    const topics = result.topics ?? []
+    console.log(`✅ Q parte ${partIndex + 1}: ${questions.length} questões`)
+    return { questions, topics }
+  } catch (e: any) {
+    console.error(`❌ Q parte ${partIndex + 1}:`, e.message)
+    return { questions: [], topics: [] }
+  }
+}
+
+async function generateFlashcards(
+  apiKey: string,
+  partText: string,
+  partIndex: number,
+  diffConfig: DifficultyConfig,
+  targetCount: number,
+): Promise<any[]> {
+  const prompt = `CRIE EXATAMENTE ${targetCount} flashcards de estudo ATIVOS usando ESTRATÉGIAS VARIADAS de memorização. Use APENAS informações REAIS e ESPECÍFICAS do texto.
+
+QUANTIDADE OBRIGATÓRIA: Crie EXATAMENTE ${targetCount} flashcards — nem mais, nem menos.
+
+ESTRATÉGIAS (varie — não use sempre a mesma):
+
+1. PERGUNTA DIRETA — frente: pergunta específica | verso: resposta objetiva
+   ✅ Frente: "Quais são os efeitos jurídicos da perda dos direitos políticos?"
+      Verso: "Impossibilidade definitiva de votar, ser votado e exercer função política"
+
+2. LACUNA/OMISSÃO — frente: frase com ___ | verso: a palavra/dado omitido + significado breve
+   ✅ Frente: "O art. 37 da CF lista ___ princípios da Administração Pública"
+      Verso: "5 — LIMPE: Legalidade, Impessoalidade, Moralidade, Publicidade, Eficiência"
+
+3. COMPARAÇÃO — frente: "Diferença entre X e Y?" | verso: distinção clara
+   ✅ Frente: "Diferença entre suspensão e perda dos direitos políticos?"
+      Verso: "Suspensão: temporária. Perda: definitiva e permanente"
+
+4. LISTA/MNEMÔNICO — frente: "Quais são os tipos/requisitos de X?" | verso: lista curta
+   ✅ Frente: "Quais são as hipóteses de perda dos direitos políticos?"
+      Verso: "1) Cancelamento de naturalização 2) Incapacidade civil absoluta 3) Condenação criminal transitada em julgado"
+
+5. VERDADEIRO OU FALSO — frente: afirmação | verso: "Verdadeiro" ou "Falso — [correção]"
+   ✅ Frente: "A perda dos direitos políticos é temporária"
+      Verso: "Falso — é definitiva. Temporária é a suspensão"
+
+REGRAS:
+- Frente: máximo 15 palavras
+- Verso: máximo 3 linhas, direto ao ponto
+- NÃO comece o verso com "Referência:", "Texto:", "Conteúdo:" ou similares
+- NÃO crie flashcards genéricos como "Conceito importante" ou "Ponto relevante"
+- Use elementos concretos do texto: artigos, nomes, valores, conceitos específicos
+
+IGNORE COMPLETAMENTE (não crie flashcard sobre):
+- URLs, links, endereços de Telegram, WhatsApp ou redes sociais
+- Cabeçalhos repetitivos (nome do curso, nome do professor)
+- Convites para seguir canais, grupos ou se inscrever
+- Números de página, rodapés, separadores
+- Textos promocionais ("Clique aqui", "Compartilhe", "Ingresse no canal")
+
+Retorne APENAS este JSON (sem markdown):
+{
+  "flashcards": [
+    {
+      "front": "Pergunta, lacuna ou afirmação (máx. 15 palavras)",
+      "back": "Resposta direta e objetiva (máx. 3 linhas)",
+      "topic": "tópico específico"
+    }
+  ]
+}
+
+Nível ${diffConfig.label}: ${diffConfig.flashcardDepth.substring(0, 150)}
+
+REGRAS FINAIS:
+- QUANTIDADE OBRIGATÓRIA: EXATAMENTE ${targetCount} flashcards no array "flashcards"
+- Cada flashcard deve abordar um conceito DIFERENTE dos demais
+- Use elementos concretos do texto: artigos, nomes, valores, conceitos específicos
+
+Texto:
+${partText.substring(0, 12000)}`
+
+  try {
+    const raw = await callDeepSeek(
+      apiKey,
+      [
+        {
+          role: 'system',
+          content:
+            'Você cria flashcards de estudo baseados estritamente no texto fornecido. ' +
+            'NUNCA use front/back genérico. Cada flashcard deve referenciar um elemento concreto do texto. ' +
+            'NUNCA crie flashcard sobre URLs, Telegram, WhatsApp, cabeçalhos repetitivos, rodapés, números de página ou textos promocionais. ' +
+            'Retorne APENAS JSON válido.',
+        },
+        { role: 'user', content: prompt },
+      ],
+      4000,
+    )
+    const jsonStr = extractFirstObject(raw)
+    if (!jsonStr) {
+      console.log(`⚠️ FC parte ${partIndex + 1}: resposta sem JSON válido`)
+      return []
+    }
+    const result = JSON.parse(jsonStr)
+    const flashcards = Array.isArray(result) ? result : (result.flashcards ?? [])
+    console.log(`✅ FC parte ${partIndex + 1}: ${flashcards.length} flashcards`)
+    return flashcards
+  } catch (e: any) {
+    console.error(`❌ FC parte ${partIndex + 1}:`, e.message)
+    return []
+  }
+}
+
+async function generateSummary(apiKey: string, text: string): Promise<string> {
+  try {
+    return await callDeepSeek(
+      apiKey,
+      [
+        {
+          role: 'user',
+          content: `Crie um resumo estruturado e completo deste texto acadêmico.
+
+REGRAS:
+- NÃO use asteriscos (*) ou (**)
+- Use hífen (-) para listas
+- Títulos de seção em MAIÚSCULAS
+- Cubra todos os tópicos e conceitos importantes
+
+FORMATO:
+NOME DO TÓPICO
+- Conceito: explicação detalhada
+- Ponto importante: desenvolvimento
+
+Texto:
+${text.substring(0, 14000)}`,
+        },
+      ],
+      2500,
+    )
+  } catch (e: any) {
+    console.error('Erro no resumo:', e.message)
+    return 'Resumo gerado automaticamente.'
+  }
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
   const startTime = Date.now()
-  
+  const elapsed = () => `${Math.round((Date.now() - startTime) / 1000)}s`
+
   try {
-    const body = await req.json()
-    const { pdfText, generationId } = body
+    const { pdfText, generationId, mode = 'concurso', difficulty = 'medio' } = await req.json()
 
-    // Cliente admin para operações no banco
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    )
-
-    // Verificar JWT pelo padrão recomendado pelo Supabase para Edge Functions:
-    // criar cliente com ANON_KEY + JWT no header, depois chamar getUser()
-    const authHeader = req.headers.get('Authorization') || ''
+    const authHeader = req.headers.get('Authorization') ?? ''
     if (!authHeader.startsWith('Bearer ')) {
       return new Response(JSON.stringify({ error: 'Authorization header ausente' }), {
-        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
+
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+    )
     const userClient = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_ANON_KEY')!,
-      { global: { headers: { Authorization: authHeader } } }
+      { global: { headers: { Authorization: authHeader } } },
     )
+
     const { data: { user }, error: userError } = await userClient.auth.getUser()
     if (userError || !user) {
-      console.error('Auth error:', userError?.message)
-      return new Response(JSON.stringify({ error: 'Nao autorizado' }), {
-        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      return new Response(JSON.stringify({ error: 'Não autorizado' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
     const userId = user.id
 
-    console.log(`📄 Texto: ${pdfText?.length || 0} chars | userId: ${userId}`)
+    const config = modeConfig[mode] ?? modeConfig.concurso
+    const diffConfig = difficultyConfig[difficulty] ?? difficultyConfig.medio
+
+    const text = cleanText(pdfText ?? '')
+    console.log(`📄 Texto bruto: ${pdfText?.length ?? 0} chars → limpo: ${text.length} chars | modo: ${mode} | userId: ${userId}`)
 
     await supabase.from('generations').update({ status: 'processing' }).eq('id', generationId)
 
     const DEEPSEEK_API_KEY = Deno.env.get('DEEPSEEK_API_KEY')
-    if (!DEEPSEEK_API_KEY) throw new Error('API Key não configurada')
+    if (!DEEPSEEK_API_KEY) throw new Error('DEEPSEEK_API_KEY não configurada')
 
-    // Dividir em MAIS partes para evitar timeout (6 partes em vez de 4)
-    const numParts = 6
-    const partSize = Math.ceil(pdfText.length / numParts)
-    const parts = []
-    for (let i = 0; i < numParts; i++) {
-      parts.push(pdfText.substring(i * partSize, (i + 1) * partSize))
-    }
-    
-    const results = []
-    
-    for (let idx = 0; idx < parts.length; idx++) {
-      console.log(`📝 Processando parte ${idx + 1}/${numParts}...`)
-      
-      const prompt = `Analise o texto e gere JSON com BASE NO CONTEÚDO REAL. NÃO invente. Se não houver conteúdo suficiente, gere menos itens.
+    const TARGET_QUESTIONS = 50
+    const TARGET_FLASHCARDS = 100
+    const numParts = 5
+    const partSize = Math.ceil(text.length / numParts)
+    // Partes NÃO sobrepostas: cada parte cobre uma fatia exclusiva do texto
+    const parts = Array.from({ length: numParts }, (_, i) =>
+      text.substring(i * partSize, Math.min((i + 1) * partSize, text.length)),
+    ).filter(p => p.trim().length > 200)
 
-{
-  "questions": [{"text":"pergunta baseada no texto","alternatives":["A) alternativa correta","B) segunda","C) terceira","D) quarta"],"correct_answer":"A","topic":"topic"}],
-  "flashcards": [{"front":"termo ou pergunta do texto","back":"definição ou resposta","topic":"topic"}],
-  "topics": ["topico1","topico2"]
-}
+    const questionsPerPart = Math.ceil(TARGET_QUESTIONS / parts.length)          // 10 se 5 partes
+    const flashcardsPerPart = Math.ceil((TARGET_FLASHCARDS + 10) / parts.length) // 22 se 5 partes (buffer p/ dedup)
 
-IMPORTANTE: 
-- Gere ATÉ 15 questões e ATÉ 25 flashcards por parte
-- As perguntas devem ser ESPECÍFICAS sobre o texto
-- As alternativas devem ser REAIS e baseadas no conteúdo
-- Use tópicos REAIS extraídos do texto
+    console.log(`🚀 Lançando ${parts.length * 2 + 1} chamadas paralelas à DeepSeek (${questionsPerPart}Q + ${flashcardsPerPart}FC por parte)...`)
 
-Texto: ${parts[idx].substring(0, 8000)}`
+    const [questionResults, flashcardResults, finalSummary] = await Promise.all([
+      Promise.all(parts.map((part, i) => generateQuestions(DEEPSEEK_API_KEY, part, i, config, diffConfig, questionsPerPart))),
+      Promise.all(parts.map((part, i) => generateFlashcards(DEEPSEEK_API_KEY, part, i, diffConfig, flashcardsPerPart))),
+      generateSummary(DEEPSEEK_API_KEY, text),
+    ])
 
-      try {
-        const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${DEEPSEEK_API_KEY}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            model: 'deepseek-chat',
-            messages: [{ role: 'system', content: 'Retorne APENAS JSON válido. Não adicione texto antes ou depois.' }, { role: 'user', content: prompt }],
-            temperature: 0.3,
-            max_tokens: 20000, // Aumentado
-          }),
-        })
+    console.log(`⏱️ API concluída em ${elapsed()}`)
 
-        const data = await response.json()
-        const aiResponse = data.choices[0].message.content
-        const jsonMatch = aiResponse.match(/\{[\s\S]*\}/)
-        
-        if (jsonMatch) {
-          const cleanJson = jsonMatch[0].replace(/,\s*}/g, '}').replace(/,\s*\]/g, ']')
-          const result = JSON.parse(cleanJson)
-          results.push({
-            questions: result.questions || [],
-            flashcards: result.flashcards || [],
-            topics: result.topics || []
-          })
-          console.log(`✅ Parte ${idx + 1}: ${result.questions?.length || 0} questões, ${result.flashcards?.length || 0} flashcards`)
-        } else {
-          console.log(`⚠️ Parte ${idx + 1}: sem JSON válido`)
-          results.push({ questions: [], flashcards: [], topics: [] })
-        }
-      } catch (e) {
-        console.error(`❌ Erro parte ${idx + 1}:`, e.message)
-        results.push({ questions: [], flashcards: [], topics: [] })
-      }
-    }
+    let allQuestions: any[] = []
+    let allFlashcards: any[] = []
+    let allTopics: string[] = []
 
-    // Combinar tudo
-    let allQuestions = []
-    let allFlashcards = []
-    let allTopics = []
-    
-    for (const r of results) {
+    for (const r of questionResults) {
       allQuestions.push(...r.questions)
-      allFlashcards.push(...r.flashcards)
-      if (r.topics) allTopics.push(...r.topics)
+      allTopics.push(...r.topics)
     }
-    
-    console.log(`📊 Total gerado: ${allQuestions.length} questões, ${allFlashcards.length} flashcards`)
-    
-    // Se não gerou NADA, usar fallback MELHORADO (baseado no texto real)
+    for (const fc of flashcardResults) {
+      allFlashcards.push(...fc)
+    }
+
+    console.log(`📊 Total gerado: ${allQuestions.length}Q, ${allFlashcards.length}FC`)
+
+    // Fallback apenas se a IA falhou completamente em todas as chamadas paralelas
     if (allQuestions.length === 0 && allFlashcards.length === 0) {
-      console.log('⚠️ Nenhum conteúdo gerado! Usando fallback baseado no texto...')
-      
-      // Extrair frases do texto como fallback
-      const sentences = pdfText.split(/[.!?]+/).filter(s => s.trim().length > 30).slice(0, 30)
-      
-      for (let i = 0; i < Math.min(50, sentences.length); i++) {
-        allQuestions.push({
-          text: `Sobre: ${sentences[i].substring(0, 100)}`,
-          alternatives: ["A) Verdadeiro", "B) Falso", "C) Parcialmente", "D) Não informado"],
-          correct_answer: "A",
-          topic: "Conteúdo do texto"
-        })
-      }
-      
-      for (let i = 0; i < Math.min(100, sentences.length); i++) {
-        allFlashcards.push({
-          front: `Conceito: ${sentences[i].substring(0, 80)}`,
-          back: `Detalhe: ${sentences[i].substring(80, 160)}`,
-          topic: "Conteúdo do texto"
-        })
+      console.log('⚠️ IA falhou em todas as partes — tentando chamada única de recuperação')
+      try {
+        const recoveryResult = await generateQuestions(DEEPSEEK_API_KEY, text.substring(0, 8000), 0, config, diffConfig, TARGET_QUESTIONS)
+        allQuestions.push(...recoveryResult.questions)
+        allTopics.push(...recoveryResult.topics)
+        const recoveryFC = await generateFlashcards(DEEPSEEK_API_KEY, text.substring(0, 8000), 0, diffConfig, TARGET_FLASHCARDS)
+        allFlashcards.push(...recoveryFC)
+        console.log(`🔄 Recuperação: ${allQuestions.length}Q, ${allFlashcards.length}FC`)
+      } catch (recoveryErr: any) {
+        console.error('❌ Recuperação também falhou:', recoveryErr.message)
       }
     }
-    
+
+    const altCount = config.alternativesCount
+    const VALID_ANSWERS = new Set(['A', 'B', 'C', 'D', 'E'])
+
+    // Sanitizador: aceita 4 ou 5 alternativas válidas (não exige match exato com altCount)
+    for (const q of allQuestions) {
+      const altsValid =
+        Array.isArray(q.alternatives) &&
+        q.alternatives.length >= 4 &&
+        q.alternatives.every((a: any) => typeof a === 'string' && a.trim().length > 3)
+
+      if (altsValid) {
+        // Ajusta contagem se necessário sem destruir o conteúdo real
+        if (q.alternatives.length > altCount) {
+          q.alternatives = q.alternatives.slice(0, altCount)
+        }
+      } else {
+        // Alternativas realmente quebradas — descarta a questão inteira
+        console.warn(`⚠️ Q inválida descartada: alternatives=${JSON.stringify(q.alternatives)?.substring(0, 80)}`)
+        q._discard = true
+      }
+
+      if (!VALID_ANSWERS.has(q.correct_answer)) {
+        q.correct_answer = 'A'
+      }
+    }
+
+    // Remove questões marcadas para descarte e questões sem texto
+    const before = allQuestions.length
+    allQuestions = allQuestions.filter((q: any) => !q._discard && q.text && q.text.trim().length > 10)
+    if (allQuestions.length < before) {
+      console.warn(`⚠️ ${before - allQuestions.length} questão(ões) descartadas`)
+    }
+
     const uniqueTopics = [...new Set(allTopics)]
 
-    // Garantir quantidades mínimas (MAS com conteúdo melhorado)
-    while (allQuestions.length < 50) {
-      const idx: number = allQuestions.length % 10
-      allQuestions.push({
-        text: `Questão sobre ${uniqueTopics[idx] || "o conteúdo"}: qual a afirmação correta?`,
-        alternatives: ["A) Correta segundo o texto", "B) Incorreta segundo o texto", "C) Parcialmente correta", "D) Não mencionada"],
-        correct_answer: "A",
-        topic: uniqueTopics[idx] || "Conteúdo"
+    // Deduplicação por texto normalizado (primeiros 70 chars)
+    const seenQ = new Set<string>()
+    allQuestions = allQuestions
+      .filter((q: any) => {
+        if (isJunk(q.text ?? '')) return false
+        const key = (q.text ?? '').toLowerCase().replace(/\s+/g, ' ').trim().substring(0, 70)
+        if (seenQ.has(key)) return false
+        seenQ.add(key)
+        return true
       })
-    }
+      .slice(0, TARGET_QUESTIONS)
 
-    while (allFlashcards.length < 100) {
-      const idx: number = allFlashcards.length % 10
-      allFlashcards.push({
-        front: `${uniqueTopics[idx] || "Ponto importante"}: conceito fundamental`,
-        back: "Consulte o material original para detalhes completos.",
-        topic: uniqueTopics[idx] || "Conteúdo"
+    const seenFC = new Set<string>()
+    allFlashcards = allFlashcards
+      .filter((f: any) => {
+        if (isJunk(f.front ?? '') || isJunk(f.back ?? '')) return false
+        if ((f.front ?? '').trim().length <= 5) return false
+        const key = (f.front ?? '').toLowerCase().replace(/\s+/g, ' ').trim().substring(0, 50)
+        if (seenFC.has(key)) return false
+        seenFC.add(key)
+        return true
       })
+      .slice(0, TARGET_FLASHCARDS)
+
+    // Fallback cirúrgico: completa exatamente até TARGET_FLASHCARDS se a dedup removeu demais
+    if (allFlashcards.length < TARGET_FLASHCARDS) {
+      const missing = TARGET_FLASHCARDS - allFlashcards.length
+      console.log(`⚠️ ${allFlashcards.length} flashcards após dedup — gerando ${missing} adicionais...`)
+      try {
+        // Pede missing + 5 para absorver novas duplicatas; usa o texto inteiro como fonte
+        const extraFC = await generateFlashcards(DEEPSEEK_API_KEY, text.substring(0, 12000), 99, diffConfig, missing + 5)
+        for (const f of extraFC) {
+          if (allFlashcards.length >= TARGET_FLASHCARDS) break
+          if (isJunk(f.front ?? '') || isJunk(f.back ?? '')) continue
+          if ((f.front ?? '').trim().length <= 5) continue
+          const key = (f.front ?? '').toLowerCase().replace(/\s+/g, ' ').trim().substring(0, 50)
+          if (seenFC.has(key)) continue
+          seenFC.add(key)
+          allFlashcards.push(f)
+        }
+        console.log(`🔄 Após fallback FC: ${allFlashcards.length}FC`)
+      } catch (e: any) {
+        console.error('❌ Fallback de flashcards falhou:', e.message)
+      }
     }
 
-    allQuestions = allQuestions.slice(0, 50)
-    allFlashcards = allFlashcards.slice(0, 100)
-    
-    // Gerar resumo único (melhorado)
-    let finalSummary = "Resumo gerado automaticamente."
-    try {
-      const summaryPrompt = `Você é um assistente especialista em criar resumos de alta qualidade.
+    console.log(`📊 Após dedup: ${allQuestions.length}Q (target ${TARGET_QUESTIONS}), ${allFlashcards.length}FC (target ${TARGET_FLASHCARDS})`)
 
-REGRAS:
-1. NÃO use asteriscos (*) ou (**)
-2. Use hífen (-) para itens de lista
-3. Tópicos principais em MAIÚSCULAS
-4. Seja COMPLETO e BEM FEITO
+    const questionRows = allQuestions.map((q, i) => ({
+      generation_id: generationId,
+      text: q.text,
+      alternatives: q.alternatives,
+      correct_answer: q.correct_answer,
+      explanation: q.explanation ?? null,
+      topic: q.topic ?? 'Geral',
+      order_index: i + 1,
+    }))
 
-Formato:
-TÍTULO DO TÓPICO
-- Conceito: explicação detalhada
-- Outro ponto: desenvolvimento
+    const flashcardRows = allFlashcards.map((f, i) => ({
+      generation_id: generationId,
+      front: f.front,
+      back: f.back,
+      topic: f.topic ?? 'Geral',
+      order_index: i + 1,
+    }))
 
-Texto: ${pdfText.substring(0, 10000)}`
+    const BATCH = 25
+    const insertResults = await Promise.all([
+      ...Array.from({ length: Math.ceil(questionRows.length / BATCH) }, (_, i) =>
+        supabase.from('questions').insert(questionRows.slice(i * BATCH, (i + 1) * BATCH)),
+      ),
+      ...Array.from({ length: Math.ceil(flashcardRows.length / BATCH) }, (_, i) =>
+        supabase.from('flashcards').insert(flashcardRows.slice(i * BATCH, (i + 1) * BATCH)),
+      ),
+    ])
 
-      const summaryRes = await fetch('https://api.deepseek.com/v1/chat/completions', {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${DEEPSEEK_API_KEY}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'deepseek-chat',
-          messages: [{ role: 'user', content: summaryPrompt }],
-          temperature: 0.3,
-          max_tokens: 2000,
-        }),
+    let insertErrors = 0
+    for (const r of insertResults) {
+      if (r.error) {
+        console.error('❌ INSERT ERROR:', r.error.message, r.error.details)
+        insertErrors++
+      }
+    }
+    if (insertErrors > 0) {
+      throw new Error(`${insertErrors} batch(es) de inserção falharam — verifique os logs acima`)
+    }
+    console.log(`✅ ${questionRows.length}Q + ${flashcardRows.length}FC salvos em ${elapsed()}`)
+
+    console.log(`📝 Atualizando status da geração ${generationId} para 'completed'...`)
+    const now = new Date().toISOString()
+    const { data: updatedRows, error: updateError } = await supabase
+      .from('generations')
+      .update({
+        summary: finalSummary,
+        topics: uniqueTopics.slice(0, 10),
+        status: 'completed',
+        study_mode: mode,
+        question_count: questionRows.length,
+        flashcard_count: flashcardRows.length,
+        completed_at: now,
+        updated_at: now,
       })
-      const summaryData = await summaryRes.json()
-      finalSummary = summaryData.choices[0].message.content
-    } catch (e) {
-      console.error('Erro no resumo:', e)
-    }
-    
-    // Salvar geração
-    await supabase.from('generations').update({
-      summary: finalSummary,
-      topics: uniqueTopics.slice(0, 10),
-      status: 'completed',
-      completed_at: new Date().toISOString(),
-    }).eq('id', generationId)
-    
-    // Salvar questões
-    for (let i = 0; i < allQuestions.length; i += 20) {
-      const batch = allQuestions.slice(i, i + 20).map((q, idx) => ({
-        generation_id: generationId, user_id: userId,
-        text: q.text, alternatives: q.alternatives,
-        correct_answer: q.correct_answer, topic: q.topic || "Geral",
-        order_index: i + idx + 1,
-      }))
-      await supabase.from('questions').insert(batch)
-    }
-    
-    // Salvar flashcards
-    for (let i = 0; i < allFlashcards.length; i += 20) {
-      const batch = allFlashcards.slice(i, i + 20).map((f, idx) => ({
-        generation_id: generationId, user_id: userId,
-        front: f.front, back: f.back, topic: f.topic || "Geral",
-        order_index: i + idx + 1,
-      }))
-      const { error } = await supabase.from('flashcards').insert(batch)
-      if (error) console.error('Erro ao salvar flashcards:', error)
-      else console.log(`✅ ${batch.length} flashcards salvos`)
-    }
-    
-    // Debitar crédito via RPC atomica
-    const { data: debitResult, error: debitErr } = await supabase
-      .rpc('debit_one_credit', { p_user_id: userId })
+      .eq('id', generationId)
+      .select('id')
 
-    if (debitErr) {
-      console.error(`DEBIT_ERROR userId=${userId} msg=${debitErr.message}`)
+    if (updateError) {
+      console.error('❌ UPDATE ERROR — geração NÃO marcada como completed:', updateError.message)
+      console.error('❌ UPDATE DETAILS:', JSON.stringify(updateError))
+    } else if (!updatedRows || updatedRows.length === 0) {
+      console.error(`⚠️ UPDATE afetou 0 linhas — generationId: ${generationId} (RLS ou ID inválido?)`)
     } else {
-      console.log(`DEBIT_RESULT userId=${userId} result=${JSON.stringify(debitResult)}`)
+      console.log(`✅ Geração ${generationId} marcada como completed com sucesso`)
     }
-    
-    console.log(`🎉 Concluído em ${Math.round((Date.now() - startTime)/1000)}s!`)
-    
-    return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
-    
-  } catch (error) {
-    console.error('❌ Erro:', error.message)
-    return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+
+    try {
+      const { error: debitError } = await supabase.rpc('consume_credit', { p_user_id: userId })
+      if (debitError) console.error(`DEBIT_ERROR userId=${userId}:`, debitError.message)
+      else console.log(`DEBIT OK userId=${userId}`)
+    } catch (e: any) {
+      console.error(`DEBIT_EXCEPTION userId=${userId}:`, e.message)
+    }
+
+    console.log(`🎉 Concluído em ${elapsed()}!`)
+    return new Response(JSON.stringify({ success: true }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
+  } catch (error: any) {
+    console.error('❌ Erro fatal:', error.message)
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
   }
 })

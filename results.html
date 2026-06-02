@@ -9,14 +9,14 @@
   <style>
     /* ── CSS variables (light / dark) ─────────────────── */
     :root {
-      --bg:         #F8FAFC;
+      --bg:         #FAFAF9;
       --surface:    #FFFFFF;
-      --border:     #E2E8F0;
-      --border-sub: #F1F5F9;
-      --text:       #1E293B;
-      --text-2:     #475569;
-      --text-3:     #94A3B8;
-      --text-4:     #CBD5E1;
+      --border:     #E2DDD7;
+      --border-sub: #F3F0EC;
+      --text:       #18181B;
+      --text-2:     #52525B;
+      --text-3:     #A1A1AA;
+      --text-4:     #D4D0CB;
       --blue:       #2563EB;
       --blue-bg:    #EFF6FF;
       --blue-text:  #1D4ED8;
@@ -25,18 +25,18 @@
       --green-bg:   #F0FDF4;
       --green-text: #166534;
       --green-bd:   #BBF7D0;
-      --bar-track:  #E2E8F0;
-      --shadow:     0 1px 3px rgba(0,0,0,.06);
+      --bar-track:  #E2DDD7;
+      --shadow:     0 1px 2px rgba(0,0,0,.04);
     }
     [data-theme="dark"] {
-      --bg:         #0F172A;
-      --surface:    #1E293B;
-      --border:     #334155;
-      --border-sub: #1E293B;
-      --text:       #F1F5F9;
-      --text-2:     #94A3B8;
-      --text-3:     #64748B;
-      --text-4:     #475569;
+      --bg:         #0C0C0F;
+      --surface:    #18181B;
+      --border:     #27272A;
+      --border-sub: #111116;
+      --text:       #FAFAFA;
+      --text-2:     #A1A1AA;
+      --text-3:     #52525B;
+      --text-4:     #3F3F46;
       --blue:       #3B82F6;
       --blue-bg:    #1E3A5F;
       --blue-text:  #93C5FD;
@@ -45,8 +45,8 @@
       --green-bg:   #052E16;
       --green-text: #4ADE80;
       --green-bd:   #166534;
-      --bar-track:  #334155;
-      --shadow:     0 1px 3px rgba(0,0,0,.4);
+      --bar-track:  #27272A;
+      --shadow:     0 1px 2px rgba(0,0,0,.3);
     }
 
     body {
@@ -55,9 +55,17 @@
       color: var(--text);
       transition: background .2s, color .2s;
     }
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: -1;
+      background-image: radial-gradient(circle, var(--border) 1px, transparent 1px);
+      background-size: 28px 28px;
+      opacity: .45;
+      pointer-events: none;
+    }
 
     /* ── Dark mode overrides for Tailwind classes ───────── */
-    [data-theme="dark"] .bg-\[\#F8FAFC\] { background-color: var(--bg) !important; }
+    [data-theme="dark"] .bg-\[\#F8FAFC\], [data-theme="dark"] .bg-\[\#FAFAF9\] { background-color: var(--bg) !important; }
     [data-theme="dark"] .bg-white        { background-color: var(--surface) !important; }
     [data-theme="dark"] .border-slate-100 { border-color: var(--border-sub) !important; }
     [data-theme="dark"] .border-slate-200 { border-color: var(--border) !important; }
@@ -114,9 +122,9 @@
     /* dark mode toggle button */
     .btn-icon-sm {
       background: transparent;
-      border: 1px solid var(--border, #E2E8F0);
-      border-radius: 8px; padding: 6px;
-      color: var(--text-3, #94A3B8);
+      border: 1px solid var(--border, #E2DDD7);
+      border-radius: 6px; padding: 6px;
+      color: var(--text-3, #A1A1AA);
       cursor: pointer;
       display: inline-flex; align-items: center; justify-content: center;
       transition: background .15s, color .15s;
@@ -127,7 +135,7 @@
     .flip-wrap { perspective: 1200px; cursor: pointer; user-select: none; touch-action: manipulation; }
     .flip-inner {
       position: relative; width: 100%; height: 100%;
-      transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
       transform-style: preserve-3d;
     }
     .flip-wrap.flipped .flip-inner { transform: rotateY(180deg); }
@@ -199,7 +207,7 @@
     #focusFlip { perspective: 1200px; cursor: pointer; user-select: none; height: 210px; }
     #focusFlip .flip-inner {
       position: relative; width: 100%; height: 100%;
-      transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
       transform-style: preserve-3d;
     }
     #focusFlip.flipped .flip-inner { transform: rotateY(180deg); }
@@ -318,7 +326,7 @@
 <body>
 
 <!-- ── Loading ──────────────────────────────────────────────── -->
-<div id="loading" class="fixed inset-0 bg-[#F8FAFC] flex items-center justify-center z-50">
+<div id="loading" class="fixed inset-0 flex items-center justify-center z-50" style="background:var(--bg)">
   <div class="text-center">
     <div class="w-8 h-8 rounded-full border-4 border-blue-100 border-t-[#2563EB] animate-spin mx-auto mb-3"></div>
     <p class="text-sm text-slate-400">Carregando material de estudo…</p>
@@ -329,7 +337,9 @@
 <div id="app" class="hidden min-h-screen flex flex-col">
 
   <!-- Header -->
-  <header class="bg-white border-b border-slate-100 px-4 md:px-8 h-12 flex items-center justify-between gap-4 sticky top-0 z-10 shadow-sm">
+  <header class="px-4 md:px-8 h-12 flex items-center justify-between gap-4 sticky top-0 z-10"
+    style="background:rgba(250,250,249,.9);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--border);transition:background .2s;">
+    <style>[data-theme="dark"] #app > header { background: rgba(12,12,15,.9) !important; }</style>
     <div class="flex items-center gap-3 min-w-0">
       <a href="/dashboard.html" class="text-slate-400 hover:text-slate-700 transition flex-shrink-0" title="Voltar">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -339,6 +349,7 @@
       <h1 id="pageTitle" class="text-sm font-semibold text-slate-800 truncate">Material de estudo</h1>
     </div>
     <div class="flex items-center gap-2 flex-shrink-0">
+      <span id="badgeMode" class="hidden text-xs font-medium px-2 py-0.5 rounded-full"></span>
       <span id="badgeQ"  class="hidden text-xs font-medium px-2 py-0.5 bg-blue-50 text-blue-700 rounded-full"></span>
       <span id="badgeFC" class="hidden text-xs font-medium px-2 py-0.5 bg-violet-50 text-violet-700 rounded-full"></span>
       <button id="darkToggle" class="btn-icon-sm" onclick="toggleDark()" title="Alternar tema">
@@ -1098,11 +1109,26 @@
       questions  = qRes.data  || [];
       flashcards = fRes.data  || [];
 
-      console.log(`📊 ${questions.length} questões, ${flashcards.length} flashcards`);
+      console.log(`${questions.length} questões, ${flashcards.length} flashcards`);
 
       // Header
       document.getElementById('pageTitle').textContent =
         gen.title || gen.pdf_name || 'Material de estudo';
+
+      // Mode badge
+      const modeLabels = {
+        concurso:   { label: 'Concurso Público', cls: 'bg-amber-50 text-amber-700' },
+        oab:        { label: 'OAB',              cls: 'bg-purple-50 text-purple-700' },
+        vestibular: { label: 'Vestibular/ENEM',  cls: 'bg-green-50 text-green-800' },
+        faculdade:  { label: 'Faculdade',         cls: 'bg-blue-50 text-blue-700' },
+      };
+      if (gen.study_mode && modeLabels[gen.study_mode]) {
+        const m = modeLabels[gen.study_mode];
+        const badgeMode = document.getElementById('badgeMode');
+        badgeMode.textContent = m.label;
+        badgeMode.className = `text-xs font-medium px-2 py-0.5 rounded-full ${m.cls}`;
+        badgeMode.classList.remove('hidden');
+      }
 
       if (questions.length) {
         document.getElementById('badgeQ').textContent = questions.length + ' questões';

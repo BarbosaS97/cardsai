@@ -8,13 +8,13 @@
   <style>
     /* ── CSS variables (light / dark) ─────────────────────── */
     :root {
-      --bg:        #F8FAFC;
+      --bg:        #FAFAF9;
       --surface:   #FFFFFF;
-      --surface-2: #F1F5F9;
-      --border:    #E2E8F0;
-      --text:      #1E293B;
-      --text-2:    #475569;
-      --text-3:    #94A3B8;
+      --surface-2: #F3F0EC;
+      --border:    #E2DDD7;
+      --text:      #18181B;
+      --text-2:    #52525B;
+      --text-3:    #A1A1AA;
       --blue:      #2563EB;
       --blue-bg:   #EFF6FF;
       --blue-bd:   #BFDBFE;
@@ -27,17 +27,18 @@
       --amber-bg:  #FFFBEB;
       --amber:     #92400E;
       --amber-bd:  #FDE68A;
-      --shadow:    0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
-      --shadow-md: 0 4px 12px rgba(0,0,0,.08);
+      --violet:    #7C3AED;
+      --shadow:    0 1px 2px rgba(0,0,0,.04);
+      --shadow-md: 0 2px 8px rgba(0,0,0,.07);
     }
     [data-theme="dark"] {
-      --bg:        #0F172A;
-      --surface:   #1E293B;
-      --surface-2: #0F172A;
-      --border:    #334155;
-      --text:      #F1F5F9;
-      --text-2:    #94A3B8;
-      --text-3:    #64748B;
+      --bg:        #0C0C0F;
+      --surface:   #18181B;
+      --surface-2: #111116;
+      --border:    #27272A;
+      --text:      #FAFAFA;
+      --text-2:    #A1A1AA;
+      --text-3:    #52525B;
       --blue:      #3B82F6;
       --blue-bg:   #1E3A5F;
       --blue-bd:   #1D4ED8;
@@ -47,11 +48,12 @@
       --red-bg:    #450A0A;
       --red:       #F87171;
       --red-bd:    #7F1D1D;
-      --amber-bg:  #451A03;
+      --amber-bg:  #1C1400;
       --amber:     #FCD34D;
       --amber-bd:  #78350F;
-      --shadow:    0 1px 3px rgba(0,0,0,.3);
-      --shadow-md: 0 4px 12px rgba(0,0,0,.4);
+      --violet:    #8B5CF6;
+      --shadow:    0 1px 2px rgba(0,0,0,.25);
+      --shadow-md: 0 2px 8px rgba(0,0,0,.35);
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -67,6 +69,14 @@
       display: flex;
       flex-direction: column;
     }
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: -1;
+      background-image: radial-gradient(circle, var(--border) 1px, transparent 1px);
+      background-size: 28px 28px;
+      opacity: .45;
+      pointer-events: none;
+    }
     a { color: inherit; text-decoration: none; }
     button { font-family: inherit; cursor: pointer; }
     input  { font-family: inherit; }
@@ -78,23 +88,29 @@
     /* ── Header ─────────────────────────────────────────── */
     header {
       position: sticky; top: 0; z-index: 40;
-      background: var(--surface);
+      background: rgba(250,250,249,.9);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
       border-bottom: 1px solid var(--border);
-      height: 56px;
+      height: 54px;
+      transition: background .2s;
     }
+    [data-theme="dark"] header { background: rgba(12,12,15,.9); }
     .header-inner {
       display: flex; align-items: center;
       justify-content: space-between; gap: 16px;
       height: 100%;
     }
     .header-left { display: flex; align-items: center; gap: 12px; }
-    .logo { font-size: 17px; font-weight: 700; color: var(--text); }
+    .logo {
+      font-size: 14px; font-weight: 700; letter-spacing: -.3px; color: var(--text);
+    }
     .header-right { display: flex; align-items: center; gap: 10px; }
 
     /* ── Buttons ─────────────────────────────────────────── */
     .btn {
       display: inline-flex; align-items: center; justify-content: center;
-      gap: 6px; border-radius: 8px; font-weight: 600;
+      gap: 6px; border-radius: 6px; font-weight: 600;
       font-size: 13px; cursor: pointer; border: none;
       transition: opacity .15s, background .15s; white-space: nowrap;
       text-decoration: none;
@@ -109,21 +125,21 @@
     .btn-ghost:hover { border-color: var(--text-3); color: var(--text); background: var(--surface-2); }
     .btn-icon {
       background: transparent; border: 1px solid var(--border);
-      border-radius: 8px; padding: 7px; color: var(--text-2);
+      border-radius: 6px; padding: 7px; color: var(--text-2);
       display: inline-flex; align-items: center; justify-content: center;
     }
     .btn-icon:hover { border-color: var(--text-3); color: var(--text); background: var(--surface-2); }
     .btn-danger {
       background: var(--red-bg); color: var(--red);
       border: 1px solid var(--red-bd); padding: 6px 12px;
-      border-radius: 7px; font-size: 12px; font-weight: 500;
+      border-radius: 6px; font-size: 12px; font-weight: 500;
     }
     .btn-danger:hover { opacity: .8; }
 
     /* ── Status badges ───────────────────────────────────── */
     .badge {
       display: inline-block; font-size: 10px; font-weight: 600;
-      padding: 2px 7px; border-radius: 4px; border: 1px solid;
+      padding: 2px 7px; border-radius: 3px; border: 1px solid;
       letter-spacing: .02em;
     }
     .badge-completed  { background: var(--green-bg); color: var(--green); border-color: var(--green-bd); }
@@ -139,10 +155,11 @@
     .gen-card {
       background: var(--surface); border: 1px solid var(--border);
       border-radius: 10px; padding: 14px;
-      transition: border-color .15s;
+      border-left: 3px solid transparent;
+      transition: border-color .15s, border-left-color .15s;
       display: flex; flex-direction: column; gap: 8px;
     }
-    .gen-card:hover { border-color: var(--text-3); }
+    .gen-card:hover { border-color: var(--text-3); border-left-color: var(--blue); }
 
     /* ── Inline title edit ───────────────────────────────── */
     .title-edit-input {
@@ -177,7 +194,7 @@
     /* ── Card / section ──────────────────────────────────── */
     .card {
       background: var(--surface); border: 1px solid var(--border);
-      border-radius: 14px; padding: 20px;
+      border-radius: 12px; padding: 20px;
       box-shadow: var(--shadow);
     }
     .section-title { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 14px; }
@@ -192,6 +209,73 @@
     /* ── Utility ─────────────────────────────────────────── */
     .hidden { display: none !important; }
 
+    /* ── Search + filter toolbar ────────────────────────── */
+    .toolbar {
+      display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; align-items: center;
+    }
+    .search-wrap { position: relative; flex: 1; min-width: 180px; }
+    .search-icon {
+      position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+      color: var(--text-3); pointer-events: none;
+    }
+    .search-input {
+      width: 100%; padding: 8px 12px 8px 34px;
+      border: 1px solid var(--border); border-radius: 8px;
+      background: var(--surface); color: var(--text);
+      font-size: 13px; font-family: inherit; outline: none;
+      transition: border-color .15s;
+    }
+    .search-input:focus { border-color: var(--blue); }
+    .search-input::placeholder { color: var(--text-3); }
+    .filter-select {
+      padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px;
+      background: var(--surface); color: var(--text-2);
+      font-size: 13px; font-family: inherit; outline: none; cursor: pointer;
+      transition: border-color .15s;
+    }
+    .filter-select:focus { border-color: var(--blue); }
+
+    /* ── View toggle ─────────────────────────────────────── */
+    .view-toggle { display: flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; flex-shrink: 0; }
+    .view-btn {
+      padding: 7px 9px; background: transparent; border: none;
+      color: var(--text-3); cursor: pointer;
+      display: inline-flex; align-items: center;
+      transition: background .15s, color .15s;
+    }
+    .view-btn.active { background: var(--surface-2); color: var(--text); }
+    .view-btn:not(.active):hover { background: var(--surface-2); color: var(--text-2); }
+
+    /* ── List view ───────────────────────────────────────── */
+    .gen-list { display: flex; flex-direction: column; gap: 6px; }
+    .gen-list .gen-card {
+      flex-direction: row; align-items: center;
+      padding: 10px 14px; gap: 12px;
+    }
+    .gen-list .gen-card .card-type-icon { display: none; }
+    .gen-list .gen-card .card-actions { margin-top: 0; padding-top: 0; flex-direction: row; }
+
+    /* ── Card type icon ──────────────────────────────────── */
+    .card-type-icon {
+      font-size: 28px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      width: 44px; height: 44px; border-radius: 10px;
+      background: var(--surface-2);
+    }
+
+    /* ── Multi-select ────────────────────────────────────── */
+    .card-checkbox { accent-color: var(--blue); width: 15px; height: 15px; cursor: pointer; flex-shrink: 0; }
+    .bulk-bar {
+      display: none; align-items: center; gap: 10px;
+      padding: 10px 14px; background: var(--blue-bg);
+      border: 1px solid var(--blue-bd); border-radius: 10px;
+      margin-bottom: 12px; font-size: 13px; font-weight: 500; color: var(--blue);
+    }
+    .bulk-bar.visible { display: flex; }
+
+    /* ── Results counter ─────────────────────────────────── */
+    .results-count { font-size: 12px; color: var(--text-3); margin-bottom: 10px; }
+
     /* ── Responsive ─────────────────────────────────────── */
     @media (max-width: 540px) {
       .max-w { padding: 0 14px; }
@@ -200,6 +284,7 @@
       .back-link { font-size: 12px; }
       .gen-card { padding: 14px; }
       .btn-danger { padding: 5px 10px; font-size: 11px; }
+      .filter-select { font-size: 12px; }
     }
   </style>
   <!-- PWA -->
@@ -259,6 +344,53 @@
       </p>
     </div>
 
+    <!-- Toolbar: busca + filtros + toggle -->
+    <div class="toolbar" id="toolbar" style="display:none;">
+      <div class="search-wrap">
+        <span class="search-icon">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="8"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35"/>
+          </svg>
+        </span>
+        <input type="text" id="searchInput" class="search-input" placeholder="Buscar por título..." oninput="applyFilters()">
+      </div>
+      <select id="modeFilter" class="filter-select" onchange="applyFilters()">
+        <option value="">Todos os modos</option>
+        <option value="concurso">Concurso Público</option>
+        <option value="oab">OAB</option>
+        <option value="vestibular">Vestibular / ENEM</option>
+        <option value="faculdade">Faculdade</option>
+      </select>
+      <select id="dateFilter" class="filter-select" onchange="applyFilters()">
+        <option value="">Qualquer data</option>
+        <option value="7">Últimos 7 dias</option>
+        <option value="30">Últimos 30 dias</option>
+        <option value="90">Últimos 90 dias</option>
+      </select>
+      <div class="view-toggle">
+        <button class="view-btn active" id="btnGrid" title="Grade" onclick="setView('grid')">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+            <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+          </svg>
+        </button>
+        <button class="view-btn" id="btnList" title="Lista" onclick="setView('list')">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Bulk action bar -->
+    <div class="bulk-bar" id="bulkBar">
+      <span id="bulkCount">0 selecionados</span>
+      <button class="btn-danger" onclick="deleteSelected()" style="margin-left:auto;">Excluir selecionados</button>
+      <button onclick="clearSelection()" style="background:none;border:none;font-size:12px;color:var(--text-2);cursor:pointer;padding:0 4px;">Cancelar</button>
+    </div>
+
+    <p class="results-count" id="resultsCount" style="display:none;"></p>
+
     <!-- Skeleton -->
     <div id="genSkeleton" class="gen-grid">
       <div class="skeleton" style="height:112px;"></div>
@@ -304,7 +436,9 @@
 
   /* ── State ──────────────────────────────────────────────── */
   let profile = null;
-  let pollTimer = null;
+  let allGens = [];
+  let currentView = 'grid';
+  let selectedIds = new Set();
 
   /* ── Init ───────────────────────────────────────────────── */
   async function init() {
@@ -337,39 +471,136 @@
       empty.classList.remove('hidden');
       grid.classList.add('hidden');
     } else {
+      allGens = gens;
       empty.classList.add('hidden');
-      grid.classList.remove('hidden');
-      grid.innerHTML = gens.map(g => renderGenCard(g)).join('');
-    }
-
-    const hasActive = (gens || []).some(g => g.status === 'processing' || g.status === 'pending');
-    if (hasActive && !pollTimer) {
-      pollTimer = setInterval(loadGenerations, 4000);
-    } else if (!hasActive && pollTimer) {
-      clearInterval(pollTimer); pollTimer = null;
+      document.getElementById('toolbar').style.display = '';
+      applyFilters();
     }
   }
+
+  /* ── Filter & render ────────────────────────────────────── */
+  window.applyFilters = function () {
+    const q    = (document.getElementById('searchInput')?.value  || '').toLowerCase();
+    const mode = document.getElementById('modeFilter')?.value  || '';
+    const days = parseInt(document.getElementById('dateFilter')?.value || '0', 10);
+    const now  = Date.now();
+
+    const filtered = allGens.filter(g => {
+      if (q && !(g.title || g.pdf_name || '').toLowerCase().includes(q)) return false;
+      if (mode && g.study_mode !== mode) return false;
+      if (days) {
+        const age = (now - new Date(g.created_at).getTime()) / 86400000;
+        if (age > days) return false;
+      }
+      return true;
+    });
+
+    const countEl = document.getElementById('resultsCount');
+    countEl.style.display = (q || mode || days) ? '' : 'none';
+    countEl.textContent = `${filtered.length} resultado${filtered.length !== 1 ? 's' : ''} encontrado${filtered.length !== 1 ? 's' : ''}`;
+
+    const grid = document.getElementById('genGrid');
+    if (filtered.length === 0) {
+      grid.innerHTML = `<div style="grid-column:1/-1;padding:24px 0;font-size:13px;color:var(--text-3);">Nenhuma criação corresponde aos filtros.</div>`;
+    } else {
+      grid.innerHTML = filtered.map(g => renderGenCard(g)).join('');
+    }
+    grid.classList.remove('hidden');
+    document.getElementById('genEmpty').classList.add('hidden');
+    updateViewClass();
+  };
+
+  /* ── View toggle ────────────────────────────────────────── */
+  window.setView = function (v) {
+    currentView = v;
+    document.getElementById('btnGrid').classList.toggle('active', v === 'grid');
+    document.getElementById('btnList').classList.toggle('active', v === 'list');
+    updateViewClass();
+  };
+
+  function updateViewClass() {
+    const grid = document.getElementById('genGrid');
+    grid.className = currentView === 'list' ? 'gen-list' : 'gen-grid';
+  }
+
+  /* ── Multi-select ───────────────────────────────────────── */
+  window.toggleSelect = function (id, checked) {
+    if (checked) selectedIds.add(id); else selectedIds.delete(id);
+    const bar = document.getElementById('bulkBar');
+    const countEl = document.getElementById('bulkCount');
+    if (selectedIds.size > 0) {
+      bar.classList.add('visible');
+      countEl.textContent = selectedIds.size + ' selecionado' + (selectedIds.size > 1 ? 's' : '');
+    } else {
+      bar.classList.remove('visible');
+    }
+  };
+
+  window.clearSelection = function () {
+    selectedIds.clear();
+    document.querySelectorAll('.card-checkbox').forEach(cb => { cb.checked = false; });
+    document.getElementById('bulkBar').classList.remove('visible');
+  };
+
+  window.deleteSelected = async function () {
+    if (!selectedIds.size) return;
+    if (!confirm(`Excluir ${selectedIds.size} criação(ões)? Esta ação não pode ser desfeita.`)) return;
+    for (const id of [...selectedIds]) {
+      await db.from('questions').delete().eq('generation_id', id);
+      await db.from('flashcards').delete().eq('generation_id', id);
+      await db.from('generations').delete().eq('id', id);
+      allGens = allGens.filter(g => g.id !== id);
+      const card = document.getElementById('card-' + id);
+      if (card) card.remove();
+    }
+    selectedIds.clear();
+    document.getElementById('bulkBar').classList.remove('visible');
+    if (!allGens.length) {
+      document.getElementById('genGrid').classList.add('hidden');
+      document.getElementById('genEmpty').classList.remove('hidden');
+      document.getElementById('toolbar').style.display = 'none';
+    }
+  };
 
   /* ── Render generation card ─────────────────────────────── */
   function renderGenCard(g) {
     const isCompleted  = g.status === 'completed';
     const isProcessing = g.status === 'processing' || g.status === 'pending';
-    const title = escHtml(g.title || g.pdf_name || 'Material de estudo');
-    const date  = formatDate(g.created_at);
+    const isFailed     = g.status === 'failed';
+    const hasData      = g.question_count > 0 || g.flashcard_count > 0;
+    const title   = escHtml(g.title || g.pdf_name || 'Material de estudo');
+    const date    = formatDate(g.created_at);
+    const isPDF   = g.pdf_name && g.pdf_name !== 'Texto colado';
+    const typeIcon = isPDF
+      ? `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" style="color:var(--text-3)"><path stroke-linecap="round" stroke-linejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>`
+      : `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" style="color:var(--text-3)"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>`;
 
-    const spinnerSVG = `<svg class="spin" width="13" height="13" fill="none" viewBox="0 0 24 24" style="color:var(--blue);">
-      <circle opacity=".25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-      <path opacity=".75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
-    </svg>`;
+    const counts = [
+      g.question_count  ? `${g.question_count} questões`   : '',
+      g.flashcard_count ? `${g.flashcard_count} flashcards` : '',
+    ].filter(Boolean).join(' · ');
+
+    const modeLabelMap = { concurso:'Concurso', oab:'OAB', vestibular:'Vestibular', faculdade:'Faculdade' };
+    const modeLabel = g.study_mode ? modeLabelMap[g.study_mode] || g.study_mode : '';
 
     const pencilSVG = `<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
     </svg>`;
 
+    const badgeHtml = isFailed
+      ? `<span class="badge badge-failed" style="flex-shrink:0;">Erro</span>`
+      : isCompleted || hasData
+      ? `<span class="badge badge-completed" style="flex-shrink:0;">Concluído</span>`
+      : isProcessing
+      ? `<span class="badge badge-processing" style="flex-shrink:0;">Processando</span>`
+      : '';
+
     return `
     <div class="gen-card" id="card-${g.id}">
-      <!-- Title + badge row -->
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;min-width:0;">
+      <!-- Top row: checkbox + icon + title + badge -->
+      <div style="display:flex;align-items:flex-start;gap:8px;min-width:0;">
+        <input type="checkbox" class="card-checkbox" onchange="toggleSelect('${g.id}',this.checked)" style="margin-top:3px;" title="Selecionar">
+        <div class="card-type-icon" style="width:36px;height:36px;border-radius:8px;flex-shrink:0;">${typeIcon}</div>
         <div style="flex:1;min-width:0;">
           <div id="titleDisplay-${g.id}" style="display:flex;align-items:center;gap:4px;">
             <span style="font-size:13px;font-weight:600;color:var(--text);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.4;">
@@ -387,28 +618,28 @@
             />
           </div>
         </div>
-        <span class="badge badge-${g.status}" style="flex-shrink:0;">
-          ${statusLabel(g.status)}
-        </span>
+        ${badgeHtml}
       </div>
 
       <!-- Meta row -->
-      <div style="font-size:11px;color:var(--text-3);display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+      <div style="font-size:11px;color:var(--text-3);display:flex;flex-wrap:wrap;gap:4px;align-items:center;">
         <span>${date}</span>
-        ${isProcessing ? `<span style="display:inline-flex;align-items:center;gap:3px;">${spinnerSVG} Processando…</span>` : ''}
+        ${modeLabel ? `<span style="background:var(--blue-bg);color:var(--blue);border-radius:4px;padding:1px 5px;font-weight:600;">${modeLabel}</span>` : ''}
+        ${counts ? `<span>· ${counts}</span>` : ''}
       </div>
 
-      ${g.status === 'failed' ? `<p style="font-size:11px;color:var(--red);line-height:1.4;">${escHtml(g.error_message || 'Erro ao processar')}</p>` : ''}
+      ${isFailed ? `<p style="font-size:11px;color:var(--red);line-height:1.4;">${escHtml(g.error_message || 'Erro ao processar')}</p>` : ''}
 
       <!-- Actions -->
-      <div style="display:flex;align-items:center;gap:6px;margin-top:auto;padding-top:2px;">
-        ${isCompleted
-          ? `<a href="/results.html?id=${g.id}" class="btn btn-primary" style="font-size:12px;padding:6px 12px;flex:1;text-align:center;">Ver resultados</a>`
-          : isProcessing
-          ? `<a href="/results.html?id=${g.id}" class="btn btn-ghost" style="font-size:12px;padding:6px 12px;flex:1;text-align:center;">Acompanhar</a>`
-          : `<span style="flex:1;"></span>`
-        }
-        <button class="btn-danger" onclick="deleteGeneration('${g.id}')">Excluir</button>
+      <div class="card-actions" style="display:flex;align-items:center;gap:6px;margin-top:auto;padding-top:2px;">
+        <a href="/results.html?id=${g.id}" class="btn btn-primary" style="font-size:12px;padding:6px 12px;flex:1;text-align:center;">
+          <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin-right:3px;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253"/></svg>
+          Estudar
+        </a>
+        <button class="btn-danger" onclick="deleteGeneration('${g.id}')" title="Excluir">
+          <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+          Excluir
+        </button>
       </div>
     </div>`;
   }
@@ -475,7 +706,7 @@
 
   /* ── Helpers ────────────────────────────────────────────── */
   function statusLabel(s) {
-    return { completed: 'Concluído', processing: 'Processando', pending: 'Aguardando', failed: 'Erro' }[s] || s;
+    return { completed: 'Concluído', failed: 'Erro' }[s] || '';
   }
 
   function escHtml(str) {

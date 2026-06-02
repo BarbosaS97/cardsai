@@ -1,41 +1,76 @@
 ﻿<!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-theme="light">
 <head>
+  <script>(function(){var t=localStorage.getItem('cardsai-theme');if(t)document.documentElement.setAttribute('data-theme',t);})()</script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Admin — CardsQuestõesAI</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
+    :root {
+      --bg: #FAFAF9; --surface: #FFFFFF; --surface-2: #F3F0EC; --border: #E2DDD7;
+      --text: #18181B; --text-2: #52525B; --text-3: #A1A1AA;
+      --blue: #2563EB; --blue-bg: #EFF6FF; --blue-bd: #BFDBFE;
+      --red: #DC2626; --red-bg: #FEF2F2; --red-bd: #FECACA;
+      --green: #15803D; --green-bg: #F0FDF4; --green-bd: #BBF7D0;
+    }
+    [data-theme="dark"] {
+      --bg: #0C0C0F; --surface: #18181B; --surface-2: #111116; --border: #27272A;
+      --text: #FAFAFA; --text-2: #A1A1AA; --text-3: #52525B;
+      --blue: #3B82F6; --blue-bg: #1E3A5F; --blue-bd: #1D4ED8;
+      --red: #F87171; --red-bg: #450A0A; --red-bd: #7F1D1D;
+      --green: #4ADE80; --green-bg: #052E16; --green-bd: #166534;
+    }
     *, *::before, *::after { box-sizing: border-box; }
-    body { font-family: system-ui, -apple-system, sans-serif; color: #1E293B; background: #F8FAFC; -webkit-font-smoothing: antialiased; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      color: var(--text); background: var(--bg);
+      -webkit-font-smoothing: antialiased;
+      transition: background .2s, color .2s;
+    }
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: -1;
+      background-image: radial-gradient(circle, var(--border) 1px, transparent 1px);
+      background-size: 28px 28px;
+      opacity: .45;
+      pointer-events: none;
+    }
 
-    .card { border: 1px solid #E2E8F0; border-radius: 12px; padding: 24px; background: #fff; }
+    header {
+      background: rgba(250,250,249,.9) !important;
+      backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+      transition: background .2s;
+    }
+    [data-theme="dark"] header { background: rgba(12,12,15,.9) !important; }
 
-    .btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 6px; background: #2563EB; color: #fff; border: none; border-radius: 8px; padding: 10px 20px; font-weight: 600; font-size: 14px; cursor: pointer; transition: opacity .15s; }
-    .btn-primary:hover { opacity: 0.9; }
-    .btn-ghost { display: inline-flex; align-items: center; justify-content: center; background: transparent; color: #475569; border: 1px solid #E2E8F0; border-radius: 6px; padding: 6px 12px; font-size: 12px; font-weight: 500; cursor: pointer; transition: border-color .15s, color .15s; }
-    .btn-ghost:hover { border-color: #94A3B8; color: #1E293B; }
-    .btn-danger { display: inline-flex; align-items: center; justify-content: center; background: #FEF2F2; color: #DC2626; border: 1px solid #FECACA; border-radius: 6px; padding: 6px 12px; font-size: 12px; font-weight: 500; cursor: pointer; }
-    .btn-danger:hover { background: #FEE2E2; }
+    .card { border: 1px solid var(--border); border-radius: 10px; padding: 24px; background: var(--surface); }
 
-    .input-field { width: 100%; padding: 9px 12px; border: 1px solid #E2E8F0; border-radius: 8px; font-size: 14px; color: #1E293B; background: #fff; outline: none; transition: border-color .15s, box-shadow .15s; font-family: inherit; }
-    .input-field:focus { border-color: #2563EB; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
-    .input-field::placeholder { color: #94A3B8; }
+    .btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 6px; background: var(--blue); color: #fff; border: none; border-radius: 6px; padding: 10px 20px; font-weight: 600; font-size: 14px; cursor: pointer; transition: opacity .15s; }
+    .btn-primary:hover { opacity: 0.88; }
+    .btn-ghost { display: inline-flex; align-items: center; justify-content: center; background: transparent; color: var(--text-2); border: 1px solid var(--border); border-radius: 6px; padding: 6px 12px; font-size: 12px; font-weight: 500; cursor: pointer; transition: border-color .15s, color .15s; }
+    .btn-ghost:hover { border-color: var(--text-3); color: var(--text); }
+    .btn-danger { display: inline-flex; align-items: center; justify-content: center; background: var(--red-bg); color: var(--red); border: 1px solid var(--red-bd); border-radius: 6px; padding: 6px 12px; font-size: 12px; font-weight: 500; cursor: pointer; }
+    .btn-danger:hover { opacity: .8; }
 
-    .tab-btn { padding: 10px 20px; font-size: 14px; font-weight: 500; color: #475569; border: none; background: none; cursor: pointer; border-bottom: 2px solid transparent; transition: color .15s, border-color .15s; }
-    .tab-btn:hover { color: #1E293B; }
-    .tab-btn.active { color: #2563EB; border-color: #2563EB; font-weight: 600; }
+    .input-field { width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; color: var(--text); background: var(--surface); outline: none; transition: border-color .15s, box-shadow .15s; font-family: inherit; }
+    .input-field:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(37,99,235,0.08); }
+    .input-field::placeholder { color: var(--text-3); }
 
-    .status-completed { background: #F0FDF4; color: #15803D; border: 1px solid #BBF7D0; padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 600; }
-    .status-failed { background: #FEF2F2; color: #DC2626; border: 1px solid #FECACA; padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 600; }
-    .status-processing { background: #EFF6FF; color: #1D4ED8; border: 1px solid #BFDBFE; padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 600; }
-    .status-pending { background: #F8FAFC; color: #64748B; border: 1px solid #E2E8F0; padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 600; }
+    .tab-btn { padding: 10px 20px; font-size: 14px; font-weight: 500; color: var(--text-2); border: none; background: none; cursor: pointer; border-bottom: 2px solid transparent; transition: color .15s, border-color .15s; }
+    .tab-btn:hover { color: var(--text); }
+    .tab-btn.active { color: var(--blue); border-color: var(--blue); font-weight: 600; }
 
-    tr { border-bottom: 1px solid #F1F5F9; }
-    tr:hover { background: #F8FAFC; }
-    th { text-align: left; padding: 12px 20px; font-size: 11px; font-weight: 600; color: #475569; text-transform: uppercase; letter-spacing: 0.05em; }
-    td { padding: 14px 20px; font-size: 14px; }
+    .status-completed { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-bd); padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+    .status-failed { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-bd); padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+    .status-processing { background: var(--blue-bg); color: var(--blue); border: 1px solid var(--blue-bd); padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+    .status-pending { background: var(--surface-2); color: var(--text-3); border: 1px solid var(--border); padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+
+    tr { border-bottom: 1px solid var(--border); }
+    tr:hover { background: var(--surface-2); }
+    th { text-align: left; padding: 12px 20px; font-size: 11px; font-weight: 600; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.05em; }
+    td { padding: 14px 20px; font-size: 14px; color: var(--text); }
 
     /* ── Responsive ──────────────────────────────────────── */
     @media (max-width: 640px) {
@@ -85,11 +120,11 @@
 <body class="min-h-screen">
 
   <!-- Header -->
-  <header style="position:sticky;top:0;z-index:50;background:#fff;border-bottom:1px solid #E2E8F0;height:56px;">
+  <header style="position:sticky;top:0;z-index:50;border-bottom:1px solid var(--border);height:54px;">
     <div class="max-w-screen-xl mx-auto px-6 h-full flex items-center justify-between gap-4">
-      <div style="display:flex;align-items:center;gap:16px;">
-        <a href="/dashboard.html" style="font-size:18px;font-weight:700;color:#1E293B;text-decoration:none;">CardsQuestõesAI</a>
-        <span style="font-size:12px;font-weight:600;color:#2563EB;background:#EFF6FF;padding:3px 10px;border-radius:6px;border:1px solid #BFDBFE;">Admin</span>
+      <div style="display:flex;align-items:center;gap:14px;">
+        <a href="/dashboard.html" style="font-size:14px;font-weight:700;color:var(--text);text-decoration:none;">CardsQuestõesAI</a>
+        <span style="font-size:11px;font-weight:600;color:var(--blue);background:var(--blue-bg);padding:2px 8px;border-radius:4px;border:1px solid var(--blue-bd);">Admin</span>
       </div>
       <button onclick="signOut()" class="btn-ghost">Sair</button>
     </div>
@@ -100,25 +135,25 @@
     <!-- Stats -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
       <div class="card" style="padding:20px;">
-        <p style="font-size:11px;font-weight:600;color:#475569;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Usuários</p>
-        <p id="statUsers" style="font-size:28px;font-weight:700;color:#1E293B;">—</p>
+        <p style="font-size:11px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Usuários</p>
+        <p id="statUsers" style="font-size:28px;font-weight:700;color:var(--text);">—</p>
       </div>
       <div class="card" style="padding:20px;">
-        <p style="font-size:11px;font-weight:600;color:#475569;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Gerações</p>
-        <p id="statGens" style="font-size:28px;font-weight:700;color:#1E293B;">—</p>
+        <p style="font-size:11px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Gerações</p>
+        <p id="statGens" style="font-size:28px;font-weight:700;color:var(--text);">—</p>
       </div>
       <div class="card" style="padding:20px;">
-        <p style="font-size:11px;font-weight:600;color:#475569;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Questões</p>
-        <p id="statQ" style="font-size:28px;font-weight:700;color:#1E293B;">—</p>
+        <p style="font-size:11px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Questões</p>
+        <p id="statQ" style="font-size:28px;font-weight:700;color:var(--text);">—</p>
       </div>
       <div class="card" style="padding:20px;">
-        <p style="font-size:11px;font-weight:600;color:#475569;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Flashcards</p>
-        <p id="statF" style="font-size:28px;font-weight:700;color:#1E293B;">—</p>
+        <p style="font-size:11px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Flashcards</p>
+        <p id="statF" style="font-size:28px;font-weight:700;color:var(--text);">—</p>
       </div>
     </div>
 
     <!-- Tabs -->
-    <div style="border-bottom:1px solid #E2E8F0;margin-bottom:24px;display:flex;">
+    <div style="border-bottom:1px solid var(--border);margin-bottom:24px;display:flex;">
       <button onclick="showTab('users')" id="tab-users" class="tab-btn active">Usuários</button>
       <button onclick="showTab('generations')" id="tab-generations" class="tab-btn">Gerações</button>
     </div>
@@ -126,13 +161,13 @@
     <!-- Users tab -->
     <div id="tab-users-content">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px;">
-        <h2 style="font-size:15px;font-weight:600;color:#1E293B;">Todos os usuários</h2>
+        <h2 style="font-size:15px;font-weight:600;color:var(--text);">Todos os usuários</h2>
         <input id="userSearch" type="text" placeholder="Buscar por email…" oninput="filterUsers()"
           class="input-field" style="width:240px;" />
       </div>
       <div class="card table-wrap" style="padding:0;overflow:hidden;">
         <table class="w-full" style="min-width:520px;">
-          <thead style="background:#F8FAFC;border-bottom:1px solid #E2E8F0;">
+          <thead style="background:var(--bg);border-bottom:1px solid var(--border);">
             <tr>
               <th>Usuário</th>
               <th>Créditos</th>
@@ -142,7 +177,7 @@
             </tr>
           </thead>
           <tbody id="usersTable">
-            <tr><td colspan="5" style="text-align:center;color:#94A3B8;padding:32px;">Carregando…</td></tr>
+            <tr><td colspan="5" style="text-align:center;color:var(--text-3);padding:32px;">Carregando…</td></tr>
           </tbody>
         </table>
       </div>
@@ -151,41 +186,41 @@
     <!-- Generations tab -->
     <div id="tab-generations-content" class="hidden">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px;">
-        <h2 style="font-size:15px;font-weight:600;color:#1E293B;">Todas as gerações</h2>
+        <h2 style="font-size:15px;font-weight:600;color:var(--text);">Todas as gerações</h2>
         <input id="genSearch" type="text" placeholder="Buscar…" oninput="filterGenerations()"
           class="input-field" style="width:240px;" />
       </div>
       <div class="space-y-2" id="generationsTable">
-        <div style="text-align:center;color:#94A3B8;padding:32px;">Carregando…</div>
+        <div style="text-align:center;color:var(--text-3);padding:32px;">Carregando…</div>
       </div>
     </div>
 
   </main>
 
   <!-- Footer -->
-  <footer style="border-top:1px solid #E2E8F0;padding:20px 24px;text-align:center;margin-top:32px;background:#fff;">
-    <p style="font-size:12px;color:#94A3B8;">© 2026 CardsQuestõesAI · Painel Administrativo &nbsp;·&nbsp; <a href="/termos.html" style="color:#94A3B8;text-decoration:none;">Termos</a> &nbsp;·&nbsp; <a href="/privacidade.html" style="color:#94A3B8;text-decoration:none;">Privacidade</a></p>
+  <footer style="border-top:1px solid var(--border);padding:20px 24px;text-align:center;margin-top:32px;">
+    <p style="font-size:12px;color:var(--text-3);">© 2026 CardsQuestõesAI · Painel Administrativo &nbsp;·&nbsp; <a href="/termos.html" style="color:var(--text-3);text-decoration:none;">Termos</a> &nbsp;·&nbsp; <a href="/privacidade.html" style="color:var(--text-3);text-decoration:none;">Privacidade</a></p>
   </footer>
 
   <!-- Modal: gerenciar créditos -->
   <div id="creditsModal" class="hidden" style="position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(15,23,42,0.5);backdrop-filter:blur(4px);">
     <div class="card" style="width:100%;max-width:400px;padding:32px;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
-        <h3 style="font-size:16px;font-weight:700;color:#1E293B;">Gerenciar créditos</h3>
-        <button onclick="closeCreditsModal()" style="color:#94A3B8;font-size:20px;background:none;border:none;cursor:pointer;line-height:1;">×</button>
+        <h3 style="font-size:16px;font-weight:700;color:var(--text);">Gerenciar créditos</h3>
+        <button onclick="closeCreditsModal()" style="color:var(--text-3);font-size:20px;background:none;border:none;cursor:pointer;line-height:1;">×</button>
       </div>
-      <p id="creditsModalEmail" style="font-size:13px;color:#475569;padding-bottom:20px;margin-bottom:20px;border-bottom:1px solid #E2E8F0;"></p>
+      <p id="creditsModalEmail" style="font-size:13px;color:var(--text-2);padding-bottom:20px;margin-bottom:20px;border-bottom:1px solid var(--border);"></p>
 
       <div class="space-y-4">
         <div>
-          <label style="display:block;font-size:11px;font-weight:600;color:#475569;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Adicionar créditos</label>
+          <label style="display:block;font-size:11px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Adicionar créditos</label>
           <div style="display:flex;gap:8px;">
             <input id="addCreditsInput" type="number" min="1" max="9999" placeholder="Ex: 10" class="input-field" />
             <button onclick="addCredits()" class="btn-primary" style="flex-shrink:0;">Adicionar</button>
           </div>
         </div>
         <div>
-          <label style="display:block;font-size:11px;font-weight:600;color:#475569;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Resetar para</label>
+          <label style="display:block;font-size:11px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Resetar para</label>
           <div style="display:flex;gap:8px;">
             <input id="resetCreditsInput" type="number" min="0" max="9999" placeholder="Ex: 2" class="input-field" />
             <button onclick="resetCredits()" class="btn-ghost" style="flex-shrink:0;">Resetar</button>
@@ -252,7 +287,7 @@
     function renderUsers(users) {
       const tbody = document.getElementById('usersTable');
       if (users.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#94A3B8;padding:32px;">Nenhum usuário encontrado</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-3);padding:32px;">Nenhum usuário encontrado</td></tr>';
         return;
       }
       const gensByUser = {};
@@ -261,22 +296,22 @@
       tbody.innerHTML = users.map(u => `
         <tr>
           <td>
-            <p style="font-weight:500;color:#1E293B;">${u.full_name || '—'}</p>
-            <p style="font-size:12px;color:#94A3B8;margin-top:2px;">${u.email}</p>
+            <p style="font-weight:500;color:var(--text);">${u.full_name || '—'}</p>
+            <p style="font-size:12px;color:var(--text-3);margin-top:2px;">${u.email}</p>
             <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px;">
-              ${u.is_admin ? '<span style="font-size:11px;font-weight:600;color:#2563EB;background:#EFF6FF;padding:2px 8px;border-radius:4px;border:1px solid #BFDBFE;">ADMIN</span>' : ''}
+              ${u.is_admin ? '<span style="font-size:11px;font-weight:600;color:var(--blue);background:var(--blue-bg);padding:2px 8px;border-radius:4px;border:1px solid var(--blue-bd);">ADMIN</span>' : ''}
               ${u.unlimited_access ? '<span style="font-size:11px;font-weight:600;color:#7C3AED;background:#F5F3FF;padding:2px 8px;border-radius:4px;border:1px solid #DDD6FE;">ILIMITADO</span>' : ''}
             </div>
           </td>
-          <td><span style="font-weight:600;color:#1E293B;">${u.credits >= 999990 ? '∞' : u.credits}</span></td>
-          <td style="color:#1E293B;font-weight:500;">${gensByUser[u.id] || 0}</td>
-          <td style="color:#94A3B8;font-size:12px;">${formatDate(u.created_at)}</td>
+          <td><span style="font-weight:600;color:var(--text);">${u.credits >= 999990 ? '∞' : u.credits}</span></td>
+          <td style="color:var(--text);font-weight:500;">${gensByUser[u.id] || 0}</td>
+          <td style="color:var(--text-3);font-size:12px;">${formatDate(u.created_at)}</td>
           <td>
             <div style="display:flex;gap:6px;flex-wrap:wrap;">
               <button onclick="openCreditsModal('${u.id}', '${u.email}', ${u.credits})" class="btn-ghost">Créditos</button>
               <button onclick="viewUserGens('${u.id}')" class="btn-ghost">Gerações</button>
               <button onclick="toggleUnlimited('${u.id}', ${!!u.unlimited_access})" class="btn-ghost" style="${u.unlimited_access ? 'color:#7C3AED;border-color:#DDD6FE;' : ''}">${u.unlimited_access ? 'Rem. ∞' : 'Dar ∞'}</button>
-              <button onclick="toggleAdmin('${u.id}', ${!!u.is_admin})" class="btn-ghost" style="${u.is_admin ? 'color:#DC2626;border-color:#FECACA;' : 'color:#2563EB;border-color:#BFDBFE;'}">${u.is_admin ? 'Rem. Admin' : 'Dar Admin'}</button>
+              <button onclick="toggleAdmin('${u.id}', ${!!u.is_admin})" class="btn-ghost" style="${u.is_admin ? 'color:#DC2626;border-color:#FECACA;' : 'color:var(--blue);border-color:#BFDBFE;'}">${u.is_admin ? 'Rem. Admin' : 'Dar Admin'}</button>
             </div>
           </td>
         </tr>
@@ -286,17 +321,17 @@
     function renderGenerations(gens) {
       const el = document.getElementById('generationsTable');
       if (gens.length === 0) {
-        el.innerHTML = '<div style="text-align:center;color:#94A3B8;padding:32px;">Nenhuma geração encontrada</div>';
+        el.innerHTML = '<div style="text-align:center;color:var(--text-3);padding:32px;">Nenhuma geração encontrada</div>';
         return;
       }
       const userMap = {};
       allUsers.forEach(u => { userMap[u.id] = u.email; });
 
       el.innerHTML = gens.map(g => `
-        <div style="border:1px solid #E2E8F0;border-radius:8px;padding:14px 16px;background:#fff;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+        <div style="border:1px solid var(--border);border-radius:8px;padding:14px 16px;background:var(--surface);display:flex;align-items:center;justify-content:space-between;gap:12px;">
           <div style="flex:1;min-width:0;">
-            <p style="font-size:14px;font-weight:500;color:#1E293B;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${g.title || g.pdf_name || 'Sem título'}</p>
-            <p style="font-size:12px;color:#94A3B8;margin-top:2px;">
+            <p style="font-size:14px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${g.title || g.pdf_name || 'Sem título'}</p>
+            <p style="font-size:12px;color:var(--text-3);margin-top:2px;">
               ${userMap[g.user_id] || g.user_id} · ${formatDate(g.created_at)}
               ${g.status === 'completed' ? ` · ${g.question_count || 0}Q · ${g.flashcard_count || 0}FC` : ''}
             </p>
