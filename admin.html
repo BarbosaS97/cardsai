@@ -123,7 +123,7 @@
 <body class="min-h-screen">
 
   <!-- Header -->
-  <header style="position:sticky;top:0;z-index:50;border-bottom:1px solid var(--border);height:54px;">
+  <header>
     <div class="max-w-screen-xl mx-auto px-6 h-full flex items-center justify-between gap-4">
       <div style="display:flex;align-items:center;gap:14px;">
         <a href="/dashboard.html" style="font-size:14px;font-weight:700;color:var(--text);text-decoration:none;">CardsQuestõesAI</a>
@@ -219,14 +219,14 @@
           <label style="display:block;font-size:11px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Adicionar créditos</label>
           <div style="display:flex;gap:8px;">
             <input id="addCreditsInput" type="number" min="1" max="9999" placeholder="Ex: 10" class="input-field" />
-            <button onclick="addCredits()" class="btn-primary" style="flex-shrink:0;">Adicionar</button>
+            <button id="btnAddCredits" onclick="addCredits()" class="btn-primary" style="flex-shrink:0;">Adicionar</button>
           </div>
         </div>
         <div>
           <label style="display:block;font-size:11px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Resetar para</label>
           <div style="display:flex;gap:8px;">
             <input id="resetCreditsInput" type="number" min="0" max="9999" placeholder="Ex: 2" class="input-field" />
-            <button onclick="resetCredits()" class="btn-ghost" style="flex-shrink:0;">Resetar</button>
+            <button id="btnResetCredits" onclick="resetCredits()" class="btn-ghost" style="flex-shrink:0;">Resetar</button>
           </div>
         </div>
       </div>
@@ -243,6 +243,8 @@
     let allUsers = [];
     let allGens = [];
     let selectedUserId = null;
+    let selectedUserEmail = null;
+    let selectedUserCredits = 0;
 
     async function init() {
       const result = await requireAuth(true);
@@ -356,38 +358,64 @@
 
     function openCreditsModal(userId, email, currentCredits) {
       selectedUserId = userId;
+      selectedUserEmail = email;
+      selectedUserCredits = currentCredits;
       document.getElementById('creditsModal').style.display = 'flex';
-      document.getElementById('creditsModalEmail').textContent =
-        `${email} — ${currentCredits >= 999990 ? '∞' : currentCredits} créditos atuais`;
+      document.getElementById('addCreditsInput').value = '';
+      document.getElementById('resetCreditsInput').value = '';
+      updateCreditsModalHeader();
       document.getElementById('creditsModalMsg').classList.add('hidden');
+    }
+
+    function updateCreditsModalHeader() {
+      document.getElementById('creditsModalEmail').textContent =
+        `${selectedUserEmail} — ${selectedUserCredits >= 999990 ? '∞' : selectedUserCredits} créditos atuais`;
     }
 
     function closeCreditsModal() {
       document.getElementById('creditsModal').style.display = 'none';
       selectedUserId = null;
+      selectedUserEmail = null;
     }
 
     async function addCredits() {
-      const amount = parseInt(document.getElementById('addCreditsInput').value);
-      if (!amount || amount <= 0) return;
-      const { error } = await db.rpc('add_credits', { p_user_id: selectedUserId, p_amount: amount });
+      const amount = parseInt(document.getElementById('addCreditsInput').value, 10);
+      if (isNaN(amount) || amount <= 0) {
+        showMsg('Digite um número válido maior que zero.', 'error');
+        return;
+      }
+      const btn = document.getElementById('btnAddCredits');
+      setLoading(btn, true, 'Adicionando…');
+      const { data, error } = await db.rpc('add_credits', { p_user_id: selectedUserId, p_amount: amount });
+      setLoading(btn, false);
       if (error) { showMsg('Erro: ' + error.message, 'error'); return; }
-      showMsg(`${amount} créditos adicionados!`, 'success');
+      selectedUserCredits = typeof data === 'number' ? data : selectedUserCredits + amount;
+      updateCreditsModalHeader();
+      document.getElementById('addCreditsInput').value = '';
+      showMsg(`+${amount} créditos adicionados! Saldo atual: ${selectedUserCredits >= 999990 ? '∞' : selectedUserCredits}`, 'success');
       await loadData();
     }
 
     async function resetCredits() {
-      const amount = parseInt(document.getElementById('resetCreditsInput').value);
-      if (amount === undefined || amount < 0) return;
-      const { error } = await db.rpc('reset_credits', { p_user_id: selectedUserId, p_amount: amount });
+      const amount = parseInt(document.getElementById('resetCreditsInput').value, 10);
+      if (isNaN(amount) || amount < 0) {
+        showMsg('Digite um número válido (0 ou mais).', 'error');
+        return;
+      }
+      const btn = document.getElementById('btnResetCredits');
+      setLoading(btn, true, 'Resetando…');
+      const { data, error } = await db.rpc('reset_credits', { p_user_id: selectedUserId, p_amount: amount });
+      setLoading(btn, false);
       if (error) { showMsg('Erro: ' + error.message, 'error'); return; }
-      showMsg(`Créditos resetados para ${amount}!`, 'success');
+      selectedUserCredits = typeof data === 'number' ? data : amount;
+      updateCreditsModalHeader();
+      document.getElementById('resetCreditsInput').value = '';
+      showMsg(`Créditos resetados para ${selectedUserCredits >= 999990 ? '∞' : selectedUserCredits}!`, 'success');
       await loadData();
     }
 
     async function toggleUnlimited(userId, currentValue) {
-      const action = currentValue ? 'Remover acesso ilimitado de' : 'Dar acesso ilimitado a';
-      if (!confirm(`${action} este usuário?`)) return;
+      if (!confirm(`${currentValue ? 'Remover acesso ilimitado de' : 'Dar acesso ilimitado a'} este usuário?`)) return;
       const { error } = await db.rpc('toggle_unlimited_access', { p_user_id: userId, p_value: !currentValue });
       if (error) { showToast('Erro: ' + error.message); return; }
       showToast(currentValue ? 'Acesso ilimitado removido.' : 'Acesso ilimitado ativado!', 'success');
@@ -395,8 +423,7 @@
     }
 
     async function toggleAdmin(userId, currentValue) {
-      const action = currentValue ? 'Remover privilégios de admin de' : 'Tornar admin';
-      if (!confirm(`${action} este usuário?`)) return;
+      if (!confirm(`${currentValue ? 'Remover privilégios de admin de' : 'Tornar admin'} este usuário?`)) return;
       const { error } = await db.rpc('toggle_admin', { p_user_id: userId, p_value: !currentValue });
       if (error) { showToast('Erro: ' + error.message); return; }
       showToast(currentValue ? 'Admin removido.' : 'Usuário agora é admin!', 'success');
@@ -414,9 +441,9 @@
     function showMsg(msg, type) {
       const el = document.getElementById('creditsModalMsg');
       el.textContent = msg;
-      el.style.background = type === 'success' ? '#F0FDF4' : '#FEF2F2';
-      el.style.color = type === 'success' ? '#15803D' : '#DC2626';
-      el.style.border = `1px solid ${type === 'success' ? '#BBF7D0' : '#FECACA'}`;
+      el.style.background = type === 'success' ? 'var(--green-bg)' : 'var(--red-bg)';
+      el.style.color = type === 'success' ? 'var(--green)' : 'var(--red)';
+      el.style.border = `1px solid ${type === 'success' ? 'var(--green-bd)' : 'var(--red-bd)'}`;
       el.classList.remove('hidden');
     }
 

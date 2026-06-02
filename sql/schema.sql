@@ -15,9 +15,13 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   full_name TEXT,
   credits INTEGER NOT NULL DEFAULT 2,
   is_admin BOOLEAN NOT NULL DEFAULT false,
+  unlimited_access BOOLEAN NOT NULL DEFAULT false,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- Migration: add unlimited_access if table already exists
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS unlimited_access BOOLEAN NOT NULL DEFAULT false;
 
 CREATE TABLE IF NOT EXISTS public.generations (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -122,23 +126,81 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Adiciona créditos a um usuário
+-- Adiciona créditos a um usuário (somente admin; retorna novo saldo)
 CREATE OR REPLACE FUNCTION public.add_credits(p_user_id UUID, p_amount INTEGER)
-RETURNS VOID AS $$
+RETURNS INTEGER AS $$
+DECLARE
+  v_new_credits INTEGER;
 BEGIN
+  IF NOT public.is_admin_user() THEN
+    RAISE EXCEPTION 'Permissão negada: apenas administradores podem adicionar créditos';
+  END IF;
+  IF p_amount IS NULL OR p_amount <= 0 THEN
+    RAISE EXCEPTION 'Quantidade deve ser um número positivo';
+  END IF;
   UPDATE public.profiles
   SET credits = credits + p_amount, updated_at = NOW()
-  WHERE id = p_user_id;
+  WHERE id = p_user_id
+  RETURNING credits INTO v_new_credits;
+  IF v_new_credits IS NULL THEN
+    RAISE EXCEPTION 'Usuário não encontrado';
+  END IF;
+  RETURN v_new_credits;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Reseta créditos de um usuário
+-- Reseta créditos de um usuário para um valor específico (somente admin; retorna novo saldo)
 CREATE OR REPLACE FUNCTION public.reset_credits(p_user_id UUID, p_amount INTEGER DEFAULT 2)
-RETURNS VOID AS $$
+RETURNS INTEGER AS $$
+DECLARE
+  v_new_credits INTEGER;
 BEGIN
+  IF NOT public.is_admin_user() THEN
+    RAISE EXCEPTION 'Permissão negada: apenas administradores podem resetar créditos';
+  END IF;
+  IF p_amount IS NULL OR p_amount < 0 THEN
+    RAISE EXCEPTION 'Quantidade não pode ser negativa';
+  END IF;
   UPDATE public.profiles
   SET credits = p_amount, updated_at = NOW()
+  WHERE id = p_user_id
+  RETURNING credits INTO v_new_credits;
+  IF v_new_credits IS NULL THEN
+    RAISE EXCEPTION 'Usuário não encontrado';
+  END IF;
+  RETURN v_new_credits;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Alterna acesso ilimitado de um usuário (somente admin)
+CREATE OR REPLACE FUNCTION public.toggle_unlimited_access(p_user_id UUID, p_value BOOLEAN)
+RETURNS VOID AS $$
+BEGIN
+  IF NOT public.is_admin_user() THEN
+    RAISE EXCEPTION 'Permissão negada';
+  END IF;
+  UPDATE public.profiles
+  SET unlimited_access = p_value, updated_at = NOW()
   WHERE id = p_user_id;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Usuário não encontrado';
+  END IF;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Alterna privilégios de admin de um usuário (somente admin)
+CREATE OR REPLACE FUNCTION public.toggle_admin(p_user_id UUID, p_value BOOLEAN)
+RETURNS VOID AS $$
+BEGIN
+  IF NOT public.is_admin_user() THEN
+    RAISE EXCEPTION 'Permissão negada';
+  END IF;
+  UPDATE public.profiles
+  SET is_admin = p_value, updated_at = NOW()
+  WHERE id = p_user_id;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Usuário não encontrado';
+  END IF;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
@@ -231,6 +293,8 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON public.flashcards TO authenticated;
 GRANT EXECUTE ON FUNCTION public.consume_credit TO authenticated;
 GRANT EXECUTE ON FUNCTION public.add_credits TO authenticated;
 GRANT EXECUTE ON FUNCTION public.reset_credits TO authenticated;
+GRANT EXECUTE ON FUNCTION public.toggle_unlimited_access TO authenticated;
+GRANT EXECUTE ON FUNCTION public.toggle_admin TO authenticated;
 GRANT EXECUTE ON FUNCTION public.is_admin_user TO authenticated, anon;
 
 -- ============================================
