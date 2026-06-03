@@ -318,15 +318,16 @@
     .proc-tip { font-size: 12px; color: var(--text-3); }
 
     /* ── Source tabs ────────────────────────────────────────── */
-    .source-tabs { display: flex; gap: 6px; margin-bottom: 16px; }
+    .source-tabs { display: flex; gap: 6px; margin-bottom: 16px; overflow-x: auto; }
     .source-tab {
-      flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
-      padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border);
+      flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 8px 8px; border-radius: 8px; border: 1px solid var(--border);
       background: var(--surface-2); color: var(--text-2);
-      font-size: 13px; font-weight: 500; cursor: pointer;
+      font-size: 13px; font-weight: 500; cursor: pointer; white-space: nowrap;
       transition: background .15s, color .15s, border-color .15s;
     }
-    .source-tab.active { background: var(--blue-bg); color: var(--blue); border-color: var(--blue-bd); font-weight: 600; }
+    .source-tab.active { background: var(--blue); color: #fff; border-color: var(--blue); font-weight: 600; box-shadow: 0 2px 6px rgba(37,99,235,.3); }
+    .source-tab.active svg { stroke: #fff; }
     .source-tab:not(.active):hover { border-color: var(--text-3); color: var(--text); }
 
     /* ── Text input area ────────────────────────────────────── */
@@ -345,6 +346,27 @@
     .char-info.ok   { color: #15803D; }
     .char-info.over { color: var(--red); }
     .char-hint { font-size: 12px; color: var(--text-3); }
+
+    /* ── Subject input area ────────────────────────────────── */
+    .subject-field { margin-bottom: 12px; }
+    .subject-field label {
+      display: block; font-size: 11px; font-weight: 700; color: var(--text-2);
+      text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px;
+    }
+    .subject-field input,
+    .subject-field textarea {
+      width: 100%; padding: 10px 13px;
+      border: 1.5px solid var(--border); border-radius: 8px;
+      background: var(--surface); color: var(--text);
+      font-family: inherit; font-size: 14px; line-height: 1.5;
+      transition: border-color .15s; outline: none;
+    }
+    .subject-field input:focus,
+    .subject-field textarea:focus { border-color: var(--blue); }
+    .subject-field input::placeholder,
+    .subject-field textarea::placeholder { color: var(--text-3); }
+    .subject-field textarea { resize: vertical; min-height: 80px; max-height: 180px; }
+    .subject-required { color: var(--red); margin-left: 2px; }
 
     /* ── Field label ────────────────────────────────────────── */
     .field-label {
@@ -557,6 +579,61 @@
       .logo { font-size: 13px; }
       .btn-icon { padding: 5px; }
     }
+
+    /* ── Validation hints ──────────────────────────────────── */
+    .validation-hint {
+      display: flex; align-items: flex-start; gap: 8px;
+      padding: 10px 13px; border-radius: 7px; margin-top: 10px;
+      font-size: 13px; line-height: 1.5; border: 1px solid;
+    }
+    .validation-hint.warn { background: var(--amber-bg); color: var(--amber); border-color: var(--amber-bd); }
+    .validation-hint.ok   { background: var(--green-bg); color: var(--green);  border-color: var(--green-bd); }
+
+    /* ── Config box (step 2) ───────────────────────────────── */
+    .config-box { margin-top: 20px; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+    .config-box-header {
+      background: var(--surface-2); border-bottom: 1px solid var(--border);
+      padding: 10px 16px; display: flex; align-items: center; gap: 8px;
+    }
+    .config-box-body { padding: 16px 16px 8px; }
+
+    /* ── Step badge ─────────────────────────────────────────── */
+    .step-badge {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 18px; height: 18px; border-radius: 50%;
+      background: var(--blue); color: #fff;
+      font-size: 10px; font-weight: 800; flex-shrink: 0;
+    }
+
+    /* ── Generate button (green CTA) ──────────────────────── */
+    .btn-generate {
+      background: linear-gradient(135deg, #16A34A 0%, #15803D 100%);
+      color: #fff; padding: 13px 22px;
+      font-size: 15px; font-weight: 700; letter-spacing: -.2px;
+      box-shadow: 0 2px 8px rgba(22,163,74,.3);
+      transition: opacity .15s, box-shadow .15s, transform .1s;
+    }
+    .btn-generate:hover:not(:disabled) { opacity: .92; box-shadow: 0 4px 14px rgba(22,163,74,.4); transform: translateY(-1px); }
+    .btn-generate:disabled { background: var(--surface-2); color: var(--text-3); box-shadow: none; cursor: not-allowed; transform: none; }
+    .btn-generate:active:not(:disabled) { transform: translateY(0); }
+
+    /* ── Credits row (above button) ─────────────────────────── */
+    .credits-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 9px 13px; background: var(--surface-2);
+      border: 1px solid var(--border); border-radius: 8px; margin-bottom: 10px;
+      font-size: 13px;
+    }
+    .credits-row-left  { display: flex; align-items: center; gap: 5px; color: var(--text-2); }
+    .credits-row-count { font-weight: 700; color: var(--text); }
+    .credits-row-cost  { font-size: 12px; color: var(--text-3); }
+
+    /* ── Method header ──────────────────────────────────────── */
+    .method-header {
+      display: flex; align-items: center; gap: 8px;
+      margin-bottom: 12px; padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
   </style>
   <link rel="manifest" href="/manifest.json" />
   <meta name="theme-color" content="#2563EB" />
@@ -582,7 +659,7 @@
         Anotações
       </a>
 
-      <a href="/estatisticas.html"
+      <a id="navStats" href="/estatisticas.html"
         style="font-size:12px;font-weight:500;color:var(--text-2);display:inline-flex;align-items:center;gap:4px;padding:5px 10px;border:1px solid var(--border);border-radius:8px;transition:background .15s,color .15s;"
         onmouseover="this.style.background='var(--surface-2)';this.style.color='var(--text)';"
         onmouseout="this.style.background='';this.style.color='var(--text-2)';">
@@ -631,6 +708,12 @@
       <div>
         <div class="upload-card">
 
+          <div class="method-header" id="methodHeader">
+            <span class="step-badge">1</span>
+            <span style="font-size:13px;font-weight:700;color:var(--text);">Método de entrada</span>
+            <span style="font-size:12px;color:var(--text-3);">— escolha apenas um</span>
+          </div>
+
           <div class="source-tabs" id="sourceTabs">
             <button class="source-tab active" id="tabPDF" onclick="switchInputMode('pdf')">
               <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -643,6 +726,12 @@
                 <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
               </svg>
               Colar Texto
+            </button>
+            <button class="source-tab" id="tabSubject" onclick="switchInputMode('subject')">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+              </svg>
+              Criar do Zero
             </button>
           </div>
 
@@ -658,7 +747,37 @@ Mínimo: 500 caracteres · Máximo: 50.000 caracteres"
               oninput="updateCharCount()"></textarea>
             <div class="char-row">
               <span id="charInfo" class="char-info">0 caracteres</span>
-              <span class="char-hint">mín. 500 · máx. 50.000</span>
+              <div style="display:flex;align-items:center;gap:10px;">
+                <span class="char-hint">mín. 500 · máx. 50.000</span>
+                <button onclick="clearText()" style="font-size:12px;color:var(--text-3);background:none;border:1px solid var(--border);border-radius:5px;padding:2px 9px;cursor:pointer;transition:color .15s,border-color .15s;"
+                  onmouseover="this.style.color='var(--text)';this.style.borderColor='var(--text-3)';"
+                  onmouseout="this.style.color='var(--text-3)';this.style.borderColor='var(--border)';">Limpar</button>
+              </div>
+            </div>
+          </div>
+
+          <div id="subjectInputArea" style="display:none;">
+            <div class="subject-field">
+              <label for="subjectMateria">Matéria<span class="subject-required">*</span></label>
+              <input type="text" id="subjectMateria"
+                placeholder="Ex: Direito Constitucional, Matemática, Biologia Celular…"
+                oninput="updateGenerateBtn()" maxlength="120" />
+            </div>
+            <div class="subject-field">
+              <label for="subjectAssunto">Assunto / Tópico<span class="subject-required">*</span></label>
+              <input type="text" id="subjectAssunto"
+                placeholder="Ex: Princípios da Administração Pública, Funções Trigonométricas…"
+                oninput="updateGenerateBtn()" maxlength="200" />
+            </div>
+            <div class="subject-field">
+              <label for="subjectObs">Observações <span style="color:var(--text-3);font-weight:400;text-transform:none;letter-spacing:0;">(opcional)</span></label>
+              <textarea id="subjectObs" rows="3"
+                placeholder="Ex: Focar em questões de concurso FCC. Incluir artigos da CF. Nível superior de direito…"
+                maxlength="500"></textarea>
+            </div>
+            <div style="display:flex;align-items:flex-start;gap:8px;padding:9px 12px;background:var(--blue-bg);border:1px solid var(--blue-bd);border-radius:7px;margin-top:4px;">
+              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color:var(--blue);flex-shrink:0;margin-top:1px;"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" d="M12 16v-4M12 8h.01"/></svg>
+              <span style="font-size:12px;color:var(--blue);line-height:1.5;">Seja específico para melhores resultados — quanto mais detalhado o assunto, mais precisas as questões.</span>
             </div>
           </div>
 
@@ -690,6 +809,7 @@ Mínimo: 500 caracteres · Máximo: 50.000 caracteres"
           </div>
 
           <div id="uploadError" class="alert-error hidden"></div>
+          <div id="validationHint" class="validation-hint hidden"></div>
 
           <div id="uploadProgress" style="display:none;margin-top:16px;">
             <div class="progress-track">
@@ -701,7 +821,13 @@ Mínimo: 500 caracteres · Máximo: 50.000 caracteres"
             </p>
           </div>
 
-          <div id="modeSection" style="margin-top:18px;">
+          <div id="modeSection">
+            <div class="config-box">
+            <div class="config-box-header">
+              <span class="step-badge">2</span>
+              <span style="font-size:11px;font-weight:700;color:var(--text-2);text-transform:uppercase;letter-spacing:.06em;">Configurações do material</span>
+            </div>
+            <div class="config-box-body">
             <p class="field-label">Modo de estudo</p>
             <div class="mode-grid" id="tourModeGrid">
               <button class="mode-card selected" id="modeCard-concurso" onclick="selectMode('concurso')">
@@ -762,11 +888,24 @@ Mínimo: 500 caracteres · Máximo: 50.000 caracteres"
               <div id="modeDetailMode"></div>
               <div id="modeDetailDiff" class="detail-sep"></div>
             </div>
+            </div><!-- /config-box-body -->
+            </div><!-- /config-box -->
           </div>
 
-          <div id="uploadActions" style="margin-top:14px;">
-            <button id="generateBtn" onclick="startGeneration()" disabled class="btn btn-primary btn-full">
-              Gerar questões e flashcards
+          <div id="uploadActions" style="margin-top:16px;">
+            <div class="credits-row">
+              <div class="credits-row-left">
+                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" d="M12 6v12M8 10h5.5a2.5 2.5 0 010 5H8"/></svg>
+                Você tem <strong class="credits-row-count" id="creditsRowCount">—</strong> créditos disponíveis
+              </div>
+              <span class="credits-row-cost" style="display:inline-flex;align-items:center;gap:4px;">
+                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><path stroke-linecap="round" d="M1 10h22"/></svg>
+                1 crédito por geração
+              </span>
+            </div>
+            <button id="generateBtn" onclick="startGeneration()" disabled class="btn btn-generate btn-full">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+              Gerar 50 questões + 100 flashcards
             </button>
           </div>
 
@@ -776,11 +915,14 @@ Mínimo: 500 caracteres · Máximo: 50.000 caracteres"
               <div class="proc-ring-dot"></div>
             </div>
             <p class="proc-msg" id="procMsg">Aquecendo os motores...</p>
-            <p class="proc-sub">A IA está trabalhando no seu material</p>
+            <p class="proc-sub" id="procSub">Gerando 50 questões + 100 flashcards</p>
             <div class="proc-bar-track">
               <div class="proc-bar-fill" id="procBar" style="width:0%"></div>
             </div>
-            <p class="proc-tip">Isso pode levar até 2 minutos</p>
+            <p class="proc-tip" style="display:inline-flex;align-items:center;gap:5px;">
+              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" d="M12 6v6l4 2"/></svg>
+              Isso pode levar até 2 minutos — não feche esta aba
+            </p>
           </div>
 
         </div>
@@ -932,6 +1074,8 @@ Mínimo: 500 caracteres · Máximo: 50.000 caracteres"
     text.textContent = label + (credits === 1 ? ' crédito' : ' créditos');
     pill.className = 'credits-pill ' +
       (credits === 0 ? 'credits-zero' : credits <= 2 ? 'credits-low' : 'credits-ok');
+    const rowCount = document.getElementById('creditsRowCount');
+    if (rowCount) rowCount.textContent = label;
   }
 
   /* ── Drop zone ──────────────────────────────────────────── */
@@ -982,15 +1126,14 @@ Mínimo: 500 caracteres · Máximo: 50.000 caracteres"
     if (mode === inputMode) return;
     inputMode = mode;
 
-    if (mode === 'text') {
-      if (selectedFile) {
-        selectedFile = null;
-        document.getElementById('dropDefault').style.display  = 'block';
-        document.getElementById('dropFileInfo').style.display = 'none';
-        document.getElementById('dropZone').classList.remove('has-file');
-        document.getElementById('fileInput').value = '';
-      }
-    } else {
+    if (mode !== 'pdf' && selectedFile) {
+      selectedFile = null;
+      document.getElementById('dropDefault').style.display  = 'block';
+      document.getElementById('dropFileInfo').style.display = 'none';
+      document.getElementById('dropZone').classList.remove('has-file');
+      document.getElementById('fileInput').value = '';
+    }
+    if (mode !== 'text') {
       document.getElementById('plainText').value = '';
       document.getElementById('charInfo').textContent = '0 caracteres';
       document.getElementById('charInfo').className = 'char-info';
@@ -998,8 +1141,10 @@ Mínimo: 500 caracteres · Máximo: 50.000 caracteres"
 
     document.getElementById('tabPDF').classList.toggle('active', mode === 'pdf');
     document.getElementById('tabText').classList.toggle('active', mode === 'text');
-    document.getElementById('dropZone').style.display      = mode === 'pdf' ? '' : 'none';
-    document.getElementById('textInputArea').style.display = mode === 'text' ? '' : 'none';
+    document.getElementById('tabSubject').classList.toggle('active', mode === 'subject');
+    document.getElementById('dropZone').style.display          = mode === 'pdf'     ? '' : 'none';
+    document.getElementById('textInputArea').style.display     = mode === 'text'    ? '' : 'none';
+    document.getElementById('subjectInputArea').style.display  = mode === 'subject' ? '' : 'none';
     document.getElementById('uploadError').classList.add('hidden');
     updateGenerateBtn();
   };
@@ -1007,13 +1152,38 @@ Mínimo: 500 caracteres · Máximo: 50.000 caracteres"
   function updateGenerateBtn() {
     const hasCredits = profile?.is_admin || profile?.credits > 0;
     let canGenerate = false;
+    let hint = '';
+    const hintEl = document.getElementById('validationHint');
+
+    const WARN_SVG = `<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0;margin-top:1px;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>`;
+
     if (inputMode === 'pdf') {
       canGenerate = !!selectedFile && hasCredits;
-    } else {
+      if (!hasCredits) hint = WARN_SVG + '<span>Você não tem créditos suficientes. <a href="/pricing.html" style="color:inherit;font-weight:600;text-decoration:underline;">Adquira mais</a> para continuar.</span>';
+    } else if (inputMode === 'text') {
       const len = document.getElementById('plainText').value.trim().length;
       canGenerate = len >= 500 && len <= 50000 && hasCredits;
+      if (len > 0 && len < 500)     hint = WARN_SVG + `<span>Texto muito curto: ${len.toLocaleString('pt-BR')} / 500 caracteres mínimos</span>`;
+      else if (len > 50000)         hint = WARN_SVG + `<span>Texto muito longo: ${len.toLocaleString('pt-BR')} / 50.000 máximos</span>`;
+      else if (len >= 500 && !hasCredits) hint = WARN_SVG + '<span>Você não tem créditos suficientes. <a href="/pricing.html" style="color:inherit;font-weight:600;text-decoration:underline;">Adquira mais</a> para continuar.</span>';
+    } else {
+      const materia = document.getElementById('subjectMateria').value.trim();
+      const assunto = document.getElementById('subjectAssunto').value.trim();
+      canGenerate = materia.length >= 2 && assunto.length >= 2 && hasCredits;
+      const touched = materia.length > 0 || assunto.length > 0;
+      if (touched && (!materia || !assunto)) hint = WARN_SVG + '<span>Preencha tanto a Matéria quanto o Assunto para continuar</span>';
+      else if (materia && assunto && !hasCredits) hint = WARN_SVG + '<span>Você não tem créditos suficientes. <a href="/pricing.html" style="color:inherit;font-weight:600;text-decoration:underline;">Adquira mais</a> para continuar.</span>';
     }
+
     document.getElementById('generateBtn').disabled = !canGenerate;
+    if (hintEl) {
+      if (hint) {
+        hintEl.innerHTML = hint;
+        hintEl.className = 'validation-hint warn';
+      } else {
+        hintEl.className = 'validation-hint hidden';
+      }
+    }
   }
 
   window.updateCharCount = function () {
@@ -1022,6 +1192,11 @@ Mínimo: 500 caracteres · Máximo: 50.000 caracteres"
     el.textContent = len.toLocaleString('pt-BR') + ' caracteres';
     el.className = 'char-info' + (len > 50000 ? ' over' : len >= 500 ? ' ok' : '');
     updateGenerateBtn();
+  };
+
+  window.clearText = function () {
+    document.getElementById('plainText').value = '';
+    updateCharCount();
   };
 
   /* ── Processing UI ──────────────────────────────────────── */
@@ -1060,11 +1235,14 @@ Mínimo: 500 caracteres · Máximo: 50.000 caracteres"
   function showProcessingUI() {
     document.getElementById('sourceTabs').style.display     = 'none';
     document.getElementById('modeSection').style.display   = 'none';
-    if (inputMode === 'pdf') document.getElementById('dropZone').style.display = 'none';
-    else document.getElementById('textInputArea').style.display = 'none';
+    document.getElementById('dropZone').style.display          = 'none';
+    document.getElementById('textInputArea').style.display     = 'none';
+    document.getElementById('subjectInputArea').style.display  = 'none';
     document.getElementById('uploadActions').style.display  = 'none';
     document.getElementById('uploadProgress').style.display = 'none';
     document.getElementById('uploadError').classList.add('hidden');
+    document.getElementById('validationHint').className = 'validation-hint hidden';
+    document.getElementById('methodHeader').style.display = 'none';
     document.getElementById('processingWrap').style.display = 'flex';
   }
 
@@ -1076,8 +1254,10 @@ Mínimo: 500 caracteres · Máximo: 50.000 caracteres"
     document.getElementById('sourceTabs').style.display     = '';
     document.getElementById('modeSection').style.display   = '';
     if (inputMode === 'pdf') document.getElementById('dropZone').style.display = '';
-    else document.getElementById('textInputArea').style.display = '';
+    else if (inputMode === 'text') document.getElementById('textInputArea').style.display = '';
+    else document.getElementById('subjectInputArea').style.display = '';
     document.getElementById('uploadActions').style.display = '';
+    document.getElementById('methodHeader').style.display = '';
   }
 
   /* ── Generation ─────────────────────────────────────────── */
@@ -1092,6 +1272,7 @@ Mínimo: 500 caracteres · Máximo: 50.000 caracteres"
 
     try {
       let text, pageCount, titleText, pdfName;
+      let isSubjectMode = inputMode === 'subject';
 
       if (inputMode === 'pdf') {
         setProcMsg('Lendo seu PDF...');
@@ -1106,7 +1287,7 @@ Mínimo: 500 caracteres · Máximo: 50.000 caracteres"
         if (!text || text.trim().length < 100) {
           throw new Error('Não foi possível extrair texto. O PDF pode estar protegido ou ser uma imagem.');
         }
-      } else {
+      } else if (inputMode === 'text') {
         setProcMsg('Preparando o texto...');
         text = document.getElementById('plainText').value.trim();
         if (text.length < 500)   throw new Error('O texto deve ter pelo menos 500 caracteres.');
@@ -1114,6 +1295,15 @@ Mínimo: 500 caracteres · Máximo: 50.000 caracteres"
         pageCount = 0;
         pdfName   = 'Texto colado';
         titleText = text.split('\n')[0].substring(0, 80).split('.')[0].trim() || 'Texto colado';
+        setProcBar(42);
+      } else {
+        setProcMsg('Preparando geração por matéria...');
+        const materia = document.getElementById('subjectMateria').value.trim();
+        const assunto = document.getElementById('subjectAssunto').value.trim();
+        if (!materia || !assunto) throw new Error('Preencha a Matéria e o Assunto.');
+        titleText = `${materia} — ${assunto}`;
+        pdfName   = '';
+        pageCount = 0;
         setProcBar(42);
       }
 
@@ -1142,14 +1332,36 @@ Mínimo: 500 caracteres · Máximo: 50.000 caracteres"
       startMsgRotation();
       startSlowProgress(48, 88, 100);
 
-      const response = await fetch(EDGE_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type':  'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({ generationId: gen.id, pdfText: text, pdfName, pageCount, mode: selectedMode, difficulty: selectedDifficulty }),
-      });
+      let response;
+      if (isSubjectMode) {
+        const materia  = document.getElementById('subjectMateria').value.trim();
+        const assunto  = document.getElementById('subjectAssunto').value.trim();
+        const observacoes = document.getElementById('subjectObs').value.trim();
+        response = await fetch(SUBJECT_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type':  'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({
+            generationId: gen.id,
+            materia,
+            assunto,
+            observacoes,
+            modoEstudo:  selectedMode,
+            dificuldade: selectedDifficulty,
+          }),
+        });
+      } else {
+        response = await fetch(EDGE_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type':  'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({ generationId: gen.id, pdfText: text, pdfName, pageCount, mode: selectedMode, difficulty: selectedDifficulty }),
+        });
+      }
 
       const result = await response.json();
       if (!response.ok || !result.success) throw new Error(result.error || 'Erro ao processar com IA');
@@ -1230,10 +1442,11 @@ Mínimo: 500 caracteres · Máximo: 50.000 caracteres"
 
     const hasData    = g.question_count > 0 || g.flashcard_count > 0;
     const isFailed   = g.status === 'failed';
-    const showBadge  = hasData || isFailed;
-    const badgeClass = isFailed ? 'badge-failed' : 'badge-completed';
-    const badgeLabel = isFailed ? 'Erro' : 'Concluído';
-    const href = (!isFailed || hasData) ? `/results.html?id=${g.id}` : '#';
+    const isPending  = g.status === 'pending' || g.status === 'processing';
+    const showBadge  = hasData || isFailed || isPending;
+    const badgeClass = isFailed ? 'badge-failed' : isPending ? 'badge-processing' : 'badge-completed';
+    const badgeLabel = isFailed ? 'Erro' : isPending ? 'Processando' : 'Concluído';
+    const href = hasData ? `/results.html?id=${g.id}` : (isFailed || isPending) ? '#' : `/results.html?id=${g.id}`;
 
     return `
     <a href="${href}" class="gen-card-link" ${href === '#' ? 'onclick="return false"' : ''}>
@@ -1262,29 +1475,49 @@ Mínimo: 500 caracteres · Máximo: 50.000 caracteres"
   <script>
     window._tour = new Tour([
       {
+        target: '#methodHeader',
+        title: 'Bem-vindo ao CardsQuestõesAI',
+        text: 'Transforme qualquer conteúdo em questões e flashcards em menos de 2 minutos. Há <strong>3 formas</strong> de criar seu material — vamos conhecer cada uma.',
+      },
+      {
+        target: '#tabPDF',
+        title: 'Método 1 — Upload de PDF',
+        text: 'Envie qualquer PDF com até <strong>150 páginas</strong> e 50 MB. Arraste o arquivo ou clique para selecionar. Perfeito para apostilas, editais e livros digitalizados.',
+      },
+      {
+        target: '#tabText',
+        title: 'Método 2 — Colar Texto',
+        text: 'Copie e cole qualquer conteúdo textual: artigos, transcrições de aula, capítulos, leis ou resumos. O limite é de <strong>500 a 50.000 caracteres</strong>.',
+      },
+      {
+        target: '#tabSubject',
+        title: 'Método 3 — Criar do Zero',
+        text: 'Sem material? Basta digitar a <strong>Matéria</strong> e o <strong>Assunto</strong>. A IA usa seu conhecimento consolidado para criar questões e flashcards do tema que você definir.',
+      },
+      {
         target: '#tourModeGrid',
         title: 'Modo de estudo',
-        text: 'Escolha o tipo de prova que você vai encarar. Cada modo gera questões no formato certo para o seu objetivo.',
+        text: 'Escolha o formato da prova: <strong>Concurso</strong> e <strong>OAB</strong> usam 5 alternativas com foco em lei seca e casos práticos; <strong>Vestibular</strong> e <strong>Faculdade</strong> usam 4 alternativas com linguagem contextualizada.',
       },
       {
         target: '#tourDiffGrid',
-        title: 'Dificuldade',
-        text: 'Do básico ao avançado. Quanto maior a dificuldade, mais desafiadoras serão as questões e flashcards.',
-      },
-      {
-        target: '#sourceTabs',
-        title: 'Seu material',
-        text: 'Cole um texto ou envie seu PDF. Aceitamos até 150 páginas. Seu material será transformado em 50 questões e 100 flashcards.',
+        title: 'Nível de dificuldade',
+        text: '<strong>Fácil</strong> — conceitos básicos. <strong>Médio</strong> — interpretação e aplicação. <strong>Difícil</strong> — análise com pegadinhas. <strong>Expert</strong> — domínio completo exigido, alternativas extremamente convincentes.',
       },
       {
         target: '#generateBtn',
-        title: 'Gerar',
-        text: 'Clique aqui para começar. Em menos de 2 minutos, seu material estará pronto para estudo.',
+        title: 'Gerar material',
+        text: 'Custa <strong>1 crédito</strong> por geração. Você recebe <strong>50 questões de múltipla escolha + 100 flashcards</strong>. O processo leva até 2 minutos — não feche a aba.',
+      },
+      {
+        target: '#navStats',
+        title: 'Acompanhe sua evolução',
+        text: 'Na página de <strong>Estatísticas</strong> você vê sua taxa de acerto por material, evolução ao longo do tempo e quais temas precisam de mais atenção.',
       },
       {
         target: '#tourRecentPanel',
         title: 'Suas criações',
-        text: 'Aqui você encontra seus materiais já gerados. Clique para revisar ou continuar estudando.',
+        text: 'Seus materiais gerados ficam aqui. Clique em qualquer um para revisar questões, estudar os flashcards ou conferir o resumo.',
       },
     ], 'hasSeenTutorial');
 
