@@ -1,82 +1,179 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR" data-theme="light">
 <head>
   <script>(function(){var t=localStorage.getItem('cardsai-theme');if(t)document.documentElement.setAttribute('data-theme',t);})()</script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Entrar — CardsQuestõesAI</title>
-  <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root {
-      --bg: #FAFAF9; --surface: #FFFFFF; --border: #E2DDD7;
+      --bg: #FAFAF9; --surface: #FFFFFF; --surface-2: #F3F0EC; --border: #E2DDD7;
       --text: #18181B; --text-2: #52525B; --text-3: #A1A1AA;
       --blue: #2563EB; --blue-bg: #EFF6FF; --blue-bd: #BFDBFE;
       --red: #DC2626; --red-bg: #FEF2F2; --red-bd: #FECACA;
       --green: #15803D; --green-bg: #F0FDF4; --green-bd: #BBF7D0;
+      /* accent = blue para esta página */
+      --accent: #2563EB; --accent-bg: #EFF6FF; --accent-bd: #BFDBFE;
     }
     [data-theme="dark"] {
-      --bg: #0C0C0F; --surface: #18181B; --border: #27272A;
+      --bg: #0C0C0F; --surface: #18181B; --surface-2: #111116; --border: #27272A;
       --text: #FAFAFA; --text-2: #A1A1AA; --text-3: #52525B;
       --blue: #3B82F6; --blue-bg: #1E3A5F; --blue-bd: #1D4ED8;
       --red: #F87171; --red-bg: #450A0A; --red-bd: #7F1D1D;
       --green: #4ADE80; --green-bg: #052E16; --green-bd: #166534;
+      --accent: #3B82F6; --accent-bg: #1E3A5F; --accent-bd: #1D4ED8;
     }
-    *, *::before, *::after { box-sizing: border-box; }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: system-ui, -apple-system, sans-serif;
+      font-size: 14px; line-height: 1.5;
       color: var(--text); background: var(--bg);
       -webkit-font-smoothing: antialiased;
       transition: background .2s, color .2s;
+      min-height: 100vh; display: flex; flex-direction: column;
     }
     body::before {
       content: '';
       position: fixed; inset: 0; z-index: -1;
       background-image: radial-gradient(circle, var(--border) 1px, transparent 1px);
-      background-size: 28px 28px;
-      opacity: .45;
-      pointer-events: none;
+      background-size: 28px 28px; opacity: .45; pointer-events: none;
+    }
+    a { text-decoration: none; }
+    button { font-family: inherit; cursor: pointer; }
+
+    /* ── Layout ── */
+    .auth-page {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 32px 16px; gap: 18px;
     }
 
-    header {
-      position: sticky; top: 0; z-index: 50;
-      background: rgba(250,250,249,.9) !important;
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
+    /* ── Logo acima do card ── */
+    .auth-brand {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 14px; font-weight: 700; color: var(--text);
+    }
+    .auth-brand-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--accent);
+    }
+
+    /* ── Card no estilo "questão" ── */
+    .q-card {
+      width: 100%; max-width: 420px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-top: 3px solid var(--accent);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 2px 20px rgba(0,0,0,.06);
+    }
+
+    /* Header do card */
+    .q-header {
+      background: var(--surface-2);
       border-bottom: 1px solid var(--border);
-      height: 56px;
-      transition: background .2s;
+      padding: 11px 22px;
+      display: flex; align-items: center; justify-content: space-between;
     }
-    [data-theme="dark"] header {
-      background: rgba(12,12,15,.9) !important;
+    .q-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 10px; font-weight: 700; letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--accent); background: var(--accent-bg);
+      border: 1px solid var(--accent-bd);
+      padding: 3px 10px; border-radius: 99px;
+    }
+    .q-num {
+      font-size: 11px; font-weight: 600; color: var(--text-3);
+      letter-spacing: .04em;
     }
 
-    .card { border: 1px solid var(--border); border-radius: 10px; padding: 32px; background: var(--surface); }
+    /* Corpo do card */
+    .q-body { padding: 24px 22px 20px; }
 
-    .input-field {
-      width: 100%; padding: 11px 14px; border: 1px solid var(--border); border-radius: 6px;
-      font-size: 14px; color: var(--text); background: var(--surface); outline: none;
-      transition: border-color .15s, box-shadow .15s; font-family: inherit;
+    .q-prompt {
+      font-size: 15px; font-weight: 700;
+      color: var(--text); letter-spacing: -.2px;
+      margin-bottom: 18px; line-height: 1.4;
     }
-    .input-field:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(37,99,235,0.08); }
-    .input-field::placeholder { color: var(--text-3); }
-
-    .btn-primary { display: block; width: 100%; background: var(--blue); color: #fff; border: none; border-radius: 6px; padding: 12px 24px; font-weight: 600; font-size: 14px; cursor: pointer; transition: opacity .15s; text-align: center; }
-    .btn-primary:hover { opacity: 0.88; }
-    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
-
-    .alert-error { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-bd); border-radius: 6px; padding: 12px 14px; font-size: 13px; }
-
-    label { color: var(--text) !important; }
-    a { color: var(--blue); }
-
-    @media (max-width: 480px) {
-      .card { padding: 20px 16px; }
-      main { padding: 24px 16px !important; }
-      h1 { font-size: 20px !important; }
+    .q-prompt-sub {
+      display: block; font-size: 13px;
+      font-weight: 400; color: var(--text-2);
+      margin-top: 4px; letter-spacing: 0;
     }
+
+    .q-field { margin-bottom: 14px; }
+    .q-label {
+      display: block; font-size: 11px; font-weight: 600;
+      color: var(--text-3); text-transform: uppercase;
+      letter-spacing: .05em; margin-bottom: 6px;
+    }
+    .q-input {
+      width: 100%; padding: 11px 14px;
+      border: 1px solid var(--border); border-radius: 8px;
+      font-size: 14px; color: var(--text); background: var(--surface);
+      outline: none; transition: border-color .15s, box-shadow .15s;
+      font-family: inherit;
+    }
+    .q-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(37,99,235,.08);
+    }
+    .q-input::placeholder { color: var(--text-3); }
+
+    /* Banner / erro / sucesso */
+    .q-banner {
+      display: flex; align-items: center; gap: 8px;
+      border-radius: 8px; padding: 10px 14px;
+      font-size: 13px; font-weight: 500; margin-bottom: 14px;
+    }
+    .q-banner-success {
+      background: var(--green-bg); color: var(--green); border: 1px solid var(--green-bd);
+    }
+    .q-banner-error {
+      background: var(--red-bg); color: var(--red); border: 1px solid var(--red-bd);
+    }
+
+    /* Rodapé do card */
+    .q-footer {
+      border-top: 1px solid var(--border);
+      padding: 14px 22px;
+      display: flex; align-items: center;
+      justify-content: space-between; gap: 12px;
+    }
+    .q-link {
+      font-size: 13px; color: var(--text-3);
+      transition: color .15s;
+    }
+    .q-link:hover { color: var(--text-2); }
+
+    .btn-confirm {
+      display: inline-flex; align-items: center; gap: 7px;
+      background: var(--blue); color: #fff;
+      border: none; border-radius: 8px;
+      padding: 10px 20px; font-size: 14px; font-weight: 600;
+      transition: opacity .15s; cursor: pointer;
+    }
+    .btn-confirm:hover { opacity: .88; }
+    .btn-confirm:disabled { opacity: .5; cursor: not-allowed; }
+
+    /* Links abaixo do card */
+    .auth-alt {
+      font-size: 13px; color: var(--text-2); text-align: center;
+    }
+    .auth-alt a { color: var(--blue); font-weight: 600; }
+    .auth-copy {
+      font-size: 12px; color: var(--text-3); text-align: center;
+    }
+    .auth-copy a { color: var(--text-3); }
+    .auth-copy a:hover { color: var(--text-2); }
+
+    .hidden { display: none !important; }
+    @keyframes spin { to { transform: rotate(360deg); } }
   </style>
-  <!-- PWA -->
   <link rel="manifest" href="/manifest.json" />
   <meta name="theme-color" content="#2563EB" />
   <meta name="mobile-web-app-capable" content="yes" />
@@ -86,105 +183,121 @@
   <link rel="apple-touch-icon" href="/static/images/icons/icon-192.png" />
   <link rel="icon" type="image/png" sizes="32x32" href="/static/images/favicon.png" />
 </head>
-<body class="min-h-screen flex flex-col">
+<body>
 
-  <!-- Header minimal -->
-  <header style="border-bottom:1px solid var(--border);">
-    <div class="max-w-screen-xl mx-auto px-4 h-14 flex items-center justify-between">
-      <a href="/index.html" style="font-size:14px;font-weight:700;color:var(--text);text-decoration:none;">CardsQuestõesAI</a>
-      <a href="/register.html" style="font-size:13px;color:var(--blue);text-decoration:none;font-weight:500;white-space:nowrap;">Criar conta →</a>
+<div class="auth-page">
+
+  <!-- Marca -->
+  <a href="/index.html" class="auth-brand">
+    <span class="auth-brand-dot"></span>
+    CardsQuestõesAI
+  </a>
+
+  <!-- Card de questão -->
+  <div class="q-card">
+
+    <div class="q-header">
+      <span class="q-badge">
+        <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+          <path stroke-linecap="round" d="M7 11V7a5 5 0 0110 0v4"/>
+        </svg>
+        Acesso
+      </span>
+      <span class="q-num">CARD 01</span>
     </div>
-  </header>
 
-  <!-- Main -->
-  <main class="flex-1 flex items-center justify-center px-4 py-16">
-    <div style="width:100%;max-width:380px;">
+    <div class="q-body">
 
-      <div class="text-center mb-8">
-        <h1 style="font-size:22px;font-weight:700;color:var(--text);margin-bottom:6px;letter-spacing:-.03em;">Entrar na conta</h1>
-        <p style="font-size:14px;color:var(--text-2);">Bem-vindo de volta</p>
+      <!-- Banner de e-mail confirmado -->
+      <div id="confirmedBanner" class="q-banner q-banner-success hidden">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" style="flex-shrink:0;">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+        </svg>
+        E-mail confirmado! Agora você pode entrar.
       </div>
 
-      <div id="confirmedBanner" style="display:none;background:#F0FDF4;color:#15803D;border:1px solid #BBF7D0;border-radius:10px;padding:13px 16px;font-size:14px;font-weight:500;margin-bottom:16px;align-items:center;gap:10px;">
-        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" style="flex-shrink:0;"><path d="M5 13l4 4L19 7" stroke="#16A34A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        E-mail confirmado! Agora você pode fazer login.
-      </div>
+      <p class="q-prompt">
+        Qual é a sua conta?
+        <span class="q-prompt-sub">Informe e-mail e senha para continuar</span>
+      </p>
 
-      <div class="card">
-        <form id="loginForm" class="space-y-4">
-          <div>
-            <label style="display:block;font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;">Email</label>
-            <input id="email" type="email" required placeholder="seu@email.com" class="input-field" />
-          </div>
-
-          <div>
-            <label style="display:block;font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;">Senha</label>
-            <input id="password" type="password" required placeholder="••••••••" class="input-field" />
-          </div>
-
-          <div id="errorMsg" class="hidden alert-error"></div>
-
-          <button type="submit" id="submitBtn" class="btn-primary" style="margin-top:8px;">Entrar</button>
-
-          <p style="font-size:13px;text-align:center;margin-top:12px;">
-            <a href="/forgot-password.html" style="color:var(--text-3);text-decoration:none;">Esqueceu sua senha?</a>
-          </p>
-        </form>
-
-        <p style="font-size:13px;color:var(--text-2);text-align:center;margin-top:24px;padding-top:24px;border-top:1px solid var(--border);">
-          Não tem conta?
-          <a href="/register.html" style="color:var(--blue);font-weight:600;text-decoration:none;"> Criar conta grátis</a>
-        </p>
-      </div>
+      <form id="loginForm">
+        <div class="q-field">
+          <label class="q-label" for="email">E-mail</label>
+          <input id="email" type="email" required placeholder="seu@email.com" class="q-input" autocomplete="email" />
+        </div>
+        <div class="q-field" style="margin-bottom:0;">
+          <label class="q-label" for="password">Senha</label>
+          <input id="password" type="password" required placeholder="••••••••" class="q-input" autocomplete="current-password" />
+        </div>
+        <div id="errorMsg" class="q-banner q-banner-error hidden" style="margin-top:12px;margin-bottom:0;"></div>
+      </form>
 
     </div>
-  </main>
 
-  <!-- Footer -->
-  <footer style="border-top:1px solid var(--border);padding:20px 24px;text-align:center;">
-    <p style="font-size:12px;color:var(--text-3);">© 2026 CardsQuestõesAI &nbsp;·&nbsp; <a href="/termos.html" style="color:var(--text-3);text-decoration:none;">Termos</a> &nbsp;·&nbsp; <a href="/privacidade.html" style="color:var(--text-3);text-decoration:none;">Privacidade</a> &nbsp;·&nbsp; <a href="mailto:contato@cardsquestoesai.com" style="color:var(--text-3);text-decoration:none;">Contato</a></p>
-  </footer>
+    <div class="q-footer">
+      <a href="/forgot-password.html" class="q-link">Esqueceu a senha?</a>
+      <button type="submit" form="loginForm" id="submitBtn" class="btn-confirm">
+        Entrar
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M12 5l7 7-7 7"/>
+        </svg>
+      </button>
+    </div>
 
-  <script src="/js/config.js"></script>
-  <script>
-    db.auth.getSession().then(({ data: { session } }) => {
-      if (session) window.location.href = '/dashboard.html';
-    });
+  </div>
 
-    const _urlParams = new URLSearchParams(window.location.search);
-    if (_urlParams.get('confirmed') === 'true') {
-      const banner = document.getElementById('confirmedBanner');
-      banner.style.display = 'flex';
-      history.replaceState(null, '', '/login.html');
+  <p class="auth-alt">
+    Não tem conta? <a href="/register.html">Criar conta grátis</a>
+  </p>
+
+  <p class="auth-copy">
+    © 2026 CardsQuestõesAI &nbsp;·&nbsp;
+    <a href="/termos.html">Termos</a> &nbsp;·&nbsp;
+    <a href="/privacidade.html">Privacidade</a>
+  </p>
+
+</div>
+
+<script src="/js/config.js"></script>
+<script>
+  db.auth.getSession().then(({ data: { session } }) => {
+    if (session) window.location.href = '/dashboard.html';
+  });
+
+  const _p = new URLSearchParams(window.location.search);
+  if (_p.get('confirmed') === 'true') {
+    document.getElementById('confirmedBanner').classList.remove('hidden');
+    history.replaceState(null, '', '/login.html');
+  }
+
+  document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('submitBtn');
+    const errDiv = document.getElementById('errorMsg');
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+
+    btn.disabled = true;
+    btn.innerHTML = '<svg style="width:15px;height:15px;animation:spin 1s linear infinite" viewBox="0 0 24 24" fill="none"><circle opacity=".25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path opacity=".75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg> Entrando…';
+    errDiv.classList.add('hidden');
+
+    const { error } = await db.auth.signInWithPassword({ email, password });
+
+    if (error) {
+      errDiv.textContent = error.message === 'Invalid login credentials'
+        ? 'E-mail ou senha incorretos.'
+        : error.message;
+      errDiv.classList.remove('hidden');
+      btn.disabled = false;
+      btn.innerHTML = 'Entrar <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M12 5l7 7-7 7"/></svg>';
+      return;
     }
 
-    document.getElementById('loginForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const btn = document.getElementById('submitBtn');
-      const errDiv = document.getElementById('errorMsg');
-      const email = document.getElementById('email').value.trim();
-      const password = document.getElementById('password').value;
-
-      btn.disabled = true;
-      btn.innerHTML = '<svg style="display:inline;width:16px;height:16px;animation:spin 1s linear infinite;margin-right:8px;vertical-align:-3px" viewBox="0 0 24 24" fill="none"><circle opacity=".25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path opacity=".75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>Entrando…';
-      errDiv.classList.add('hidden');
-
-      const { error } = await db.auth.signInWithPassword({ email, password });
-
-      if (error) {
-        errDiv.textContent = error.message === 'Invalid login credentials'
-          ? 'E-mail ou senha incorretos.'
-          : error.message;
-        errDiv.classList.remove('hidden');
-        btn.disabled = false;
-        btn.textContent = 'Entrar';
-        return;
-      }
-
-      window.location.href = '/dashboard.html';
-    });
-  </script>
-  <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
-  <script>if('serviceWorker'in navigator){navigator.serviceWorker.register('/sw.js');}</script>
+    window.location.href = '/dashboard.html';
+  });
+</script>
+<script>if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/sw.js'); }</script>
 </body>
 </html>

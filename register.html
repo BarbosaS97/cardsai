@@ -1,82 +1,198 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR" data-theme="light">
 <head>
   <script>(function(){var t=localStorage.getItem('cardsai-theme');if(t)document.documentElement.setAttribute('data-theme',t);})()</script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Criar Conta — CardsQuestõesAI</title>
-  <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root {
-      --bg: #FAFAF9; --surface: #FFFFFF; --border: #E2DDD7;
+      --bg: #FAFAF9; --surface: #FFFFFF; --surface-2: #F3F0EC; --border: #E2DDD7;
       --text: #18181B; --text-2: #52525B; --text-3: #A1A1AA;
       --blue: #2563EB; --blue-bg: #EFF6FF; --blue-bd: #BFDBFE;
       --red: #DC2626; --red-bg: #FEF2F2; --red-bd: #FECACA;
       --green: #15803D; --green-bg: #F0FDF4; --green-bd: #BBF7D0;
+      /* accent = green para esta página */
+      --accent: #15803D; --accent-bg: #F0FDF4; --accent-bd: #BBF7D0;
     }
     [data-theme="dark"] {
-      --bg: #0C0C0F; --surface: #18181B; --border: #27272A;
+      --bg: #0C0C0F; --surface: #18181B; --surface-2: #111116; --border: #27272A;
       --text: #FAFAFA; --text-2: #A1A1AA; --text-3: #52525B;
       --blue: #3B82F6; --blue-bg: #1E3A5F; --blue-bd: #1D4ED8;
       --red: #F87171; --red-bg: #450A0A; --red-bd: #7F1D1D;
       --green: #4ADE80; --green-bg: #052E16; --green-bd: #166534;
+      --accent: #4ADE80; --accent-bg: #052E16; --accent-bd: #166534;
     }
-    *, *::before, *::after { box-sizing: border-box; }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: system-ui, -apple-system, sans-serif;
+      font-size: 14px; line-height: 1.5;
       color: var(--text); background: var(--bg);
       -webkit-font-smoothing: antialiased;
       transition: background .2s, color .2s;
+      min-height: 100vh; display: flex; flex-direction: column;
     }
     body::before {
       content: '';
       position: fixed; inset: 0; z-index: -1;
       background-image: radial-gradient(circle, var(--border) 1px, transparent 1px);
-      background-size: 28px 28px;
-      opacity: .45;
-      pointer-events: none;
+      background-size: 28px 28px; opacity: .45; pointer-events: none;
+    }
+    a { text-decoration: none; }
+    button { font-family: inherit; cursor: pointer; }
+
+    .auth-page {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 32px 16px; gap: 18px;
+    }
+    .auth-brand {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 14px; font-weight: 700; color: var(--text);
+    }
+    .auth-brand-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--accent);
     }
 
-    header {
-      position: sticky; top: 0; z-index: 50;
-      background: rgba(250,250,249,.9) !important;
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
+    .q-card {
+      width: 100%; max-width: 420px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-top: 3px solid var(--accent);
+      border-radius: 14px; overflow: hidden;
+      box-shadow: 0 2px 20px rgba(0,0,0,.06);
+    }
+    .q-header {
+      background: var(--surface-2);
       border-bottom: 1px solid var(--border);
-      height: 56px;
-      transition: background .2s;
+      padding: 11px 22px;
+      display: flex; align-items: center; justify-content: space-between;
     }
-    [data-theme="dark"] header { background: rgba(12,12,15,.9) !important; }
-
-    .card { border: 1px solid var(--border); border-radius: 10px; padding: 32px; background: var(--surface); }
-
-    .input-field {
-      width: 100%; padding: 11px 14px; border: 1px solid var(--border); border-radius: 6px;
-      font-size: 14px; color: var(--text); background: var(--surface); outline: none;
-      transition: border-color .15s, box-shadow .15s; font-family: inherit;
+    .q-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 10px; font-weight: 700; letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--accent); background: var(--accent-bg);
+      border: 1px solid var(--accent-bd);
+      padding: 3px 10px; border-radius: 99px;
     }
-    .input-field:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(37,99,235,0.08); }
-    .input-field::placeholder { color: var(--text-3); }
+    .q-num {
+      font-size: 11px; font-weight: 600; color: var(--text-3); letter-spacing: .04em;
+    }
 
-    .btn-primary { display: block; width: 100%; background: var(--blue); color: #fff; border: none; border-radius: 6px; padding: 12px 24px; font-weight: 600; font-size: 14px; cursor: pointer; transition: opacity .15s; text-align: center; }
-    .btn-primary:hover { opacity: 0.88; }
-    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .q-body { padding: 24px 22px 20px; }
+    .q-prompt {
+      font-size: 15px; font-weight: 700; color: var(--text);
+      letter-spacing: -.2px; margin-bottom: 18px; line-height: 1.4;
+    }
+    .q-prompt-sub {
+      display: block; font-size: 13px; font-weight: 400;
+      color: var(--text-2); margin-top: 4px; letter-spacing: 0;
+    }
+    .q-prompt-pills {
+      display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;
+    }
+    .q-pill {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 11px; font-weight: 600;
+      color: var(--accent); background: var(--accent-bg);
+      border: 1px solid var(--accent-bd);
+      padding: 2px 9px; border-radius: 99px;
+    }
 
-    .alert-error { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-bd); border-radius: 6px; padding: 12px 14px; font-size: 13px; }
-    .alert-success { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-bd); border-radius: 6px; padding: 12px 14px; font-size: 13px; }
+    .q-field { margin-bottom: 14px; }
+    .q-label {
+      display: block; font-size: 11px; font-weight: 600;
+      color: var(--text-3); text-transform: uppercase;
+      letter-spacing: .05em; margin-bottom: 6px;
+    }
+    .q-input {
+      width: 100%; padding: 11px 14px;
+      border: 1px solid var(--border); border-radius: 8px;
+      font-size: 14px; color: var(--text); background: var(--surface);
+      outline: none; transition: border-color .15s, box-shadow .15s;
+      font-family: inherit;
+    }
+    .q-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(21,128,61,.08);
+    }
+    .q-input::placeholder { color: var(--text-3); }
+    .q-input.error { border-color: var(--red); }
 
-    label { color: var(--text) !important; }
+    .q-banner {
+      display: flex; align-items: center; gap: 8px;
+      border-radius: 8px; padding: 10px 14px;
+      font-size: 13px; font-weight: 500;
+    }
+    .q-banner-error {
+      background: var(--red-bg); color: var(--red); border: 1px solid var(--red-bd);
+    }
 
+    .q-footer {
+      border-top: 1px solid var(--border); padding: 14px 22px;
+      display: flex; align-items: center;
+      justify-content: flex-end; gap: 12px;
+    }
+    .btn-confirm {
+      display: inline-flex; align-items: center; gap: 7px;
+      background: var(--blue); color: #fff;
+      border: none; border-radius: 8px;
+      padding: 10px 20px; font-size: 14px; font-weight: 600;
+      transition: opacity .15s; cursor: pointer;
+    }
+    .btn-confirm:hover { opacity: .88; }
+    .btn-confirm:disabled { opacity: .5; cursor: not-allowed; }
+
+    .auth-alt { font-size: 13px; color: var(--text-2); text-align: center; }
+    .auth-alt a { color: var(--blue); font-weight: 600; }
+    .auth-copy { font-size: 12px; color: var(--text-3); text-align: center; }
+    .auth-copy a { color: var(--text-3); }
+    .auth-copy a:hover { color: var(--text-2); }
+
+    /* Modal de confirmação de e-mail */
+    .modal-backdrop {
+      position: fixed; inset: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: center;
+      padding: 16px;
+      background: rgba(15,23,42,.5); backdrop-filter: blur(4px);
+    }
+    .modal-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-top: 3px solid var(--green);
+      border-radius: 14px; overflow: hidden;
+      width: 100%; max-width: 400px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.2);
+    }
+    .modal-header-strip {
+      background: var(--surface-2); border-bottom: 1px solid var(--border);
+      padding: 11px 22px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .modal-body { padding: 28px 22px 22px; text-align: center; }
+    .modal-icon {
+      width: 52px; height: 52px;
+      background: var(--green-bg); border: 1px solid var(--green-bd);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 18px; color: var(--green);
+    }
+    .modal-footer { border-top: 1px solid var(--border); padding: 14px 22px; }
+    .modal-close-btn {
+      display: block; width: 100%;
+      background: var(--blue); color: #fff;
+      border: none; border-radius: 8px;
+      padding: 11px; font-size: 14px; font-weight: 600;
+      cursor: pointer; transition: opacity .15s;
+    }
+    .modal-close-btn:hover { opacity: .88; }
+
+    .hidden { display: none !important; }
     @keyframes spin { to { transform: rotate(360deg); } }
-
-    @media (max-width: 480px) {
-      .card { padding: 20px 16px; }
-      main { padding: 20px 16px !important; }
-      h1 { font-size: 20px !important; }
-    }
   </style>
-  <!-- PWA -->
   <link rel="manifest" href="/manifest.json" />
   <meta name="theme-color" content="#2563EB" />
   <meta name="mobile-web-app-capable" content="yes" />
@@ -86,152 +202,188 @@
   <link rel="apple-touch-icon" href="/static/images/icons/icon-192.png" />
   <link rel="icon" type="image/png" sizes="32x32" href="/static/images/favicon.png" />
 </head>
-<body class="min-h-screen flex flex-col">
+<body>
 
-  <!-- Header minimal -->
-  <header style="border-bottom:1px solid var(--border);">
-    <div class="max-w-screen-xl mx-auto px-4 h-14 flex items-center justify-between">
-      <a href="/index.html" style="font-size:14px;font-weight:700;color:var(--text);text-decoration:none;">CardsQuestõesAI</a>
-      <a href="/login.html" style="font-size:13px;color:var(--blue);text-decoration:none;font-weight:500;white-space:nowrap;">Já tenho conta →</a>
+<div class="auth-page">
+
+  <a href="/index.html" class="auth-brand">
+    <span class="auth-brand-dot"></span>
+    CardsQuestõesAI
+  </a>
+
+  <div class="q-card">
+
+    <div class="q-header">
+      <span class="q-badge">
+        <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+        </svg>
+        Nova conta
+      </span>
+      <span class="q-num">CARD 01</span>
     </div>
-  </header>
 
-  <!-- Main -->
-  <main class="flex-1 flex items-center justify-center px-4 py-12">
-    <div style="width:100%;max-width:380px;">
-
-      <div class="text-center mb-8">
-        <h1 style="font-size:22px;font-weight:700;color:var(--text);margin-bottom:6px;">Criar conta grátis</h1>
-        <p style="font-size:14px;color:var(--text-2);">2 gerações grátis · Sem cartão de crédito</p>
+    <div class="q-body">
+      <p class="q-prompt">
+        Vamos começar?
+        <span class="q-prompt-sub">Crie sua conta e ganhe suas primeiras gerações</span>
+      </p>
+      <div class="q-prompt-pills">
+        <span class="q-pill">
+          <svg width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+          </svg>
+          2 gerações grátis
+        </span>
+        <span class="q-pill">
+          <svg width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+          </svg>
+          Sem cartão
+        </span>
       </div>
 
-      <div class="card">
-        <form id="registerForm" class="space-y-4">
-
-          <div>
-            <label style="display:block;font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;">Nome</label>
-            <input id="name" type="text" placeholder="Seu nome completo" class="input-field" />
-          </div>
-
-          <div>
-            <label style="display:block;font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;">Email</label>
-            <input id="email" type="email" required placeholder="seu@email.com" class="input-field" />
-          </div>
-
-          <div>
-            <label style="display:block;font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;">Senha</label>
-            <input id="password" type="password" required placeholder="Mínimo 6 caracteres" class="input-field" />
-          </div>
-
-          <div>
-            <label style="display:block;font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;">Confirmar senha</label>
-            <input id="confirmPassword" type="password" required placeholder="Repita a senha" class="input-field" />
-          </div>
-
-          <div id="errorMsg" class="hidden alert-error"></div>
-
-          <button type="submit" id="submitBtn" class="btn-primary" style="margin-top:8px;">Criar conta grátis</button>
-        </form>
-
-        <p style="font-size:13px;color:var(--text-2);text-align:center;margin-top:24px;padding-top:24px;border-top:1px solid var(--border);">
-          Já tem conta?
-          <a href="/login.html" style="color:var(--blue);font-weight:600;text-decoration:none;"> Entrar</a>
-        </p>
-      </div>
-
+      <form id="registerForm" style="margin-top:20px;">
+        <div class="q-field">
+          <label class="q-label" for="name">Nome completo</label>
+          <input id="name" type="text" placeholder="Seu nome" class="q-input" autocomplete="name" />
+        </div>
+        <div class="q-field">
+          <label class="q-label" for="email">E-mail</label>
+          <input id="email" type="email" required placeholder="seu@email.com" class="q-input" autocomplete="email" />
+        </div>
+        <div class="q-field">
+          <label class="q-label" for="password">Senha</label>
+          <input id="password" type="password" required placeholder="Mínimo 6 caracteres" class="q-input" autocomplete="new-password" />
+        </div>
+        <div class="q-field" style="margin-bottom:0;">
+          <label class="q-label" for="confirmPassword">Confirmar senha</label>
+          <input id="confirmPassword" type="password" required placeholder="Repita a senha" class="q-input" autocomplete="new-password" />
+        </div>
+        <div id="errorMsg" class="q-banner q-banner-error hidden" style="margin-top:12px;"></div>
+      </form>
     </div>
-  </main>
 
-  <!-- Footer -->
-  <footer style="border-top:1px solid var(--border);padding:20px 24px;text-align:center;">
-    <p style="font-size:12px;color:var(--text-3);">© 2026 CardsQuestõesAI &nbsp;·&nbsp; <a href="/termos.html" style="color:var(--text-3);text-decoration:none;">Termos</a> &nbsp;·&nbsp; <a href="/privacidade.html" style="color:var(--text-3);text-decoration:none;">Privacidade</a> &nbsp;·&nbsp; <a href="mailto:contato@cardsquestoesai.com" style="color:var(--text-3);text-decoration:none;">Contato</a></p>
-  </footer>
-
-  <!-- Modal: cadastro realizado -->
-  <div id="successModal" style="display:none;position:fixed;inset:0;z-index:100;background:rgba(15,23,42,0.5);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:16px;">
-    <div style="background:#fff;border-radius:16px;padding:40px 28px;max-width:400px;width:100%;text-align:center;box-shadow:0 24px 64px rgba(0,0,0,0.15);">
-      <div style="width:64px;height:64px;background:#F0FDF4;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;border:2px solid #BBF7D0;">
-        <svg width="28" height="28" fill="none" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke="#16A34A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </div>
-      <h2 style="font-size:20px;font-weight:700;color:var(--text);margin:0 0 10px;">Cadastro realizado!</h2>
-      <p style="font-size:14px;color:var(--text-2);line-height:1.6;margin:0 0 6px;">Enviamos um e-mail de confirmação para:</p>
-      <p id="modalEmail" style="font-size:14px;font-weight:600;color:var(--text);margin:0 0 16px;word-break:break-all;"></p>
-      <p style="font-size:13px;color:#64748B;line-height:1.6;margin:0 0 28px;">Verifique sua <strong>caixa de entrada</strong> e também a pasta de <strong>spam</strong>. Clique no link para ativar sua conta.</p>
-      <button onclick="closeSuccessModal()" style="display:block;width:100%;background:#2563EB;color:#fff;border:none;border-radius:8px;padding:13px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;">Entendi</button>
+    <div class="q-footer">
+      <button type="submit" form="registerForm" id="submitBtn" class="btn-confirm">
+        Criar conta
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M12 5l7 7-7 7"/>
+        </svg>
+      </button>
     </div>
+
   </div>
 
-  <script src="/js/config.js"></script>
-  <script>
-    db.auth.getSession().then(({ data: { session } }) => {
-      if (session) window.location.href = '/dashboard.html';
-    });
+  <p class="auth-alt">
+    Já tem conta? <a href="/login.html">Entrar</a>
+  </p>
 
-    function showSuccessModal(email) {
-      document.getElementById('modalEmail').textContent = email;
-      document.getElementById('successModal').style.display = 'flex';
+  <p class="auth-copy">
+    © 2026 CardsQuestõesAI &nbsp;·&nbsp;
+    <a href="/termos.html">Termos</a> &nbsp;·&nbsp;
+    <a href="/privacidade.html">Privacidade</a>
+  </p>
+
+</div>
+
+<!-- Modal: cadastro realizado -->
+<div id="successModal" class="modal-backdrop hidden">
+  <div class="modal-card">
+    <div class="modal-header-strip">
+      <span class="q-badge" style="color:var(--green);background:var(--green-bg);border-color:var(--green-bd);">
+        <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+        </svg>
+        Cadastro realizado
+      </span>
+      <span class="q-num">CARD 01</span>
+    </div>
+    <div class="modal-body">
+      <div class="modal-icon">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+        </svg>
+      </div>
+      <p style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:8px;">Confirme seu e-mail</p>
+      <p style="font-size:13px;color:var(--text-2);margin-bottom:6px;">Enviamos um link de ativação para:</p>
+      <p id="modalEmail" style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:14px;word-break:break-all;"></p>
+      <p style="font-size:12px;color:var(--text-3);line-height:1.6;">Verifique a <strong>caixa de entrada</strong> e também o <strong>spam</strong>. Clique no link para ativar sua conta.</p>
+    </div>
+    <div class="modal-footer">
+      <button onclick="closeSuccessModal()" class="modal-close-btn">Entendi</button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/config.js"></script>
+<script>
+  db.auth.getSession().then(({ data: { session } }) => {
+    if (session) window.location.href = '/dashboard.html';
+  });
+
+  function showSuccessModal(email) {
+    document.getElementById('modalEmail').textContent = email;
+    document.getElementById('successModal').classList.remove('hidden');
+  }
+
+  function closeSuccessModal() {
+    document.getElementById('successModal').classList.add('hidden');
+    document.getElementById('registerForm').reset();
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = false;
+    btn.innerHTML = 'Criar conta <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M12 5l7 7-7 7"/></svg>';
+  }
+
+  document.getElementById('registerForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('submitBtn');
+    const errDiv = document.getElementById('errorMsg');
+
+    const name = document.getElementById('name').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const confirm = document.getElementById('confirmPassword').value;
+
+    errDiv.classList.add('hidden');
+
+    if (password.length < 6) {
+      errDiv.textContent = 'A senha precisa ter pelo menos 6 caracteres.';
+      errDiv.classList.remove('hidden'); return;
+    }
+    if (password !== confirm) {
+      errDiv.textContent = 'As senhas não coincidem.';
+      errDiv.classList.remove('hidden'); return;
     }
 
-    function closeSuccessModal() {
-      document.getElementById('successModal').style.display = 'none';
-      document.getElementById('registerForm').reset();
-      const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<svg style="width:15px;height:15px;animation:spin 1s linear infinite" viewBox="0 0 24 24" fill="none"><circle opacity=".25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path opacity=".75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg> Criando…';
+
+    const { data, error } = await db.auth.signUp({
+      email, password,
+      options: {
+        data: { full_name: name },
+        emailRedirectTo: 'https://cardsai.vercel.app/login.html?confirmed=true',
+      },
+    });
+
+    if (error) {
+      errDiv.textContent = error.message;
+      errDiv.classList.remove('hidden');
       btn.disabled = false;
-      btn.textContent = 'Criar conta grátis';
+      btn.innerHTML = 'Criar conta <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M12 5l7 7-7 7"/></svg>';
+      return;
     }
 
-    document.getElementById('registerForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const btn = document.getElementById('submitBtn');
-      const errDiv = document.getElementById('errorMsg');
+    if (data.session) {
+      if (name) await db.from('profiles').update({ full_name: name }).eq('id', data.user.id);
+      window.location.href = '/dashboard.html';
+      return;
+    }
 
-      const name = document.getElementById('name').value.trim();
-      const email = document.getElementById('email').value.trim();
-      const password = document.getElementById('password').value;
-      const confirm = document.getElementById('confirmPassword').value;
-
-      errDiv.classList.add('hidden');
-
-      if (password.length < 6) {
-        errDiv.textContent = 'A senha precisa ter pelo menos 6 caracteres.';
-        errDiv.classList.remove('hidden');
-        return;
-      }
-      if (password !== confirm) {
-        errDiv.textContent = 'As senhas não coincidem.';
-        errDiv.classList.remove('hidden');
-        return;
-      }
-
-      btn.disabled = true;
-      btn.innerHTML = '<svg style="display:inline;width:16px;height:16px;animation:spin 1s linear infinite;margin-right:8px;vertical-align:-3px" viewBox="0 0 24 24" fill="none"><circle opacity=".25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path opacity=".75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>Criando conta…';
-
-      const { data, error } = await db.auth.signUp({
-        email,
-        password,
-        options: {
-          data: { full_name: name },
-          emailRedirectTo: 'https://cardsai.vercel.app/login.html?confirmed=true',
-        },
-      });
-
-      if (error) {
-        errDiv.textContent = error.message;
-        errDiv.classList.remove('hidden');
-        btn.disabled = false;
-        btn.textContent = 'Criar conta grátis';
-        return;
-      }
-
-      if (data.session) {
-        if (name) await db.from('profiles').update({ full_name: name }).eq('id', data.user.id);
-        window.location.href = '/dashboard.html';
-        return;
-      }
-
-      showSuccessModal(email);
-    });
-  </script>
-  <script>if('serviceWorker'in navigator){navigator.serviceWorker.register('/sw.js');}</script>
+    showSuccessModal(email);
+  });
+</script>
+<script>if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/sw.js'); }</script>
 </body>
 </html>
