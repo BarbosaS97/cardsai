@@ -77,37 +77,146 @@
 
     /* ── Responsive ──────────────────────────────────────── */
     @media (max-width: 640px) {
-      /* Header */
+      /* Layout */
       header .max-w-screen-xl { padding-left: 14px; padding-right: 14px; }
-
-      /* Main padding */
       main.max-w-screen-xl { padding-left: 14px; padding-right: 14px; padding-top: 20px; }
 
-      /* Stats: 2 colunas em mobile (já está com grid-cols-2) */
+      /* Stats */
+      .grid .card { padding: 14px !important; }
+      #statUsers, #statGens, #statQ, #statF { font-size: 22px !important; }
 
-      /* Tabela: scroll horizontal */
-      .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-      th, td { padding: 10px 14px; font-size: 13px; white-space: nowrap; }
+      /* Tabs com scroll horizontal se necessário */
+      #tabsBar { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+      #tabsBar::-webkit-scrollbar { display: none; }
+      .tab-btn { white-space: nowrap; padding: 10px 14px; font-size: 13px; flex-shrink: 0; }
 
-      /* Search inputs 100% */
+      /* Search inputs full-width */
       #userSearch, #genSearch { width: 100% !important; }
-
-      /* Tab buttons menores */
-      .tab-btn { padding: 10px 14px; font-size: 13px; }
 
       /* Card padding */
       .card { padding: 16px; }
 
-      /* Generation cards */
-      #generationsTable > div { flex-direction: column; align-items: flex-start; gap: 10px; }
-      #generationsTable > div > div:last-child { align-self: flex-start; }
+      /* ── Tabela de usuários → layout de cards ── */
+      #usersTableWrap table { display: block; min-width: 0 !important; }
+      #usersTableWrap thead { display: none; }
+      #usersTableWrap tbody { display: flex; flex-direction: column; }
 
-      /* Modal de créditos */
+      #usersTableWrap tbody tr {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        padding: 14px;
+        border: none;
+        border-bottom: 1px solid var(--border);
+        background: transparent;
+      }
+      #usersTableWrap tbody tr:last-child { border-bottom: none; }
+      #usersTableWrap tbody tr:hover { background: var(--surface-2); }
+
+      /* Coluna 1: info do usuário — largura total */
+      #usersTableWrap td:nth-child(1) {
+        grid-column: 1 / -1;
+        padding: 0 0 10px;
+        border: none;
+        border-bottom: 1px solid var(--border);
+        margin-bottom: 6px;
+      }
+
+      /* Coluna 2: créditos */
+      #usersTableWrap td:nth-child(2) {
+        padding: 0;
+        border: none;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text);
+      }
+      #usersTableWrap td:nth-child(2)::before {
+        content: "Créd.";
+        font-size: 10px;
+        color: var(--text-3);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        margin-right: 2px;
+      }
+
+      /* Coluna 3: gerações */
+      #usersTableWrap td:nth-child(3) {
+        padding: 0;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 4px;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text);
+      }
+      #usersTableWrap td:nth-child(3)::before {
+        content: "Ger.";
+        font-size: 10px;
+        color: var(--text-3);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        margin-right: 2px;
+      }
+
+      /* Coluna 4: data — oculta no mobile */
+      #usersTableWrap td:nth-child(4) { display: none; }
+
+      /* Coluna 5: ações — largura total */
+      #usersTableWrap td:nth-child(5) {
+        grid-column: 1 / -1;
+        padding: 10px 0 0;
+        border: none;
+        border-top: 1px solid var(--border);
+        margin-top: 6px;
+      }
+
+      /* Botões de ação em grade 2×2 */
+      .action-btns {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 8px;
+      }
+      .action-btns button {
+        width: 100%;
+        justify-content: center;
+        padding: 10px 8px !important;
+        font-size: 12px !important;
+        min-height: 40px;
+      }
+
+      /* ── Cards de gerações ── */
+      .gen-card {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        justify-content: flex-start !important;
+        gap: 12px !important;
+        padding: 14px !important;
+      }
+      .gen-actions {
+        width: 100%;
+        flex-shrink: 1 !important;
+        flex-wrap: wrap;
+      }
+      .gen-actions .btn-ghost,
+      .gen-actions .btn-danger {
+        min-height: 40px;
+        padding: 10px 16px !important;
+        font-size: 13px !important;
+      }
+
+      /* ── Modal de créditos ── */
       #creditsModal > div { padding: 20px 16px; }
     }
 
     @media (max-width: 400px) {
       .grid.grid-cols-2 { grid-template-columns: 1fr; }
+      .action-btns { grid-template-columns: 1fr !important; }
     }
   </style>
   <!-- PWA -->
@@ -156,7 +265,7 @@
     </div>
 
     <!-- Tabs -->
-    <div style="border-bottom:1px solid var(--border);margin-bottom:24px;display:flex;">
+    <div id="tabsBar" style="border-bottom:1px solid var(--border);margin-bottom:24px;display:flex;">
       <button onclick="showTab('users')" id="tab-users" class="tab-btn active">Usuários</button>
       <button onclick="showTab('generations')" id="tab-generations" class="tab-btn">Gerações</button>
     </div>
@@ -168,7 +277,7 @@
         <input id="userSearch" type="text" placeholder="Buscar por email…" oninput="filterUsers()"
           class="input-field" style="width:240px;" />
       </div>
-      <div class="card table-wrap" style="padding:0;overflow:hidden;">
+      <div id="usersTableWrap" class="card table-wrap" style="padding:0;overflow:hidden;">
         <table class="w-full" style="min-width:520px;">
           <thead style="background:var(--bg);border-bottom:1px solid var(--border);">
             <tr>
@@ -312,7 +421,7 @@
           <td style="color:var(--text);font-weight:500;">${gensByUser[u.id] || 0}</td>
           <td style="color:var(--text-3);font-size:12px;">${formatDate(u.created_at)}</td>
           <td>
-            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <div class="action-btns" style="display:flex;gap:6px;flex-wrap:wrap;">
               <button onclick="openCreditsModal('${u.id}', '${u.email}', ${u.credits})" class="btn-ghost">Créditos</button>
               <button onclick="viewUserGens('${u.id}')" class="btn-ghost">Gerações</button>
               <button onclick="toggleUnlimited('${u.id}', ${!!u.unlimited_access})" class="btn-ghost" style="${u.unlimited_access ? 'color:#7C3AED;border-color:#DDD6FE;' : ''}">${u.unlimited_access ? 'Rem. ∞' : 'Dar ∞'}</button>
@@ -333,7 +442,7 @@
       allUsers.forEach(u => { userMap[u.id] = u.email; });
 
       el.innerHTML = gens.map(g => `
-        <div style="border:1px solid var(--border);border-radius:8px;padding:14px 16px;background:var(--surface);display:flex;align-items:center;justify-content:space-between;gap:12px;">
+        <div class="gen-card" style="border:1px solid var(--border);border-radius:8px;padding:14px 16px;background:var(--surface);display:flex;align-items:center;justify-content:space-between;gap:12px;">
           <div style="flex:1;min-width:0;">
             <p style="font-size:14px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${g.title || g.pdf_name || 'Sem título'}</p>
             <p style="font-size:12px;color:var(--text-3);margin-top:2px;">
@@ -342,7 +451,7 @@
             </p>
             ${g.status === 'failed' ? `<p style="font-size:12px;color:#DC2626;margin-top:2px;">${g.error_message || 'Erro'}</p>` : ''}
           </div>
-          <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+          <div class="gen-actions" style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
             <span class="status-${g.status}">${{completed:'Concluído',processing:'Processando',pending:'Aguardando',failed:'Erro'}[g.status]||g.status}</span>
             ${g.status === 'completed' ? `<a href="/results.html?id=${g.id}" class="btn-ghost">Ver →</a>` : ''}
             <button onclick="deleteGeneration('${g.id}')" class="btn-danger">Deletar</button>
