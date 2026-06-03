@@ -786,6 +786,57 @@
     }
     .btn-m-pri:hover { opacity: .72; }
 
+    /* ── Hero card carousel ─────────────────────────────────── */
+    .hv-card { transition: opacity .22s ease, transform .22s ease; }
+    .hv-dots { display: flex; justify-content: center; gap: 7px; margin-top: 12px; }
+    .hv-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--border); border: none; cursor: pointer; padding: 0;
+      transition: background .2s, transform .2s;
+    }
+    .hv-dot.active { background: var(--accent); transform: scale(1.45); }
+    /* Variantes de cor por matéria (light + dark) */
+    .hv-subj-indigo { background: #EEF2FF; border-color: #C7D2FE; color: #4F46E5; }
+    .hv-subj-green  { background: #F0FDF4; border-color: #BBF7D0; color: #15803D; }
+    .hv-subj-amber  { background: #FFFBEB; border-color: #FDE68A; color: #D97706; }
+    .hv-subj-blue   { background: #EFF6FF; border-color: #BFDBFE; color: #2563EB; }
+    .hv-subj-violet { background: #F5F3FF; border-color: #DDD6FE; color: #7C3AED; }
+    [data-theme="dark"] .hv-subj-indigo { background: #1E1B4B; border-color: #3730A3; color: #818CF8; }
+    [data-theme="dark"] .hv-subj-green  { background: #052E16; border-color: #166534; color: #4ADE80; }
+    [data-theme="dark"] .hv-subj-amber  { background: #1C1400; border-color: #78350F; color: #FCD34D; }
+    [data-theme="dark"] .hv-subj-blue   { background: #1E3A5F; border-color: #1D4ED8; color: #3B82F6; }
+    [data-theme="dark"] .hv-subj-violet { background: #2E1065; border-color: #4C1D95; color: #A78BFA; }
+
+    /* ── Stats feature section ───────────────────────────────── */
+    .sf-section { padding: 88px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+    .sf-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 72px; align-items: center; }
+    .sf-desc { font-size: 15px; color: var(--text-2); line-height: 1.7; max-width: 400px; margin: 0 0 22px; }
+    .sf-list { list-style: none; margin: 0 0 32px; display: flex; flex-direction: column; gap: 10px; }
+    .sf-list li { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--text-2); }
+    .sf-list-check { width: 16px; height: 16px; border-radius: 50%; background: var(--accent-bg); border: 1px solid var(--accent-bd); display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--accent); }
+    .sf-visual { position: relative; }
+    .sf-shadow-card { position: absolute; inset: 0; background: var(--bg-alt); border: 1px solid var(--border); border-radius: 14px; transform: rotate(-2.5deg) translateY(6px) translateX(-5px); z-index: 0; }
+    .sf-mock-wrap { position: relative; z-index: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; box-shadow: 0 6px 28px rgba(0,0,0,.07), 0 1px 4px rgba(0,0,0,.04); }
+    [data-theme="dark"] .sf-mock-wrap { box-shadow: 0 6px 28px rgba(0,0,0,.3), 0 1px 4px rgba(0,0,0,.15); }
+    .sf-mock-header { padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--bg-alt); }
+    .sf-mock-title { font-size: 11px; font-weight: 700; color: var(--text); }
+    .sf-mock-sub { font-size: 10px; color: var(--text-3); margin-top: 1px; }
+    .sf-stat-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; padding: 12px; border-bottom: 1px solid var(--border); }
+    .sf-stat-card { background: var(--bg-alt); border: 1px solid var(--border); border-radius: 8px; padding: 10px; }
+    .sf-stat-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--text-3); margin-bottom: 5px; }
+    .sf-stat-value { font-size: 18px; font-weight: 800; letter-spacing: -.3px; line-height: 1; margin-bottom: 5px; }
+    .sf-stat-bar { height: 2px; background: var(--border); border-radius: 99px; overflow: hidden; }
+    .sf-stat-bar-fill { height: 100%; border-radius: 99px; }
+    .sf-rows { padding: 10px 14px; }
+    .sf-rows-head { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--text-3); margin-bottom: 6px; }
+    .sf-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--border); }
+    .sf-row:last-child { border-bottom: none; }
+    .sf-row-name { flex: 1; min-width: 0; font-size: 11px; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sf-row-cnt { font-size: 10px; color: var(--text-3); white-space: nowrap; flex-shrink: 0; }
+    .sf-row-bar { width: 50px; height: 3px; background: var(--border); border-radius: 99px; overflow: hidden; flex-shrink: 0; }
+    .sf-row-bar-fill { height: 100%; border-radius: 99px; }
+    .sf-row-pct { font-size: 10px; font-weight: 700; width: 24px; text-align: right; flex-shrink: 0; }
+
     /* ── Responsive ──────────────────────────────────────────── */
     @media (max-width: 960px) {
       .hero-layout { gap: 48px; }
@@ -804,6 +855,8 @@
       .hv-wrap { max-width: 460px; margin: 0 auto; }
       .hv-float-tr { top: -12px; right: -8px; }
       .hv-float-bl { bottom: -12px; left: -8px; }
+      .sf-layout { grid-template-columns: 1fr; gap: 48px; }
+      .sf-visual { order: -1; max-width: 460px; margin: 0 auto; }
     }
     @media (max-width: 700px) {
       .diff-bento { grid-template-columns: 1fr; }
@@ -832,6 +885,8 @@
       .modal-backdrop { padding: 0; align-items: flex-end; }
       .modal-box { max-width: 100%; border-radius: 12px 12px 0 0; padding-bottom: 36px; }
       .modal-actions { flex-direction: column; align-items: flex-start; gap: 14px; }
+      .sf-section { padding: 56px 0; }
+      .sf-stat-grid { grid-template-columns: repeat(2,1fr); }
     }
   </style>
   <link rel="manifest" href="/manifest.json" />
@@ -852,6 +907,7 @@
     <div class="header-right">
       <nav class="nav-links">
         <a href="#como-funciona" class="nav-link">Como funciona</a>
+        <a href="#desempenho" class="nav-link">Desempenho</a>
         <a href="#planos" class="nav-link">Preços</a>
         <div class="nav-divider"></div>
         <a href="/login.html" class="nav-link">Entrar</a>
@@ -876,6 +932,7 @@
 <!-- ── Mobile nav ───────────────────────────────────────────────── -->
 <div id="mobileNav" class="nav-mobile">
   <a href="#como-funciona" class="nav-mobile-link" onclick="closeMobileNav()">Como funciona</a>
+  <a href="#desempenho" class="nav-mobile-link" onclick="closeMobileNav()">Desempenho</a>
   <a href="#planos" class="nav-mobile-link" onclick="closeMobileNav()">Preços</a>
   <a href="/login.html" class="nav-mobile-link">Entrar</a>
   <a href="/register.html" class="nav-mobile-cta">Começar grátis →</a>
@@ -942,21 +999,21 @@
         </div>
       </div>
 
-      <!-- Right: mock question card -->
+      <!-- Right: mock question card (carousel) -->
       <div class="hero-right">
         <div class="hv-wrap">
           <div class="hv-shadow-card" aria-hidden="true"></div>
 
-          <div class="hv-card">
+          <div class="hv-card" id="heroCard">
             <div class="hv-top">
-              <span class="hv-subject">Dir. Constitucional</span>
-              <span class="hv-count">3 / 50</span>
+              <span class="hv-subject hv-subj-indigo" id="heroSubject">Dir. Constitucional</span>
+              <span class="hv-count" id="heroCount">3 / 50</span>
             </div>
-            <div class="hv-meta">Concurso · Nível Difícil</div>
-            <p class="hv-q">
+            <div class="hv-meta" id="heroMeta">Concurso · Nível Difícil</div>
+            <p class="hv-q" id="heroQ">
               Segundo o art. 5° da CF/88, é correto afirmar que a liberdade de manifestação do pensamento:
             </p>
-            <div class="hv-options">
+            <div class="hv-options" id="heroOpts">
               <div class="hv-opt">
                 <span class="hv-opt-letter">A</span>
                 Pode ser exercida de forma anônima em casos excepcionais previstos em lei
@@ -976,9 +1033,9 @@
             </div>
             <div class="hv-footer">
               <div class="hv-progress-bar-wrap">
-                <div class="hv-progress-bar"></div>
+                <div class="hv-progress-bar" id="heroBar" style="width:6%"></div>
               </div>
-              <span class="hv-progress-label">3 de 50 questões</span>
+              <span class="hv-progress-label" id="heroLabel">3 de 50 questões</span>
             </div>
           </div>
 
@@ -994,6 +1051,15 @@
               <rect x="2" y="3" width="20" height="14" rx="2"/><path stroke-linecap="round" d="M8 21h8M12 17v4"/>
             </svg>
             100 flashcards prontos
+          </div>
+
+          <!-- Carousel dots -->
+          <div class="hv-dots">
+            <button class="hv-dot active" onclick="goToCard(0)" aria-label="Direito Constitucional"></button>
+            <button class="hv-dot" onclick="goToCard(1)" aria-label="Química"></button>
+            <button class="hv-dot" onclick="goToCard(2)" aria-label="Português"></button>
+            <button class="hv-dot" onclick="goToCard(3)" aria-label="Matemática"></button>
+            <button class="hv-dot" onclick="goToCard(4)" aria-label="Medicina"></button>
           </div>
 
         </div>
@@ -1064,7 +1130,103 @@
   </div>
 </section>
 
-<!-- ── 3. Como funciona ─────────────────────────────────────────── -->
+<!-- ── 3. Acompanhe seu desempenho ──────────────────────────────── -->
+<section class="sf-section" id="desempenho">
+  <div class="container">
+    <div class="sf-layout">
+
+      <!-- Texto esquerda -->
+      <div>
+        <p class="section-label">Desempenho</p>
+        <h2 class="sec-title">Acompanhe<br><strong>sua evolução</strong></h2>
+        <p class="sf-desc">Veja sua taxa de acerto, os tópicos mais fracos e o histórico completo por material — tudo em um só lugar.</p>
+        <ul class="sf-list">
+          <li>
+            <span class="sf-list-check">
+              <svg width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            </span>
+            Taxa de acerto geral e por material
+          </li>
+          <li>
+            <span class="sf-list-check">
+              <svg width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            </span>
+            Pontos fortes e fracos por tópico
+          </li>
+          <li>
+            <span class="sf-list-check">
+              <svg width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            </span>
+            Histórico completo de todos os materiais
+          </li>
+        </ul>
+        <a href="/register.html" class="btn-primary">
+          Começar grátis
+          <svg class="btn-arrow" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M12 5l7 7-7 7"/>
+          </svg>
+        </a>
+      </div>
+
+      <!-- Mock visual direita -->
+      <div class="sf-visual">
+        <div class="sf-shadow-card" aria-hidden="true"></div>
+        <div class="sf-mock-wrap">
+          <div class="sf-mock-header">
+            <div class="sf-mock-title">Estatísticas</div>
+            <div class="sf-mock-sub">Seu desempenho nas questões</div>
+          </div>
+          <div class="sf-stat-grid">
+            <div class="sf-stat-card">
+              <div class="sf-stat-label">Taxa de Acerto</div>
+              <div class="sf-stat-value" style="color:#15803D;">73%</div>
+              <div class="sf-stat-bar"><div class="sf-stat-bar-fill" style="width:73%;background:#15803D;"></div></div>
+            </div>
+            <div class="sf-stat-card">
+              <div class="sf-stat-label">Acertos</div>
+              <div class="sf-stat-value" style="color:#15803D;">158</div>
+              <div class="sf-stat-bar"><div class="sf-stat-bar-fill" style="width:73%;background:#15803D;"></div></div>
+            </div>
+            <div class="sf-stat-card">
+              <div class="sf-stat-label">Erros</div>
+              <div class="sf-stat-value" style="color:#DC2626;">58</div>
+              <div class="sf-stat-bar"><div class="sf-stat-bar-fill" style="width:27%;background:#DC2626;"></div></div>
+            </div>
+            <div class="sf-stat-card">
+              <div class="sf-stat-label">Respondidas</div>
+              <div class="sf-stat-value" style="color:#2563EB;">216</div>
+              <div class="sf-stat-bar"><div class="sf-stat-bar-fill" style="width:100%;background:#2563EB;"></div></div>
+            </div>
+          </div>
+          <div class="sf-rows">
+            <div class="sf-rows-head">Por material</div>
+            <div class="sf-row">
+              <span class="sf-row-name">Dir. Constitucional</span>
+              <span class="sf-row-cnt">38/50</span>
+              <div class="sf-row-bar"><div class="sf-row-bar-fill" style="width:76%;background:#15803D;"></div></div>
+              <span class="sf-row-pct" style="color:#15803D;">76%</span>
+            </div>
+            <div class="sf-row">
+              <span class="sf-row-name">Dir. Administrativo</span>
+              <span class="sf-row-cnt">32/50</span>
+              <div class="sf-row-bar"><div class="sf-row-bar-fill" style="width:64%;background:#D97706;"></div></div>
+              <span class="sf-row-pct" style="color:#D97706;">64%</span>
+            </div>
+            <div class="sf-row">
+              <span class="sf-row-name">Português — Gramática</span>
+              <span class="sf-row-cnt">44/50</span>
+              <div class="sf-row-bar"><div class="sf-row-bar-fill" style="width:88%;background:#15803D;"></div></div>
+              <span class="sf-row-pct" style="color:#15803D;">88%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ── 4. Como funciona ─────────────────────────────────────────── -->
 <section class="how-section" id="como-funciona">
   <div class="container">
     <p class="section-label">Processo</p>
@@ -1280,6 +1442,133 @@
     document.getElementById('mobileNav').classList.toggle('open');
     document.getElementById('hamburgerBtn').classList.toggle('open');
   };
+
+  /* ── Carrossel do hero ───────────────────────────────────── */
+  (function () {
+    const LETTERS = ['A', 'B', 'C', 'D'];
+    const CARDS = [
+      {
+        subject: 'Dir. Constitucional', colorClass: 'hv-subj-indigo',
+        count: '3 / 50', meta: 'Concurso · Nível Difícil',
+        question: 'Segundo o art. 5° da CF/88, é correto afirmar que a liberdade de manifestação do pensamento:',
+        options: [
+          'Pode ser exercida de forma anônima em casos excepcionais previstos em lei',
+          'É vedado o anonimato em sua manifestação',
+          'Admite censura prévia por autoridade judicial competente',
+          'Está condicionada à autorização prévia do Estado',
+        ],
+        correct: 1, progress: 6, label: '3 de 50 questões',
+      },
+      {
+        subject: 'Química', colorClass: 'hv-subj-green',
+        count: '7 / 50', meta: 'Vestibular · Nível Médio',
+        question: 'A molécula da água (H₂O) apresenta geometria angular. Qual propriedade decorre diretamente dessa configuração?',
+        options: [
+          'Apolaridade da molécula',
+          'Polaridade da molécula',
+          'Estabilidade por ligação iônica',
+          'Caráter não-eletrolítico em solução',
+        ],
+        correct: 1, progress: 14, label: '7 de 50 questões',
+      },
+      {
+        subject: 'Português', colorClass: 'hv-subj-amber',
+        count: '22 / 50', meta: 'Concurso · Nível Médio',
+        question: 'Assinale a alternativa em que a concordância verbal está CORRETA:',
+        options: [
+          'Fazem dez anos que não o vejo.',
+          'Existem muita dúvida sobre o assunto.',
+          'Faz dez anos que não o vejo.',
+          'Houveram muitas reclamações sobre o caso.',
+        ],
+        correct: 2, progress: 44, label: '22 de 50 questões',
+      },
+      {
+        subject: 'Matemática', colorClass: 'hv-subj-blue',
+        count: '15 / 50', meta: 'Vestibular · Nível Fácil',
+        question: 'Se x + y = 10 e x − y = 4, qual é o valor de x?',
+        options: ['3', '5', '7', '9'],
+        correct: 2, progress: 30, label: '15 de 50 questões',
+      },
+      {
+        subject: 'Medicina', colorClass: 'hv-subj-violet',
+        count: '31 / 50', meta: 'Faculdade · Nível Difícil',
+        question: 'Qual é a principal função da insulina no organismo humano?',
+        options: [
+          'Estimular a produção de glucagon pancreático',
+          'Facilitar a captação de glicose pelas células',
+          'Aumentar a glicemia em situações de estresse',
+          'Inibir a síntese de glicogênio hepático',
+        ],
+        correct: 1, progress: 62, label: '31 de 50 questões',
+      },
+    ];
+
+    let current = 0;
+    let timer = null;
+    let paused = false;
+
+    function applyCard(idx) {
+      const c = CARDS[idx];
+      const card = document.getElementById('heroCard');
+      if (!card) return;
+
+      card.style.opacity = '0';
+      card.style.transform = 'translateY(5px)';
+
+      setTimeout(function () {
+        const subjEl = document.getElementById('heroSubject');
+        if (subjEl) {
+          subjEl.textContent = c.subject;
+          subjEl.className = 'hv-subject ' + c.colorClass;
+        }
+        document.getElementById('heroCount').textContent = c.count;
+        document.getElementById('heroMeta').textContent  = c.meta;
+        document.getElementById('heroQ').textContent     = c.question;
+
+        const optsEl = document.getElementById('heroOpts');
+        optsEl.innerHTML = c.options.map(function (opt, i) {
+          return '<div class="hv-opt' + (i === c.correct ? ' hv-correct' : '') + '">' +
+            '<span class="hv-opt-letter">' + LETTERS[i] + '</span>' + opt + '</div>';
+        }).join('');
+
+        document.getElementById('heroBar').style.width     = c.progress + '%';
+        document.getElementById('heroLabel').textContent   = c.label;
+
+        document.querySelectorAll('.hv-dot').forEach(function (d, i) {
+          d.classList.toggle('active', i === idx);
+        });
+
+        card.style.opacity   = '1';
+        card.style.transform = 'translateY(0)';
+      }, 210);
+    }
+
+    window.goToCard = function (idx) {
+      current = idx;
+      applyCard(idx);
+      restartTimer();
+    };
+
+    function advance() {
+      if (paused) return;
+      current = (current + 1) % CARDS.length;
+      applyCard(current);
+    }
+
+    function restartTimer() {
+      clearInterval(timer);
+      timer = setInterval(advance, 3800);
+    }
+
+    var wrap = document.querySelector('.hv-wrap');
+    if (wrap) {
+      wrap.addEventListener('mouseenter', function () { paused = true; });
+      wrap.addEventListener('mouseleave', function () { paused = false; });
+    }
+
+    restartTimer();
+  })();
 
   /* ── Redirecionar se já logado ───────────────────────────── */
   db.auth.getSession().then(({ data: { session } }) => {

@@ -352,6 +352,8 @@
       <span id="badgeMode" class="hidden text-xs font-medium px-2 py-0.5 rounded-full"></span>
       <span id="badgeQ"  class="hidden text-xs font-medium px-2 py-0.5 bg-blue-50 text-blue-700 rounded-full"></span>
       <span id="badgeFC" class="hidden text-xs font-medium px-2 py-0.5 bg-violet-50 text-violet-700 rounded-full"></span>
+      <button onclick="window._resultsTour?.start(true)" title="Ver tutorial de uso"
+        class="btn-icon-sm" style="font-size:13px;font-weight:700;line-height:1;">?</button>
       <button id="darkToggle" class="btn-icon-sm" onclick="toggleDark()" title="Alternar tema">
         <svg id="iconSun" class="hidden" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <circle cx="12" cy="12" r="5"/><path stroke-linecap="round" d="M12 2v2m0 16v2M4.22 4.22l1.42 1.42m12.72 12.72 1.42 1.42M2 12h2m16 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
@@ -419,7 +421,7 @@
       </div>
 
       <!-- Navigation -->
-      <div class="flex items-center justify-between gap-3">
+      <div id="qNavRow" class="flex items-center justify-between gap-3">
         <button id="qPrev" onclick="goQ(-1)"
           class="opt inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium border border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-900 transition disabled:opacity-40 disabled:pointer-events-none" style="border-radius:8px;">
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -763,6 +765,8 @@
 
   let questions = [], flashcards = [];
   let qIdx = 0, fcIdx = 0, activeTab = 'questions';
+  let generationId = null;
+  const _answeredSet = new Set();
   window._notesMap = {};
 
   /* ── Tab switching ─────────────────────────────────────── */
@@ -826,6 +830,26 @@
     card.classList.add('card-in');
   }
 
+  function trackAnswer(selectedIdx, correctIdx, alternatives) {
+    const q = questions[qIdx];
+    if (!q || !q.id || !generationId || _answeredSet.has(q.id)) return;
+    _answeredSet.add(q.id);
+    const isCorrect = selectedIdx === correctIdx;
+    const selectedLetter = (alternatives[selectedIdx] || '').charAt(0);
+    db.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return;
+      db.from('question_attempts').insert({
+        user_id: user.id,
+        question_id: q.id,
+        generation_id: generationId,
+        selected_answer: selectedLetter,
+        is_correct: isCorrect,
+      }).then(({ error }) => {
+        if (error) console.warn('[stats]', error.message);
+      });
+    });
+  }
+
   function pickOpt(selectedIdx, correct, alternatives) {
     const corUp = (correct || '').charAt(0).toUpperCase();
     const correctIdx = (alternatives || []).findIndex(
@@ -844,6 +868,7 @@
     });
     document.getElementById('qAnswer').classList.remove('hidden');
     document.getElementById('qReveal').textContent = 'Resposta revelada';
+    trackAnswer(selectedIdx, correctIdx, alternatives);
   }
 
   window.revealAnswer = function () {
@@ -1047,6 +1072,7 @@
         b.style.opacity = '.35';
     });
     document.getElementById('focusQAnswer').style.display = 'block';
+    trackAnswer(selectedIdx, correctIdx, alternatives);
   }
 
   /* ── Notes helpers ─────────────────────────────────────── */
@@ -1095,6 +1121,7 @@
   async function loadData() {
     const id = new URLSearchParams(window.location.search).get('id');
     if (!id) { window.location.href = '/dashboard.html'; return; }
+    generationId = id;
 
     try {
       const [genRes, qRes, fRes] = await Promise.all([
@@ -1161,6 +1188,41 @@
       document.getElementById('focusBtn').classList.remove('hidden');
       document.getElementById('focusBtn').style.display = 'inline-flex';
 
+      // Guided tour — first visit only
+      window._resultsTour = new Tour([
+        {
+          target: '#qCard',
+          title: 'Questão',
+          text: 'Leia a pergunta e escolha a alternativa correta. Clique em "Ver resposta" para conferir o gabarito e a explicação.',
+        },
+        {
+          target: '#qNavRow',
+          title: 'Navegação',
+          text: 'Use os botões Anterior/Próxima ou as setas do teclado para navegar entre as 50 questões. No celular, deslize para o lado.',
+        },
+        {
+          target: '#flipCard',
+          title: 'Flashcard',
+          text: 'Clique no card para virá-lo e ver a resposta. Estude os flashcards até memorizar o conteúdo.',
+          before: () => window.switchTab?.('flashcards'),
+        },
+        {
+          target: '#fcGoogleFront',
+          title: 'Pesquisar no Google',
+          text: 'Clique no ícone do Google para pesquisar o termo diretamente e se aprofundar no assunto com um clique.',
+          before: () => window.switchTab?.('flashcards'),
+        },
+        {
+          target: '#fcNoteBtn',
+          title: 'Anotações',
+          text: 'Adicione suas próprias anotações em qualquer card. Reveja tudo na página "Minhas Anotações" a qualquer momento.',
+          before: () => window.switchTab?.('flashcards'),
+        },
+      ], 'hasSeenResultsTutorial');
+
+      // Slight delay so DOM settles before highlighting
+      setTimeout(() => window._resultsTour.start(), 400);
+
     } catch (err) {
       console.error('Erro ao carregar:', err);
       document.getElementById('loading').innerHTML =
@@ -1174,6 +1236,7 @@
   loadData();
 })();
 </script>
+  <script src="/js/tutorial.js"></script>
   <script>if('serviceWorker'in navigator){navigator.serviceWorker.register('/sw.js');}</script>
   <footer style="border-top:1px solid var(--border,#E2E8F0);padding:20px 24px;text-align:center;margin-top:auto;">
     <p style="font-size:12px;color:#94A3B8;">© 2026 CardsQuestõesAI &nbsp;·&nbsp; <a href="/termos.html" style="color:#94A3B8;text-decoration:none;">Termos</a> &nbsp;·&nbsp; <a href="/privacidade.html" style="color:#94A3B8;text-decoration:none;">Privacidade</a> &nbsp;·&nbsp; <a href="mailto:contato@cardsquestoesai.com" style="color:#94A3B8;text-decoration:none;">Contato</a></p>

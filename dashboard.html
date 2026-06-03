@@ -582,6 +582,14 @@
         Anotações
       </a>
 
+      <a href="/estatisticas.html"
+        style="font-size:12px;font-weight:500;color:var(--text-2);display:inline-flex;align-items:center;gap:4px;padding:5px 10px;border:1px solid var(--border);border-radius:8px;transition:background .15s,color .15s;"
+        onmouseover="this.style.background='var(--surface-2)';this.style.color='var(--text)';"
+        onmouseout="this.style.background='';this.style.color='var(--text-2)';">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+        Estatísticas
+      </a>
+
       <a id="creditsPill" href="/pricing.html" class="credits-pill credits-ok">
         <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
           <circle cx="12" cy="12" r="10"/>
@@ -589,6 +597,8 @@
         </svg>
         <span id="creditsText">—</span>
       </a>
+
+      <button class="btn-icon" onclick="window._tour?.start(true)" title="Ver tutorial de uso" style="font-size:13px;font-weight:700;">?</button>
 
       <button id="darkToggle" class="btn-icon" onclick="toggleDark()" title="Alternar tema">
         <svg id="iconSun" class="hidden" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -693,7 +703,7 @@ Mínimo: 500 caracteres · Máximo: 50.000 caracteres"
 
           <div id="modeSection" style="margin-top:18px;">
             <p class="field-label">Modo de estudo</p>
-            <div class="mode-grid">
+            <div class="mode-grid" id="tourModeGrid">
               <button class="mode-card selected" id="modeCard-concurso" onclick="selectMode('concurso')">
                 <span class="mode-check"><svg width="8" height="8" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span>
                 <div class="mode-card-icon">
@@ -729,7 +739,7 @@ Mínimo: 500 caracteres · Máximo: 50.000 caracteres"
             </div>
 
             <p class="field-label" style="margin-top:14px;">Nível de dificuldade</p>
-            <div class="diff-grid">
+            <div class="diff-grid" id="tourDiffGrid">
               <button class="diff-btn" id="diffBtn-facil" data-diff="facil" data-tip="Questões básicas e diretas" onclick="selectDifficulty('facil')">
                 <span class="diff-dot" style="background:#16A34A;"></span>
                 <span class="diff-label">Fácil</span>
@@ -777,7 +787,7 @@ Mínimo: 500 caracteres · Máximo: 50.000 caracteres"
       </div>
 
       <!-- RIGHT: últimas criações -->
-      <div class="right-panel">
+      <div class="right-panel" id="tourRecentPanel">
         <div class="section-header">
           <span class="section-label">Últimas criações</span>
           <a href="/criacoes.html" class="link-muted">Ver todas</a>
@@ -1245,9 +1255,42 @@ Mínimo: 500 caracteres · Máximo: 50.000 caracteres"
       .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
-  init();
+  init().then(() => window._tour?.start());
 </script>
   <script>if('serviceWorker'in navigator){navigator.serviceWorker.register('/sw.js');}</script>
+  <script src="/js/tutorial.js"></script>
+  <script>
+    window._tour = new Tour([
+      {
+        target: '#tourModeGrid',
+        title: 'Modo de estudo',
+        text: 'Escolha o tipo de prova que você vai encarar. Cada modo gera questões no formato certo para o seu objetivo.',
+      },
+      {
+        target: '#tourDiffGrid',
+        title: 'Dificuldade',
+        text: 'Do básico ao avançado. Quanto maior a dificuldade, mais desafiadoras serão as questões e flashcards.',
+      },
+      {
+        target: '#sourceTabs',
+        title: 'Seu material',
+        text: 'Cole um texto ou envie seu PDF. Aceitamos até 150 páginas. Seu material será transformado em 50 questões e 100 flashcards.',
+      },
+      {
+        target: '#generateBtn',
+        title: 'Gerar',
+        text: 'Clique aqui para começar. Em menos de 2 minutos, seu material estará pronto para estudo.',
+      },
+      {
+        target: '#tourRecentPanel',
+        title: 'Suas criações',
+        text: 'Aqui você encontra seus materiais já gerados. Clique para revisar ou continuar estudando.',
+      },
+    ], 'hasSeenTutorial');
+
+    // Auto-start on first visit after init() finishes loading all data
+    // (init() is async so .then() fires after auth + generations are ready)
+  </script>
   <footer style="border-top:1px solid var(--border,#E2E8F0);padding:16px 24px;text-align:center;margin-top:auto;">
     <p style="font-size:12px;color:#94A3B8;">© 2026 CardsQuestõesAI &nbsp;·&nbsp; <a href="/termos.html" style="color:#94A3B8;text-decoration:none;">Termos</a> &nbsp;·&nbsp; <a href="/privacidade.html" style="color:#94A3B8;text-decoration:none;">Privacidade</a> &nbsp;·&nbsp; <a href="mailto:contato@cardsquestoesai.com" style="color:#94A3B8;text-decoration:none;">Contato</a></p>
   </footer>

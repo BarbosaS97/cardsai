@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Estatísticas — CardsQuestõesAI</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --bg:        #FAFAF9;
+      --surface:   #FFFFFF;
+      --surface-2: #F3F0EC;
+      --border:    #E2DDD7;
+      --text:      #18181B;
+      --text-2:    #52525B;
+      --text-3:    #A1A1AA;
+      --blue:      #2563EB;
+      --blue-bg:   #EFF6FF;
+      --blue-bd:   #BFDBFE;
+      --green-bg:  #F0FDF4;
+      --green:     #15803D;
+      --green-bd:  #BBF7D0;
+      --red-bg:    #FEF2F2;
+      --red:       #DC2626;
+      --red-bd:    #FECACA;
+      --amber-bg:  #FFFBEB;
+      --amber:     #92400E;
+      --amber-bd:  #FDE68A;
+      --shadow:    0 1px 2px rgba(0,0,0,.04);
+      --shadow-md: 0 2px 8px rgba(0,0,0,.07);
+    }
+    [data-theme="dark"] {
+      --bg:        #0C0C0F;
+      --surface:   #18181B;
+      --surface-2: #111116;
+      --border:    #27272A;
+      --text:      #FAFAFA;
+      --text-2:    #A1A1AA;
+      --text-3:    #52525B;
+      --blue:      #3B82F6;
+      --blue-bg:   #1E3A5F;
+      --blue-bd:   #1D4ED8;
+      --green-bg:  #052E16;
+      --green:     #4ADE80;
+      --green-bd:  #166534;
+      --red-bg:    #450A0A;
+      --red:       #F87171;
+      --red-bd:    #7F1D1D;
+      --amber-bg:  #1C1400;
+      --amber:     #FCD34D;
+      --amber-bd:  #78350F;
+      --shadow:    0 1px 2px rgba(0,0,0,.25);
+      --shadow-md: 0 2px 8px rgba(0,0,0,.35);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, 'Inter', sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+      color: var(--text);
+      background: var(--bg);
+      -webkit-font-smoothing: antialiased;
+      transition: background .2s, color .2s;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: -1;
+      background-image: radial-gradient(circle, var(--border) 1px, transparent 1px);
+      background-size: 28px 28px;
+      opacity: .45;
+      pointer-events: none;
+    }
+    a { color: inherit; text-decoration: none; }
+    button { font-family: inherit; cursor: pointer; }
+
+    /* ── Layout ─────────────────────────────────────────────── */
+    .max-w { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+    main { padding: 32px 0 64px; flex: 1; }
+
+    /* ── Header ─────────────────────────────────────────────── */
+    header {
+      position: sticky; top: 0; z-index: 40;
+      background: rgba(250,250,249,.9);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+      height: 56px;
+      transition: background .2s;
+    }
+    [data-theme="dark"] header { background: rgba(12,12,15,.9); }
+    .header-inner {
+      display: flex; align-items: center;
+      justify-content: space-between;
+      height: 100%;
+    }
+    .logo { font-size: 14px; font-weight: 700; letter-spacing: -.3px; color: var(--text); }
+    .header-right { display: flex; align-items: center; gap: 8px; }
+
+    /* ── Credits pill ───────────────────────────────────────── */
+    .credits-pill {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 12px; font-weight: 600;
+      padding: 4px 11px; border-radius: 5px; border: 1px solid;
+      cursor: pointer; text-decoration: none;
+      transition: opacity .15s;
+    }
+    .credits-pill:hover { opacity: .8; }
+    .credits-ok   { background: var(--blue-bg);  color: var(--blue);  border-color: var(--blue-bd); }
+    .credits-low  { background: var(--amber-bg); color: var(--amber); border-color: var(--amber-bd); }
+    .credits-zero { background: var(--red-bg);   color: var(--red);   border-color: var(--red-bd); }
+
+    /* ── Icon buttons ───────────────────────────────────────── */
+    .btn-icon {
+      background: transparent; border: 1px solid var(--border);
+      border-radius: 6px; padding: 6px;
+      color: var(--text-2);
+      display: inline-flex; align-items: center; justify-content: center;
+      transition: background .15s, color .15s, border-color .15s;
+    }
+    .btn-icon:hover { border-color: var(--text-3); color: var(--text); background: var(--surface-2); }
+
+    /* ── User menu ──────────────────────────────────────────── */
+    .user-menu { position: relative; }
+    .user-dropdown {
+      position: absolute; top: calc(100% + 8px); right: 0;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; box-shadow: var(--shadow-md);
+      overflow: hidden; min-width: 120px; z-index: 50;
+    }
+    .user-dropdown button {
+      display: block; width: 100%;
+      padding: 9px 14px; text-align: left;
+      font-size: 13px; font-weight: 500; color: var(--text-2);
+      background: none; border: none;
+      transition: background .12s, color .12s;
+    }
+    .user-dropdown button:hover { background: var(--surface-2); color: var(--text); }
+
+    /* ── User avatar ────────────────────────────────────────── */
+    .user-avatar {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: linear-gradient(135deg, #2563EB 0%, #818CF8 100%);
+      color: #fff; font-size: 10px; font-weight: 700;
+      display: inline-flex; align-items: center; justify-content: center;
+      pointer-events: none;
+    }
+
+    .hidden { display: none !important; }
+
+    /* ── Skeleton ───────────────────────────────────────────── */
+    @keyframes shimmer {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+    .skeleton {
+      background: linear-gradient(90deg, var(--surface-2) 25%, var(--border) 50%, var(--surface-2) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: 8px;
+    }
+
+    /* ── Page header ────────────────────────────────────────── */
+    .page-header { margin-bottom: 24px; }
+    .page-header h1 {
+      font-size: 20px; font-weight: 700; color: var(--text);
+      letter-spacing: -.3px; margin-bottom: 4px;
+    }
+    .page-header p { font-size: 13px; color: var(--text-3); }
+
+    /* ── Stats grid ─────────────────────────────────────────── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    @media (max-width: 700px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 380px) { .stats-grid { grid-template-columns: 1fr; } }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px 20px;
+      box-shadow: var(--shadow);
+    }
+    .stat-card-label {
+      font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .06em;
+      color: var(--text-3);
+      margin-bottom: 10px;
+    }
+    .stat-card-value {
+      font-size: 32px; font-weight: 800;
+      letter-spacing: -.5px; line-height: 1;
+      margin-bottom: 10px;
+    }
+    .stat-card-bar {
+      height: 3px; background: var(--border); border-radius: 99px; overflow: hidden;
+    }
+    .stat-card-bar-fill {
+      height: 100%; border-radius: 99px; transition: width .6s ease;
+    }
+    .stat-card-sub {
+      font-size: 11px; color: var(--text-3); margin-top: 5px;
+    }
+    .val-auto  { color: var(--text); }
+    .val-green { color: var(--green); }
+    .val-red   { color: var(--red); }
+    .val-blue  { color: var(--blue); }
+
+    /* ── Section block ──────────────────────────────────────── */
+    .section-block {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      margin-bottom: 20px;
+    }
+    .section-block-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 13px 18px;
+      border-bottom: 1px solid var(--border);
+    }
+    .section-label {
+      font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .06em;
+      color: var(--text-2);
+    }
+    .section-meta { font-size: 12px; color: var(--text-3); }
+
+    /* ── Generation stat rows ───────────────────────────────── */
+    .gen-stat-row {
+      display: flex; align-items: center; gap: 14px;
+      padding: 12px 18px;
+      border-bottom: 1px solid var(--border);
+      transition: background .12s;
+      text-decoration: none;
+      color: inherit;
+    }
+    .gen-stat-row:last-child { border-bottom: none; }
+    .gen-stat-row:hover { background: var(--surface-2); }
+    .gen-stat-info { flex: 1; min-width: 0; }
+    .gen-stat-title {
+      font-size: 13px; font-weight: 600; color: var(--text);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      display: block;
+    }
+    .gen-stat-date { font-size: 11px; color: var(--text-3); }
+    .gen-stat-count {
+      font-size: 12px; color: var(--text-2); white-space: nowrap; flex-shrink: 0;
+    }
+    .rate-wrap {
+      display: flex; align-items: center; gap: 8px;
+      flex-shrink: 0; width: 110px;
+    }
+    .rate-bar {
+      flex: 1; height: 4px; background: var(--border);
+      border-radius: 99px; overflow: hidden;
+    }
+    .rate-bar-fill { height: 100%; border-radius: 99px; transition: width .4s ease; }
+    .rate-pct {
+      font-size: 12px; font-weight: 700;
+      width: 34px; text-align: right; flex-shrink: 0;
+    }
+
+    /* ── Topic stat rows ────────────────────────────────────── */
+    .topic-stat-row {
+      display: flex; align-items: center; gap: 14px;
+      padding: 11px 18px;
+      border-bottom: 1px solid var(--border);
+    }
+    .topic-stat-row:last-child { border-bottom: none; }
+    .topic-name {
+      flex: 1; min-width: 0; font-size: 13px; color: var(--text-2);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .topic-count { font-size: 12px; color: var(--text-3); white-space: nowrap; flex-shrink: 0; }
+
+    /* ── Empty state ────────────────────────────────────────── */
+    .empty-state { text-align: center; padding: 56px 24px; }
+    .empty-icon {
+      width: 48px; height: 48px;
+      background: var(--surface-2);
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 16px;
+      color: var(--text-3);
+    }
+    .empty-state h3 {
+      font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 8px;
+    }
+    .empty-state p {
+      font-size: 13px; color: var(--text-3);
+      max-width: 320px; margin: 0 auto 20px; line-height: 1.6;
+    }
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 6px;
+      border-radius: 6px; font-weight: 600; font-size: 14px;
+      cursor: pointer; border: none; text-decoration: none;
+      background: var(--blue); color: #fff; padding: 10px 22px;
+      transition: opacity .15s;
+    }
+    .btn-primary:hover { opacity: .88; }
+
+    /* ── Responsive ─────────────────────────────────────────── */
+    @media (max-width: 540px) {
+      .max-w { padding: 0 14px; }
+      main { padding: 20px 0 48px; }
+      .stat-card { padding: 14px 16px; }
+      .stat-card-value { font-size: 26px; }
+      .rate-wrap { width: 90px; }
+      .gen-stat-date { display: none; }
+    }
+  </style>
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#2563EB" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="CardsQuestõesAI" />
+  <link rel="apple-touch-icon" href="/static/images/icons/icon-192.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/static/images/favicon.png" />
+</head>
+<body>
+
+<header>
+  <div class="max-w header-inner">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <a href="/dashboard.html" class="btn-icon" title="Voltar ao dashboard" style="flex-shrink:0;">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+        </svg>
+      </a>
+      <a href="/index.html" class="logo">CardsQuestõesAI</a>
+    </div>
+    <div class="header-right">
+
+      <a href="/anotacoes.html"
+        style="font-size:12px;font-weight:500;color:var(--text-2);display:inline-flex;align-items:center;gap:4px;padding:5px 10px;border:1px solid var(--border);border-radius:8px;transition:background .15s,color .15s;"
+        onmouseover="this.style.background='var(--surface-2)';this.style.color='var(--text)';"
+        onmouseout="this.style.background='';this.style.color='var(--text-2)';">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+        Anotações
+      </a>
+
+      <a id="creditsPill" href="/pricing.html" class="credits-pill credits-ok">
+        <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="10"/>
+          <path stroke-linecap="round" d="M12 6v12M8 10h5.5a2.5 2.5 0 010 5H8"/>
+        </svg>
+        <span id="creditsText">—</span>
+      </a>
+
+      <button id="darkToggle" class="btn-icon" onclick="toggleDark()" title="Alternar tema">
+        <svg id="iconSun" class="hidden" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="5"/>
+          <path stroke-linecap="round" d="M12 2v2m0 16v2M4.22 4.22l1.42 1.42m12.72 12.72 1.42 1.42M2 12h2m16 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+        </svg>
+        <svg id="iconMoon" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+      </button>
+
+      <div class="user-menu">
+        <button style="background:none;border:none;padding:0;cursor:pointer;border-radius:50%;" onclick="toggleUserMenu()" title="Conta" id="userMenuBtn">
+          <div id="userAvatar" class="user-avatar"><span id="userAvatarInitial">?</span></div>
+        </button>
+        <div id="userDropdown" class="user-dropdown hidden">
+          <button onclick="signOut()">Sair</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="max-w">
+
+    <div class="page-header">
+      <h1>Estatísticas</h1>
+      <p>Seu desempenho nas questões de múltipla escolha</p>
+    </div>
+
+    <!-- Skeleton de carregamento -->
+    <div id="loadingSkeleton">
+      <div class="stats-grid" style="margin-bottom:20px;">
+        <div class="skeleton" style="height:96px;border-radius:12px;"></div>
+        <div class="skeleton" style="height:96px;border-radius:12px;"></div>
+        <div class="skeleton" style="height:96px;border-radius:12px;"></div>
+        <div class="skeleton" style="height:96px;border-radius:12px;"></div>
+      </div>
+      <div class="skeleton" style="height:220px;margin-bottom:20px;border-radius:12px;"></div>
+      <div class="skeleton" style="height:180px;border-radius:12px;"></div>
+    </div>
+
+    <!-- Estado vazio -->
+    <div id="emptyState" class="hidden">
+      <div class="empty-state">
+        <div class="empty-icon">
+          <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+          </svg>
+        </div>
+        <h3>Nenhuma questão respondida ainda</h3>
+        <p>Responda questões nos seus materiais gerados para começar a acompanhar seu desempenho aqui.</p>
+        <a href="/dashboard.html" class="btn-primary">Ir para o Dashboard</a>
+      </div>
+    </div>
+
+    <!-- Conteúdo de estatísticas -->
+    <div id="statsContent" class="hidden">
+
+      <!-- Cards resumo -->
+      <div class="stats-grid" id="summaryCards"></div>
+
+      <!-- Por material -->
+      <div class="section-block" id="genSection">
+        <div class="section-block-header">
+          <span class="section-label">Por material</span>
+          <span class="section-meta" id="genCount"></span>
+        </div>
+        <div id="genStatsList"></div>
+      </div>
+
+      <!-- Por tópico -->
+      <div class="section-block" id="topicSection">
+        <div class="section-block-header">
+          <span class="section-label">Por tópico</span>
+          <span class="section-meta" id="topicCount"></span>
+        </div>
+        <div id="topicStatsList"></div>
+      </div>
+
+    </div>
+
+  </div>
+</main>
+
+<script src="/js/config.js"></script>
+<script src="/js/auth.js"></script>
+<script>
+  /* ── Dark mode ──────────────────────────────────────────────── */
+  (function () {
+    const saved = localStorage.getItem('cardsai-theme');
+    if (saved === 'dark') applyDark(true);
+  })();
+
+  function applyDark(on) {
+    document.documentElement.setAttribute('data-theme', on ? 'dark' : 'light');
+    document.getElementById('iconSun').classList.toggle('hidden', !on);
+    document.getElementById('iconMoon').classList.toggle('hidden', on);
+  }
+
+  window.toggleDark = function () {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    applyDark(!isDark);
+    localStorage.setItem('cardsai-theme', isDark ? 'light' : 'dark');
+  };
+
+  /* ── User menu ──────────────────────────────────────────────── */
+  window.toggleUserMenu = function () {
+    document.getElementById('userDropdown').classList.toggle('hidden');
+  };
+  document.addEventListener('click', function (e) {
+    const btn  = document.getElementById('userMenuBtn');
+    const drop = document.getElementById('userDropdown');
+    if (drop && btn && !btn.contains(e.target) && !drop.contains(e.target)) {
+      drop.classList.add('hidden');
+    }
+  });
+
+  /* ── Helpers ────────────────────────────────────────────────── */
+  function rateColor(rate) {
+    if (rate >= 70) return { text: 'var(--green)', bar: 'var(--green)' };
+    if (rate >= 40) return { text: 'var(--amber)', bar: '#D97706' };
+    return { text: 'var(--red)', bar: 'var(--red)' };
+  }
+
+  function rateDesc(rate) {
+    if (rate >= 70) return 'Ótimo desempenho';
+    if (rate >= 50) return 'Bom, continue assim';
+    if (rate >= 40) return 'Pode melhorar';
+    return 'Precisa revisar mais';
+  }
+
+  function esc(s) {
+    return String(s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function fmtDate(dateStr) {
+    if (!dateStr) return '';
+    return new Date(dateStr).toLocaleDateString('pt-BR', {
+      day: '2-digit', month: '2-digit', year: 'numeric',
+    });
+  }
+
+  /* ── Render: cards de resumo geral ─────────────────────────── */
+  function renderSummary(total, correct, wrong, rate) {
+    const rc = rateColor(rate);
+    document.getElementById('summaryCards').innerHTML = `
+      <div class="stat-card">
+        <div class="stat-card-label">Taxa de Acerto</div>
+        <div class="stat-card-value val-auto" style="color:${rc.text};">${rate}%</div>
+        <div class="stat-card-bar">
+          <div class="stat-card-bar-fill" style="width:${rate}%;background:${rc.bar};"></div>
+        </div>
+        <div class="stat-card-sub">${rateDesc(rate)}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">Acertos</div>
+        <div class="stat-card-value val-green">${correct.toLocaleString('pt-BR')}</div>
+        <div class="stat-card-bar">
+          <div class="stat-card-bar-fill" style="width:${total ? correct / total * 100 : 0}%;background:var(--green);"></div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">Erros</div>
+        <div class="stat-card-value val-red">${wrong.toLocaleString('pt-BR')}</div>
+        <div class="stat-card-bar">
+          <div class="stat-card-bar-fill" style="width:${total ? wrong / total * 100 : 0}%;background:var(--red);"></div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">Respondidas</div>
+        <div class="stat-card-value val-blue">${total.toLocaleString('pt-BR')}</div>
+        <div class="stat-card-bar">
+          <div class="stat-card-bar-fill" style="width:100%;background:var(--blue);"></div>
+        </div>
+      </div>
+    `;
+  }
+
+  /* ── Render: por material ───────────────────────────────────── */
+  function renderGenStats(byGen) {
+    const entries = Object.values(byGen)
+      .sort((a, b) => new Date(b.lastAt || 0) - new Date(a.lastAt || 0));
+
+    if (!entries.length) {
+      document.getElementById('genSection').classList.add('hidden');
+      return;
+    }
+
+    document.getElementById('genCount').textContent =
+      entries.length + (entries.length === 1 ? ' material' : ' materiais');
+
+    document.getElementById('genStatsList').innerHTML = entries.map(g => {
+      const rate = g.total > 0 ? Math.round(g.correct / g.total * 100) : 0;
+      const rc   = rateColor(rate);
+      const date = fmtDate(g.lastAt);
+      const href = `/results.html?id=${esc(g.id)}`;
+      return `
+        <a href="${href}" class="gen-stat-row">
+          <div class="gen-stat-info">
+            <span class="gen-stat-title">${esc(g.title)}</span>
+            ${date ? `<span class="gen-stat-date">${date}</span>` : ''}
+          </div>
+          <span class="gen-stat-count">${g.correct}/${g.total}</span>
+          <div class="rate-wrap">
+            <div class="rate-bar">
+              <div class="rate-bar-fill" style="width:${rate}%;background:${rc.bar};"></div>
+            </div>
+            <span class="rate-pct" style="color:${rc.text};">${rate}%</span>
+          </div>
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color:var(--text-3);flex-shrink:0;">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+          </svg>
+        </a>`;
+    }).join('');
+  }
+
+  /* ── Render: por tópico ─────────────────────────────────────── */
+  function renderTopicStats(byTopic) {
+    const entries = Object.entries(byTopic)
+      .map(([topic, s]) => ({ topic, ...s }))
+      .filter(t => t.topic && t.topic.trim())
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 20);
+
+    if (!entries.length) {
+      document.getElementById('topicSection').classList.add('hidden');
+      return;
+    }
+
+    document.getElementById('topicCount').textContent =
+      entries.length + (entries.length === 1 ? ' tópico' : ' tópicos');
+
+    document.getElementById('topicStatsList').innerHTML = entries.map(t => {
+      const rate = t.total > 0 ? Math.round(t.correct / t.total * 100) : 0;
+      const rc   = rateColor(rate);
+      return `
+        <div class="topic-stat-row">
+          <span class="topic-name">${esc(t.topic)}</span>
+          <span class="topic-count">${t.total} resp.</span>
+          <div class="rate-wrap">
+            <div class="rate-bar">
+              <div class="rate-bar-fill" style="width:${rate}%;background:${rc.bar};"></div>
+            </div>
+            <span class="rate-pct" style="color:${rc.text};">${rate}%</span>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  /* ── Init ───────────────────────────────────────────────────── */
+  async function init() {
+    const session = await requireAuth();
+    if (!session) return;
+
+    const profile = await getProfile();
+    if (profile) {
+      const label = formatCredits(profile.credits);
+      document.getElementById('creditsText').textContent =
+        label + (profile.credits === 1 ? ' crédito' : ' créditos');
+      const pill = document.getElementById('creditsPill');
+      pill.className = 'credits-pill ' +
+        (profile.credits === 0 ? 'credits-zero' : profile.credits <= 2 ? 'credits-low' : 'credits-ok');
+      const initial = (profile.email || profile.full_name || '?').charAt(0).toUpperCase();
+      document.getElementById('userAvatarInitial').textContent = initial;
+    }
+
+    const { data: { user } } = await db.auth.getUser();
+
+    const { data: attempts, error } = await db
+      .from('question_attempts')
+      .select('generation_id, is_correct, created_at, questions(topic), generations(title, pdf_name)')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(2000);
+
+    document.getElementById('loadingSkeleton').classList.add('hidden');
+
+    if (error || !attempts || attempts.length === 0) {
+      if (error) console.error('[stats]', error.message);
+      document.getElementById('emptyState').classList.remove('hidden');
+      return;
+    }
+
+    /* Totais gerais */
+    const total   = attempts.length;
+    const correct = attempts.filter(a => a.is_correct).length;
+    const wrong   = total - correct;
+    const rate    = total > 0 ? Math.round(correct / total * 100) : 0;
+
+    /* Agrupado por geração */
+    const byGen = {};
+    attempts.forEach(a => {
+      const gid = a.generation_id;
+      if (!byGen[gid]) {
+        const gen = a.generations || {};
+        byGen[gid] = {
+          id: gid,
+          title: gen.title || gen.pdf_name || 'Material de estudo',
+          lastAt: a.created_at,
+          total: 0, correct: 0,
+        };
+      }
+      byGen[gid].total++;
+      if (a.is_correct) byGen[gid].correct++;
+    });
+
+    /* Agrupado por tópico */
+    const byTopic = {};
+    attempts.forEach(a => {
+      const topic = (a.questions && a.questions.topic) ? a.questions.topic.trim() : '';
+      if (!topic) return;
+      if (!byTopic[topic]) byTopic[topic] = { total: 0, correct: 0 };
+      byTopic[topic].total++;
+      if (a.is_correct) byTopic[topic].correct++;
+    });
+
+    renderSummary(total, correct, wrong, rate);
+    renderGenStats(byGen);
+    renderTopicStats(byTopic);
+    document.getElementById('statsContent').classList.remove('hidden');
+  }
+
+  init();
+</script>
+<script>if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/sw.js'); }</script>
+<footer style="border-top:1px solid var(--border,#E2E8F0);padding:16px 24px;text-align:center;margin-top:auto;">
+  <p style="font-size:12px;color:#94A3B8;">© 2026 CardsQuestõesAI &nbsp;·&nbsp; <a href="/termos.html" style="color:#94A3B8;text-decoration:none;">Termos</a> &nbsp;·&nbsp; <a href="/privacidade.html" style="color:#94A3B8;text-decoration:none;">Privacidade</a> &nbsp;·&nbsp; <a href="mailto:contato@cardsquestoesai.com" style="color:#94A3B8;text-decoration:none;">Contato</a></p>
+</footer>
+</body>
+</html>
