@@ -268,6 +268,7 @@
     <div id="tabsBar" style="border-bottom:1px solid var(--border);margin-bottom:24px;display:flex;">
       <button onclick="showTab('users')" id="tab-users" class="tab-btn active">Usuários</button>
       <button onclick="showTab('generations')" id="tab-generations" class="tab-btn">Gerações</button>
+      <button onclick="showTab('coupons')" id="tab-coupons" class="tab-btn">Cupons</button>
     </div>
 
     <!-- Users tab -->
@@ -292,6 +293,17 @@
             <tr><td colspan="5" style="text-align:center;color:var(--text-3);padding:32px;">Carregando…</td></tr>
           </tbody>
         </table>
+      </div>
+    </div>
+
+    <!-- Coupons tab -->
+    <div id="tab-coupons-content" class="hidden">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px;">
+        <h2 style="font-size:15px;font-weight:600;color:var(--text);">Cupons de desconto</h2>
+        <button onclick="openCouponModal(null)" class="btn-primary">+ Novo cupom</button>
+      </div>
+      <div id="couponsTableWrap" class="card" style="padding:0;overflow:hidden;overflow-x:auto;">
+        <p style="color:var(--text-3);padding:32px;text-align:center;">Clique na aba para carregar.</p>
       </div>
     </div>
 
@@ -346,8 +358,101 @@
     </div>
   </div>
 
+  <!-- Modal: criar / editar cupom -->
+  <div id="couponModal" class="hidden" style="position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(15,23,42,0.5);backdrop-filter:blur(4px);">
+    <div class="card" style="width:100%;max-width:520px;padding:28px;max-height:90vh;overflow-y:auto;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+        <h3 id="couponModalTitle" style="font-size:16px;font-weight:700;color:var(--text);">Novo cupom</h3>
+        <button onclick="closeCouponModal()" style="color:var(--text-3);font-size:20px;background:none;border:none;cursor:pointer;line-height:1;">×</button>
+      </div>
+
+      <div class="space-y-4">
+
+        <!-- Código -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div>
+            <label style="display:block;font-size:11px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">Código *</label>
+            <input id="cfCode" type="text" placeholder="Ex: BLACK30" class="input-field" style="text-transform:uppercase;" maxlength="24" />
+          </div>
+          <div>
+            <label style="display:block;font-size:11px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">Descrição</label>
+            <input id="cfDesc" type="text" placeholder="Ex: Promo de lançamento" class="input-field" />
+          </div>
+        </div>
+
+        <!-- Tipo + Valor -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div>
+            <label style="display:block;font-size:11px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">Tipo de desconto *</label>
+            <select id="cfType" class="input-field">
+              <option value="percentage">Percentual (%)</option>
+              <option value="fixed">Valor fixo (R$)</option>
+            </select>
+          </div>
+          <div>
+            <label style="display:block;font-size:11px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">Valor do desconto *</label>
+            <input id="cfValue" type="number" min="0.01" step="0.01" placeholder="Ex: 20 ou 9.90" class="input-field" />
+          </div>
+        </div>
+
+        <!-- Limite de usos -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div>
+            <label style="display:block;font-size:11px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">Limite total de usos</label>
+            <input id="cfMaxUses" type="number" min="1" placeholder="Em branco = ilimitado" class="input-field" />
+          </div>
+          <div>
+            <label style="display:block;font-size:11px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">Usos por usuário</label>
+            <input id="cfMaxPerUser" type="number" min="1" value="1" class="input-field" />
+          </div>
+        </div>
+
+        <!-- Expiração + Stripe -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div>
+            <label style="display:block;font-size:11px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">Expira em</label>
+            <input id="cfExpires" type="date" class="input-field" />
+          </div>
+          <div>
+            <label style="display:block;font-size:11px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">ID Stripe (opcional)</label>
+            <input id="cfStripeId" type="text" placeholder="coupon_xxxx" class="input-field" />
+          </div>
+        </div>
+
+        <!-- Pacotes válidos -->
+        <div>
+          <label style="display:block;font-size:11px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px;">Pacotes válidos</label>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text);cursor:pointer;">
+              <input id="cfPkg5"  type="checkbox" checked /> 5 gerações
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text);cursor:pointer;">
+              <input id="cfPkg10" type="checkbox" checked /> 10 gerações
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text);cursor:pointer;">
+              <input id="cfPkg20" type="checkbox" checked /> 20 gerações
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text);cursor:pointer;">
+              <input id="cfPkg50" type="checkbox" checked /> 50 gerações
+            </label>
+          </div>
+          <p style="font-size:11px;color:var(--text-3);margin-top:6px;">Todos marcados = válido para qualquer pacote.</p>
+        </div>
+
+      </div>
+
+      <div id="couponModalMsg" class="hidden" style="font-size:13px;padding:10px 14px;border-radius:8px;margin-top:16px;"></div>
+
+      <div style="display:flex;gap:8px;margin-top:20px;">
+        <button onclick="closeCouponModal()" class="btn-ghost" style="flex:1;justify-content:center;">Cancelar</button>
+        <button id="btnSaveCoupon" onclick="saveCoupon()" class="btn-primary" style="flex:2;justify-content:center;">Criar cupom</button>
+      </div>
+    </div>
+  </div>
+
   <script src="/js/config.js"></script>
   <script src="/js/auth.js"></script>
+  <script src="/js/admin-coupons.js"></script>
   <script>
     let allUsers = [];
     let allGens = [];
@@ -381,11 +486,12 @@
     }
 
     function showTab(tab) {
-      ['users', 'generations'].forEach(t => {
+      ['users', 'generations', 'coupons'].forEach(t => {
         document.getElementById(`tab-${t}`).className =
           'tab-btn' + (t === tab ? ' active' : '');
         document.getElementById(`tab-${t}-content`).classList.toggle('hidden', t !== tab);
       });
+      if (tab === 'coupons' && !_couponsLoaded) loadCoupons();
     }
 
     function filterUsers() {

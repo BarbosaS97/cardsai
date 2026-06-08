@@ -603,10 +603,40 @@
         <strong id="mFlashcards">—</strong>
       </div>
       <hr class="modal-summary-divider" />
+      <div class="modal-summary-row">
+        <span>Preço</span>
+        <strong id="mOriginalPrice">—</strong>
+      </div>
+      <div id="mDiscountRow" class="modal-summary-row hidden" style="color:var(--green);">
+        <span id="mDiscountLabel">Desconto (cupom)</span>
+        <strong id="mDiscountValue" style="color:var(--green);">—</strong>
+      </div>
       <div class="modal-summary-total">
-        <span>Total a pagar</span>
+        <span>Total</span>
         <span id="mPrice">—</span>
       </div>
+    </div>
+
+    <!-- Cupom -->
+    <div style="margin-bottom:20px;">
+      <label style="display:block;font-size:11px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Cupom de desconto</label>
+      <div style="display:flex;gap:8px;">
+        <input id="couponInput" type="text" placeholder="Ex: AMIGO10"
+          style="flex:1;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);background:var(--surface);outline:none;text-transform:uppercase;font-family:inherit;transition:border-color .15s;"
+          onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--border)'"
+          onkeydown="if(event.key==='Enter')applyCoupon()" />
+        <button id="btnApplyCoupon" onclick="applyCoupon()"
+          style="padding:9px 16px;border-radius:8px;border:1px solid var(--border);background:var(--surface-2);color:var(--text);font-size:13px;font-weight:600;cursor:pointer;flex-shrink:0;transition:background .15s;"
+          onmouseover="this.style.background='var(--blue)';this.style.color='#fff';this.style.borderColor='var(--blue)'"
+          onmouseout="this.style.background='var(--surface-2)';this.style.color='var(--text)';this.style.borderColor='var(--border)'">
+          Aplicar
+        </button>
+      </div>
+      <div id="couponApplied" class="hidden" style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px;padding:8px 12px;background:var(--green-bg);border:1px solid var(--green-bd);border-radius:8px;font-size:12px;color:var(--green);">
+        <span id="couponAppliedText"></span>
+        <button onclick="removeCoupon()" style="background:none;border:none;color:var(--green);cursor:pointer;font-size:16px;line-height:1;padding:0;" title="Remover cupom">×</button>
+      </div>
+      <div id="couponError" class="hidden" style="margin-top:8px;padding:8px 12px;background:var(--red-bg,#FEF2F2);border:1px solid var(--red-bd,#FECACA);border-radius:8px;font-size:12px;color:var(--red,#DC2626);"></div>
     </div>
 
     <!-- Passos -->
@@ -647,11 +677,12 @@
 </div>
 
 <footer>
-  <p>© 2026 CardsQuestõesAI &nbsp;·&nbsp; <a href="/termos.html">Termos</a> &nbsp;·&nbsp; <a href="/privacidade.html">Privacidade</a> &nbsp;·&nbsp; <a href="mailto:contato@cardsquestoesai.com">Contato</a></p>
+  <p>© 2026 CardsQuestõesAI &nbsp;·&nbsp; <a href="/termos.html">Termos</a> &nbsp;·&nbsp; <a href="/privacidade.html">Privacidade</a> &nbsp;·&nbsp; <a href="mailto:contato@cardsquestoes.com.br">contato@cardsquestoes.com.br</a></p>
 </footer>
 
 <script src="/js/config.js"></script>
 <script src="/js/auth.js"></script>
+<script src="/js/credits.js"></script>
 <script>
   /* ── Dark mode ── */
   (function () {
@@ -695,17 +726,22 @@
     document.getElementById('mQty').textContent = qty + ' gerações';
     document.getElementById('mQuestions').textContent = (qty * 50).toLocaleString('pt-BR') + ' questões';
     document.getElementById('mFlashcards').textContent = (qty * 100).toLocaleString('pt-BR') + ' flashcards';
-    document.getElementById('mPrice').textContent = price;
     document.getElementById('stepPackage').textContent =
       qty + ' gerações por ' + price + ' (' + perGen + '/geração)';
 
-    const subject = encodeURIComponent('Compra de Créditos — ' + qty + ' gerações (' + price + ')');
-    const body = encodeURIComponent(
-      'Olá!\n\nGostaria de adquirir o pacote de ' + qty +
-      ' gerações por ' + price + '.\n\nMeu e-mail de conta: [informe seu e-mail aqui]'
-    );
-    document.getElementById('modalEmailBtn').href =
-      'mailto:contato@cardsquestoesai.com?subject=' + subject + '&body=' + body;
+    // Inicializa sistema de cupom (credits.js) com preço raw para cálculo
+    const priceRaw = parseFloat(price.replace('R$', '').trim().replace(',', '.'));
+    if (typeof initCouponModal === 'function') {
+      initCouponModal(qty, priceRaw, price);
+    } else {
+      // Fallback se credits.js não carregou
+      document.getElementById('mOriginalPrice').textContent = price;
+      document.getElementById('mPrice').textContent = price;
+      document.getElementById('mDiscountRow').classList.add('hidden');
+      const subject = encodeURIComponent('Compra de Créditos — ' + qty + ' gerações (' + price + ')');
+      const body = encodeURIComponent('Olá!\n\nGostaria de adquirir o pacote de ' + qty + ' gerações por ' + price + '.\n\nMeu e-mail de conta: [informe seu e-mail aqui]');
+      document.getElementById('modalEmailBtn').href = 'mailto:contato@cardsquestoes.com.br?subject=' + subject + '&body=' + body;
+    }
 
     document.getElementById('paymentModal').classList.remove('hidden');
     document.body.style.overflow = 'hidden';
