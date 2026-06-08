@@ -170,6 +170,7 @@
       background: rgba(0, 0, 0, 0.92);
       align-items: center; justify-content: center;
       padding: 24px;
+      overflow-y: auto;
     }
     #focusOverlay.active { display: flex; }
     #focusBox {
@@ -179,6 +180,7 @@
       border-radius: 16px;
       padding: 2rem 2rem 1.5rem;
       position: relative;
+      flex-shrink: 0;
     }
     #focusClose {
       position: absolute; top: 14px; right: 14px;
@@ -186,7 +188,7 @@
       color: #94A3B8; cursor: pointer; padding: 5px 9px;
       font-size: 11px; font-weight: 500;
       display: flex; align-items: center; gap: 5px;
-      transition: background .15s;
+      transition: background .15s; z-index: 1;
     }
     #focusClose:hover { background: #475569; color: #F1F5F9; }
     .focus-nav {
@@ -232,25 +234,79 @@
     @media (max-width: 540px) {
       nav.flex { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
       nav.flex::-webkit-scrollbar { display: none; }
-      nav.flex button { padding: 10px 12px; font-size: 12px; flex-shrink: 0; }
+      nav.flex button { padding: 10px 14px; font-size: 13px; flex-shrink: 0; }
 
       main.flex-1 { padding-left: 12px !important; padding-right: 12px !important; padding-top: 14px !important; }
 
-      .flip-wrap { height: 165px !important; }
-      #focusFlip { height: 185px; }
+      .flip-wrap { height: 170px !important; }
 
-      #qPrev, #qNext, #fcPrev, #fcNext { padding: 8px 10px !important; font-size: 12px !important; }
-      #qReveal { padding: 8px 14px !important; font-size: 12px !important; }
+      #qPrev, #qNext, #fcPrev, #fcNext { padding: 9px 12px !important; font-size: 13px !important; }
+      #qReveal { padding: 9px 16px !important; font-size: 13px !important; }
 
-      #qText { font-size: 14px !important; }
+      #qText { font-size: 14px !important; line-height: 1.6 !important; }
+      #qOpts { gap: 8px !important; }
 
-      #focusBox { padding: 16px 14px 14px; }
-      #focusClose { top: 10px; right: 10px; }
+      /* Header: oculta badges no mobile para não transbordar */
+      #badgeMode, #badgeQ, #badgeFC { display: none !important; }
     }
 
     @media (max-width: 380px) {
       #qPrev, #qNext { gap: 0 !important; }
       #qPrev svg, #qNext svg { display: none; }
+      nav.flex button { padding: 10px 10px; font-size: 12px; }
+    }
+
+    /* ── Modo foco — tela cheia no mobile ───────────────── */
+    @media (max-width: 640px) {
+      #focusOverlay {
+        padding: 0;
+        align-items: flex-start;
+      }
+      #focusBox {
+        border-radius: 0;
+        border: none;
+        min-height: 100svh;
+        min-height: 100dvh;
+        padding: 52px 16px 84px;
+        margin: 0;
+        max-width: 100%;
+      }
+      #focusClose {
+        position: fixed;
+        top: 10px; right: 10px;
+        z-index: 102;
+        padding: 7px 12px;
+        font-size: 12px;
+      }
+      #focusLabel {
+        position: fixed;
+        top: 14px; left: 14px;
+        z-index: 102;
+        margin-bottom: 0;
+        font-size: 11px;
+      }
+      .focus-nav {
+        position: fixed;
+        bottom: 0; left: 0; right: 0;
+        background: #1E293B;
+        border-top: 1px solid #334155;
+        padding: 10px 16px env(safe-area-inset-bottom, 0px);
+        margin: 0;
+        z-index: 102;
+        gap: 8px;
+      }
+      .focus-nav button {
+        flex: 1;
+        justify-content: center;
+        padding: 12px 8px;
+        font-size: 14px;
+        border-radius: 10px;
+        gap: 4px;
+      }
+      #focusCounter { min-width: 52px; font-size: 13px; }
+      #focusFlip { height: 250px !important; }
+      #focusQText { font-size: 15px !important; line-height: 1.6 !important; }
+      #focusKeyHint { display: none; }
     }
 
     /* ── Google search button ───────────────────────────────── */
@@ -362,18 +418,11 @@
           <path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
         </svg>
       </button>
-      <button onclick="openFocus()" id="focusBtn"
-        class="hidden items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium border border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-900 transition" style="border-radius:6px;">
-        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/>
-        </svg>
-        Modo foco
-      </button>
     </div>
   </header>
 
   <!-- Tabs -->
-  <nav class="bg-white border-b border-slate-100 px-4 md:px-8 flex">
+  <nav class="bg-white border-b border-slate-100 px-4 md:px-8 flex" style="border-color:var(--border);background:var(--surface);">
     <button id="tabQuestions"  onclick="switchTab('questions')"
       class="tab-active px-4 py-2.5 text-sm font-medium text-slate-500 border-b-2 border-transparent transition-colors whitespace-nowrap">
       Questões
@@ -387,6 +436,21 @@
       Resumo
     </button>
   </nav>
+
+  <!-- Modo foco bar — aparece após carregar os dados -->
+  <div id="focusBtnWrap" class="hidden" style="border-bottom:1px solid var(--border);background:var(--surface);">
+    <div style="max-width:48rem;margin:0 auto;padding:8px 16px;display:flex;align-items:center;justify-content:flex-end;">
+      <button onclick="openFocus()" id="focusBtn"
+        style="display:inline-flex;align-items:center;gap:6px;padding:6px 13px;border-radius:7px;border:1px solid var(--border);background:transparent;color:var(--text-2);font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;transition:background .15s,border-color .15s,color .15s;"
+        onmouseover="this.style.borderColor='var(--text-3)';this.style.color='var(--text)';this.style.background='var(--surface-2,#F3F0EC)';"
+        onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-2)';this.style.background='transparent';">
+        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/>
+        </svg>
+        Modo foco
+      </button>
+    </div>
+  </div>
 
   <!-- Panels -->
   <main class="flex-1 px-4 md:px-8 py-5 md:py-6 max-w-3xl mx-auto w-full">
@@ -619,7 +683,7 @@
       </button>
     </div>
 
-    <p style="text-align:center;font-size:11px;color:#475569;margin-top:10px;">
+    <p id="focusKeyHint" style="text-align:center;font-size:11px;color:#475569;margin-top:10px;">
       ← → para navegar · ESC para sair
       <span id="focusSpaceHint" style="display:none;"> · Espaço para virar</span>
     </p>
@@ -1184,9 +1248,9 @@
       document.getElementById('app').classList.remove('hidden');
       switchTab('questions');
 
-      // Show focus mode button
-      document.getElementById('focusBtn').classList.remove('hidden');
-      document.getElementById('focusBtn').style.display = 'inline-flex';
+      // Show focus mode bar (below tabs)
+      document.getElementById('focusBtnWrap').classList.remove('hidden');
+      document.getElementById('focusBtnWrap').style.display = 'block';
 
       // Guided tour — first visit only
       window._resultsTour = new Tour([
