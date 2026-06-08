@@ -533,6 +533,17 @@ serve(async (req) => {
       })
     }
 
+    // Rate limiting: máx 10 gerações por hora
+    const { data: withinLimit, error: rlErr } = await supabase
+      .rpc('check_generation_rate_limit', { p_user_id: userId })
+
+    if (rlErr || !withinLimit) {
+      return new Response(
+        JSON.stringify({ error: 'Limite de gerações atingido. Aguarde antes de gerar novamente.' }),
+        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      )
+    }
+
     // A-3: Consome crédito ANTES de chamar a DeepSeek (previne TOCTOU)
     const { data: creditOk, error: creditErr } = await supabase
       .rpc('consume_credit', { p_user_id: userId })
