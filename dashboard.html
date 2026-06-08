@@ -679,6 +679,62 @@
       margin-bottom: 12px; padding-bottom: 12px;
       border-bottom: 1px solid var(--border);
     }
+
+    /* ── Mobile hamburger & nav ─────────────────────────────── */
+    .nav-desktop-link { display: inline-flex; }
+    .nav-tutorial-btn { display: inline-flex; }
+    .nav-mobile-btn   { display: none; }
+
+    .mobile-menu {
+      position: absolute; top: 56px; left: 0; right: 0;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 8px 24px rgba(0,0,0,.10);
+      z-index: 39;
+      padding: 4px 0 10px;
+      visibility: hidden; opacity: 0;
+      transform: translateY(-6px);
+      transition: opacity .18s ease, transform .18s ease, visibility 0s linear .18s;
+      pointer-events: none;
+    }
+    [data-theme="dark"] .mobile-menu { box-shadow: 0 8px 24px rgba(0,0,0,.50); }
+    .mobile-menu.open {
+      visibility: visible; opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+      transition: opacity .18s ease, transform .18s ease, visibility 0s linear 0s;
+    }
+
+    .mobile-menu-link {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 20px;
+      font-size: 14px; font-weight: 500; color: var(--text-2);
+      text-decoration: none;
+      transition: background .12s, color .12s;
+    }
+    .mobile-menu-link:hover,
+    .mobile-menu-link:active { background: var(--surface-2); color: var(--text); }
+
+    .mobile-menu-btn {
+      display: flex; align-items: center; gap: 12px;
+      width: 100%; padding: 12px 20px;
+      font-size: 14px; font-weight: 500; color: var(--text-2);
+      background: none; border: none; text-align: left; cursor: pointer;
+      font-family: inherit;
+      transition: background .12s, color .12s;
+    }
+    .mobile-menu-btn:hover { background: var(--surface-2); color: var(--text); }
+
+    .mobile-menu-sep { height: 1px; background: var(--border); margin: 4px 16px; }
+
+    @media (max-width: 640px) {
+      .nav-desktop-link { display: none !important; }
+      .nav-tutorial-btn { display: none !important; }
+      .nav-mobile-btn   { display: inline-flex; }
+    }
+    @media (max-width: 380px) {
+      #creditsText { display: none; }
+    }
   </style>
   <link rel="manifest" href="/manifest.json" />
   <meta name="theme-color" content="#2563EB" />
@@ -696,7 +752,7 @@
     <a href="/index.html" class="logo">CardsQuestõesAI</a>
     <div class="header-right">
 
-      <a href="/anotacoes.html"
+      <a href="/anotacoes.html" class="nav-desktop-link"
         style="font-size:12px;font-weight:500;color:var(--text-2);display:inline-flex;align-items:center;gap:4px;padding:5px 10px;border:1px solid var(--border);border-radius:8px;transition:background .15s,color .15s;"
         onmouseover="this.style.background='var(--surface-2)';this.style.color='var(--text)';"
         onmouseout="this.style.background='';this.style.color='var(--text-2)';">
@@ -704,7 +760,7 @@
         Anotações
       </a>
 
-      <a id="navStats" href="/estatisticas.html"
+      <a id="navStats" href="/estatisticas.html" class="nav-desktop-link"
         style="font-size:12px;font-weight:500;color:var(--text-2);display:inline-flex;align-items:center;gap:4px;padding:5px 10px;border:1px solid var(--border);border-radius:8px;transition:background .15s,color .15s;"
         onmouseover="this.style.background='var(--surface-2)';this.style.color='var(--text)';"
         onmouseout="this.style.background='';this.style.color='var(--text-2)';">
@@ -720,7 +776,7 @@
         <span id="creditsText">—</span>
       </a>
 
-      <button class="btn-icon" onclick="window._tour?.start(true)" title="Ver tutorial de uso" style="font-size:13px;font-weight:700;">?</button>
+      <button class="btn-icon nav-tutorial-btn" onclick="window._tour?.start(true)" title="Ver tutorial de uso" style="font-size:13px;font-weight:700;">?</button>
 
       <button id="darkToggle" class="btn-icon" onclick="toggleDark()" title="Alternar tema">
         <svg id="iconSun" class="hidden" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -729,6 +785,15 @@
         </svg>
         <svg id="iconMoon" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+      </button>
+
+      <button id="mobileMenuBtn" class="btn-icon nav-mobile-btn" onclick="toggleMobileMenu()" title="Menu" aria-label="Abrir menu de navegação">
+        <svg id="iconHamburger" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
+        </svg>
+        <svg id="iconClose" class="hidden" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
         </svg>
       </button>
 
@@ -743,6 +808,35 @@
 
     </div>
   </div>
+
+  <!-- Mobile navigation dropdown -->
+  <nav id="mobileMenu" class="mobile-menu" aria-label="Navegação">
+    <a href="/dashboard.html" class="mobile-menu-link" onclick="closeMobileMenu()">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+      Dashboard
+    </a>
+    <a href="/anotacoes.html" class="mobile-menu-link" onclick="closeMobileMenu()">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+      Anotações
+    </a>
+    <a href="/estatisticas.html" class="mobile-menu-link" onclick="closeMobileMenu()">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+      Estatísticas
+    </a>
+    <a href="/criacoes.html" class="mobile-menu-link" onclick="closeMobileMenu()">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+      Minhas criações
+    </a>
+    <div class="mobile-menu-sep"></div>
+    <a href="/pricing.html" class="mobile-menu-link" onclick="closeMobileMenu()">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" d="M12 6v12M8 10h5.5a2.5 2.5 0 010 5H8"/></svg>
+      Comprar créditos
+    </a>
+    <button class="mobile-menu-btn" onclick="window._tour?.start(true); closeMobileMenu();">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" d="M12 16v-4M12 8h.01"/></svg>
+      Tutorial
+    </button>
+  </nav>
 </header>
 
 <main>
@@ -1027,11 +1121,41 @@ Mínimo: 500 caracteres · Máximo: 50.000 caracteres"
   window.toggleUserMenu = function () {
     document.getElementById('userDropdown').classList.toggle('hidden');
   };
+
+  /* ── Mobile menu ────────────────────────────────────────── */
+  window.toggleMobileMenu = function () {
+    const menu = document.getElementById('mobileMenu');
+    const isOpen = menu.classList.toggle('open');
+    document.getElementById('iconHamburger').classList.toggle('hidden', isOpen);
+    document.getElementById('iconClose').classList.toggle('hidden', !isOpen);
+    if (isOpen) document.getElementById('userDropdown').classList.add('hidden');
+  };
+
+  window.closeMobileMenu = function () {
+    const menu = document.getElementById('mobileMenu');
+    if (!menu || !menu.classList.contains('open')) return;
+    menu.classList.remove('open');
+    document.getElementById('iconHamburger').classList.remove('hidden');
+    document.getElementById('iconClose').classList.add('hidden');
+  };
+
   document.addEventListener('click', function (e) {
-    const btn = document.getElementById('userMenuBtn');
+    const userBtn = document.getElementById('userMenuBtn');
     const drop = document.getElementById('userDropdown');
-    if (drop && btn && !btn.contains(e.target) && !drop.contains(e.target)) {
+    if (drop && userBtn && !userBtn.contains(e.target) && !drop.contains(e.target)) {
       drop.classList.add('hidden');
+    }
+    const mobileBtn = document.getElementById('mobileMenuBtn');
+    const mobileMenu = document.getElementById('mobileMenu');
+    if (mobileMenu && mobileBtn && !mobileBtn.contains(e.target) && !mobileMenu.contains(e.target)) {
+      closeMobileMenu();
+    }
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+      closeMobileMenu();
+      document.getElementById('userDropdown')?.classList.add('hidden');
     }
   });
 
