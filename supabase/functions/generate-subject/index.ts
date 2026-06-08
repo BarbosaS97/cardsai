@@ -56,19 +56,50 @@ function tentarParsearJSON(raw: string): any | null {
   try { return JSON.parse(limparJSON(raw)) } catch { return null }
 }
 
+function loadApiKeys(): string[] {
+  const keys: string[] = []
+  for (let i = 1; i <= 10; i++) {
+    const k = Deno.env.get(`DEEPSEEK_API_KEY_${i}`)
+    if (k) keys.push(k)
+  }
+  if (keys.length === 0) {
+    const legacy = Deno.env.get('DEEPSEEK_API_KEY')
+    if (legacy) keys.push(legacy)
+  }
+  return keys
+}
+
+let _rrIndex = 0
+
 async function callDeepSeek(
-  apiKey: string,
+  keys: string[],
   messages: { role: string; content: string }[],
   maxTokens: number,
   temperature = 0.5,
 ): Promise<string> {
-  const res = await fetch('https://api.deepseek.com/v1/chat/completions', {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model: 'deepseek-chat', messages, temperature, max_tokens: maxTokens }),
-  })
-  const data = await res.json()
-  return data.choices[0].message.content as string
+  const startIdx = _rrIndex++ % keys.length
+  for (let attempt = 0; attempt < keys.length; attempt++) {
+    const keyIdx = (startIdx + attempt) % keys.length
+    const apiKey = keys[keyIdx]
+    const keyLabel = `KEY_${keyIdx + 1}`
+    console.log(`🔑 DeepSeek ${keyLabel}`)
+    const res = await fetch('https://api.deepseek.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'deepseek-chat', messages, temperature, max_tokens: maxTokens }),
+    })
+    if (res.status === 429) {
+      console.warn(`⚠️ ${keyLabel} rate limit (429) — tentando próxima chave`)
+      continue
+    }
+    if (!res.ok) {
+      const txt = await res.text()
+      throw new Error(`DeepSeek ${keyLabel} HTTP ${res.status}: ${txt.substring(0, 200)}`)
+    }
+    const data = await res.json()
+    return data.choices[0].message.content as string
+  }
+  throw new Error('Todas as chaves DeepSeek estão com rate limit (429)')
 }
 
 interface ModeConfig {
@@ -173,7 +204,7 @@ const BATCH_ANGLES = [
 ]
 
 async function generateQuestionsFromSubject(
-  apiKey: string,
+  keys: string[],
   materia: string,
   assunto: string,
   observacoes: string,
@@ -262,7 +293,7 @@ Retorne APENAS este JSON (sem markdown, sem texto fora do JSON):
   const MAX_ATTEMPTS = 2
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     try {
-      const raw = await callDeepSeek(apiKey, qMessages, 7500)
+      const raw = await callDeepSeek(keys, qMessages, 7500)
       const result = tentarParsearJSON(raw)
       if (!result) {
         console.log(`⚠️ Q lote ${batchIndex + 1} tentativa ${attempt}: JSON inválido${attempt < MAX_ATTEMPTS ? ' — retentando' : ' — descartado'}`)
@@ -280,7 +311,7 @@ Retorne APENAS este JSON (sem markdown, sem texto fora do JSON):
 }
 
 async function generateFlashcardsFromSubject(
-  apiKey: string,
+  keys: string[],
   materia: string,
   assunto: string,
   observacoes: string,
@@ -361,7 +392,7 @@ Retorne APENAS este JSON (sem markdown):
   const MAX_ATTEMPTS = 2
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     try {
-      const raw = await callDeepSeek(apiKey, fcMessages, 4000)
+      const raw = await callDeepSeek(keys, fcMessages, 4000)
       const result = tentarParsearJSON(raw)
       if (!result) {
         console.log(`⚠️ FC lote ${batchIndex + 1} tentativa ${attempt}: JSON inválido${attempt < MAX_ATTEMPTS ? ' — retentando' : ' — descartado'}`)
@@ -378,14 +409,14 @@ Retorne APENAS este JSON (sem markdown):
 }
 
 async function generateSummary(
-  apiKey: string,
+  keys: string[],
   materia: string,
   assunto: string,
   observacoes: string,
 ): Promise<string> {
   try {
     return await callDeepSeek(
-      apiKey,
+      keys,
       [
         {
           role: 'user',
@@ -471,8 +502,9 @@ serve(async (req) => {
 
     await supabase.from('generations').update({ status: 'processing' }).eq('id', generationId)
 
-    const DEEPSEEK_API_KEY = Deno.env.get('DEEPSEEK_API_KEY')
-    if (!DEEPSEEK_API_KEY) throw new Error('DEEPSEEK_API_KEY não configurada')
+    const keys = loadApiKeys()
+    if (keys.length === 0) throw new Error('Nenhuma DEEPSEEK_API_KEY configurada')
+    console.log(`🔑 ${keys.length} chave(s) DeepSeek disponível(eis)`)
 
     const TARGET_QUESTIONS = 50
     const TARGET_FLASHCARDS = 100
@@ -487,15 +519,15 @@ serve(async (req) => {
     const [questionResults, flashcardResults, finalSummary] = await Promise.all([
       Promise.all(
         batchIndices.map(i =>
-          generateQuestionsFromSubject(DEEPSEEK_API_KEY, materia, assunto, observacoes, i, config, diffConfig, questionsPerBatch, modoEstudo),
+          generateQuestionsFromSubject(keys, materia, assunto, observacoes, i, config, diffConfig, questionsPerBatch, modoEstudo),
         ),
       ),
       Promise.all(
         batchIndices.map(i =>
-          generateFlashcardsFromSubject(DEEPSEEK_API_KEY, materia, assunto, observacoes, i, diffConfig, flashcardsPerBatch, modoEstudo, config),
+          generateFlashcardsFromSubject(keys, materia, assunto, observacoes, i, diffConfig, flashcardsPerBatch, modoEstudo, config),
         ),
       ),
-      generateSummary(DEEPSEEK_API_KEY, materia, assunto, observacoes),
+      generateSummary(keys, materia, assunto, observacoes),
     ])
 
     console.log(`⏱️ API concluída em ${elapsed()}`)
@@ -518,10 +550,10 @@ serve(async (req) => {
     if (allQuestions.length === 0 && allFlashcards.length === 0) {
       console.log('⚠️ IA falhou em todos os lotes — tentando chamada única de recuperação')
       try {
-        const recoveryQ = await generateQuestionsFromSubject(DEEPSEEK_API_KEY, materia, assunto, observacoes, 0, config, diffConfig, TARGET_QUESTIONS, modoEstudo)
+        const recoveryQ = await generateQuestionsFromSubject(keys, materia, assunto, observacoes, 0, config, diffConfig, TARGET_QUESTIONS, modoEstudo)
         allQuestions.push(...recoveryQ.questions)
         allTopics.push(...recoveryQ.topics)
-        const recoveryFC = await generateFlashcardsFromSubject(DEEPSEEK_API_KEY, materia, assunto, observacoes, 0, diffConfig, TARGET_FLASHCARDS, modoEstudo, config)
+        const recoveryFC = await generateFlashcardsFromSubject(keys, materia, assunto, observacoes, 0, diffConfig, TARGET_FLASHCARDS, modoEstudo, config)
         allFlashcards.push(...recoveryFC)
         console.log(`🔄 Recuperação: ${allQuestions.length}Q, ${allFlashcards.length}FC`)
       } catch (recoveryErr: any) {
@@ -579,7 +611,7 @@ serve(async (req) => {
       console.log(`⚠️ ${allQuestions.length} questões após dedup — gerando ${missing} adicionais...`)
       try {
         const extraQ = await generateQuestionsFromSubject(
-          DEEPSEEK_API_KEY, materia, assunto, observacoes,
+          keys, materia, assunto, observacoes,
           99, config, diffConfig, missing + 3, modoEstudo,
         )
         for (const q of extraQ.questions) {
@@ -620,7 +652,7 @@ serve(async (req) => {
       const missing = TARGET_FLASHCARDS - allFlashcards.length
       console.log(`⚠️ ${allFlashcards.length} flashcards após dedup — gerando ${missing} adicionais...`)
       try {
-        const extraFC = await generateFlashcardsFromSubject(DEEPSEEK_API_KEY, materia, assunto, observacoes, 99, diffConfig, missing + 5, modoEstudo, config)
+        const extraFC = await generateFlashcardsFromSubject(keys, materia, assunto, observacoes, 99, diffConfig, missing + 5, modoEstudo, config)
         for (const f of extraFC) {
           if (allFlashcards.length >= TARGET_FLASHCARDS) break
           if (isJunk(f.front ?? '') || isJunk(f.back ?? '')) continue
