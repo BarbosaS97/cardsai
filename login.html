@@ -231,7 +231,8 @@
           <label class="q-label" for="password">Senha</label>
           <input id="password" type="password" required placeholder="••••••••" class="q-input" autocomplete="current-password" />
         </div>
-        <div id="errorMsg" class="q-banner q-banner-error hidden" style="margin-top:12px;margin-bottom:0;"></div>
+        <div id="turnstile-widget" style="margin-top:14px;"></div>
+        <div id="errorMsg" class="q-banner q-banner-error hidden" style="margin-top:10px;margin-bottom:0;"></div>
       </form>
 
     </div>
@@ -272,6 +273,26 @@
     history.replaceState(null, '', '/login.html');
   }
 
+  // ── Turnstile ──────────────────────────────────────────────────────────────
+  function initTurnstile() {
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+    turnstile.render('#turnstile-widget', { sitekey: '0x4AAAAAADg8-LheOXhQSpsU', theme });
+  }
+
+  async function verifyTurnstile() {
+    const token = window.turnstile?.getResponse();
+    if (!token) return false;
+    try {
+      const res = await fetch(VERIFY_TURNSTILE_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token }),
+      });
+      const data = await res.json();
+      return data.success === true;
+    } catch { return false; }
+  }
+
   document.getElementById('loginForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = document.getElementById('submitBtn');
@@ -279,9 +300,21 @@
     const email = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value;
 
-    btn.disabled = true;
-    btn.innerHTML = '<svg style="width:15px;height:15px;animation:spin 1s linear infinite" viewBox="0 0 24 24" fill="none"><circle opacity=".25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path opacity=".75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg> Entrando…';
     errDiv.classList.add('hidden');
+    btn.disabled = true;
+    btn.innerHTML = '<svg style="width:15px;height:15px;animation:spin 1s linear infinite" viewBox="0 0 24 24" fill="none"><circle opacity=".25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path opacity=".75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg> Verificando…';
+
+    const ok = await verifyTurnstile();
+    if (!ok) {
+      errDiv.textContent = 'Complete a verificação de segurança antes de continuar.';
+      errDiv.classList.remove('hidden');
+      btn.disabled = false;
+      btn.innerHTML = 'Entrar <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M12 5l7 7-7 7"/></svg>';
+      window.turnstile?.reset();
+      return;
+    }
+
+    btn.innerHTML = '<svg style="width:15px;height:15px;animation:spin 1s linear infinite" viewBox="0 0 24 24" fill="none"><circle opacity=".25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path opacity=".75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg> Entrando…';
 
     const { error } = await db.auth.signInWithPassword({ email, password });
 
@@ -292,12 +325,14 @@
       errDiv.classList.remove('hidden');
       btn.disabled = false;
       btn.innerHTML = 'Entrar <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M12 5l7 7-7 7"/></svg>';
+      window.turnstile?.reset();
       return;
     }
 
     window.location.href = '/dashboard.html';
   });
 </script>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=initTurnstile" async defer></script>
 <script>if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/sw.js'); }</script>
 </body>
 </html>
