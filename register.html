@@ -349,7 +349,7 @@
     try {
       const res = await fetch(VERIFY_TURNSTILE_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
         body: JSON.stringify({ token }),
       });
       const data = await res.json();
@@ -419,7 +419,7 @@
     showSuccessModal(email);
   });
 </script>
-<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=initTurnstile" async defer></script>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=initTurnstile" async defer data-cfasync="false"></script>
 <script>if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/sw.js'); }</script>
 </body>
 </html>
