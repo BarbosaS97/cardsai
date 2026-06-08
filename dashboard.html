@@ -82,17 +82,17 @@
     input  { font-family: inherit; }
 
     /* ── Layout ─────────────────────────────────────────────── */
-    .max-w { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+    .max-w { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
     main { padding: 32px 0 64px; flex: 1; }
 
     /* ── Two-column grid ────────────────────────────────────── */
     .main-grid {
       display: grid;
-      grid-template-columns: 1fr 300px;
+      grid-template-columns: 1fr 240px;
       gap: 20px;
       align-items: start;
     }
-    @media (max-width: 860px) {
+    @media (max-width: 780px) {
       .main-grid { grid-template-columns: 1fr; }
     }
 
@@ -317,18 +317,57 @@
     }
     .proc-tip { font-size: 12px; color: var(--text-3); }
 
-    /* ── Source tabs ────────────────────────────────────────── */
-    .source-tabs { display: flex; gap: 6px; margin-bottom: 16px; overflow-x: auto; }
-    .source-tab {
-      flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; gap: 6px;
-      padding: 8px 8px; border-radius: 8px; border: 1px solid var(--border);
-      background: var(--surface-2); color: var(--text-2);
-      font-size: 13px; font-weight: 500; cursor: pointer; white-space: nowrap;
-      transition: background .15s, color .15s, border-color .15s;
+    /* ── Source options (card-style selection) ─────────────── */
+    .source-options {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 8px; margin-bottom: 20px;
     }
-    .source-tab.active { background: var(--blue); color: #fff; border-color: var(--blue); font-weight: 600; box-shadow: 0 2px 6px rgba(37,99,235,.3); }
-    .source-tab.active svg { stroke: #fff; }
-    .source-tab:not(.active):hover { border-color: var(--text-3); color: var(--text); }
+    @media (max-width: 500px) {
+      .source-options { grid-template-columns: 1fr; gap: 6px; }
+    }
+    @media (max-width: 780px) and (min-width: 501px) {
+      .source-option { padding: 12px 8px 10px; }
+      .source-opt-icon { width: 30px; height: 30px; }
+      .source-opt-label { font-size: 11px; }
+    }
+    .source-option {
+      position: relative;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: flex-start;
+      gap: 7px; padding: 14px 10px 12px;
+      border-radius: 10px; border: 1.5px solid var(--border);
+      background: var(--surface-2); color: var(--text-2);
+      font-family: inherit; cursor: pointer; text-align: center;
+      transition: background .15s, color .15s, border-color .15s, box-shadow .15s, transform .12s;
+    }
+    .source-option:hover {
+      border-color: var(--text-3); color: var(--text);
+      background: var(--surface); transform: translateY(-1px);
+      box-shadow: var(--shadow-md);
+    }
+    .source-option.active {
+      background: var(--blue-bg); color: var(--blue);
+      border-color: var(--blue); box-shadow: 0 2px 8px rgba(37,99,235,.18);
+    }
+    .source-option.active .source-opt-icon { background: rgba(37,99,235,.1); color: var(--blue); }
+    .source-opt-icon {
+      width: 36px; height: 36px; border-radius: 9px;
+      background: var(--surface); color: var(--text-2);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; transition: background .15s, color .15s;
+    }
+    .source-opt-label {
+      font-size: 12px; font-weight: 600; line-height: 1.3; color: inherit;
+    }
+    .source-opt-badge {
+      font-size: 10px; font-weight: 700;
+      padding: 2px 7px; border-radius: 4px;
+      background: #dcfce7; color: #166534;
+      border: 1px solid #bbf7d0; white-space: nowrap;
+    }
+    [data-theme="dark"] .source-opt-badge {
+      background: #14532d; color: #86efac; border-color: #166534;
+    }
 
     /* ── Text input area ────────────────────────────────────── */
     #textInputArea textarea {
@@ -574,10 +613,16 @@
       #textInputArea textarea { min-height: 200px; }
       .gen-card { padding: 12px; }
       .gen-card-title { font-size: 13px; }
+      .credits-row { flex-wrap: wrap; gap: 6px; }
+      .credits-row-cost { width: 100%; }
+      .method-header { padding-bottom: 10px; margin-bottom: 10px; }
+      .config-box-body { padding: 12px 12px 6px; }
     }
     @media (max-width: 380px) {
       .logo { font-size: 13px; }
       .btn-icon { padding: 5px; }
+      .source-options { gap: 5px; }
+      .source-option { padding: 12px 8px 10px; }
     }
 
     /* ── Validation hints ──────────────────────────────────── */
@@ -709,29 +754,33 @@
         <div class="upload-card">
 
           <div class="method-header" id="methodHeader">
-            <span class="step-badge">1</span>
-            <span style="font-size:13px;font-weight:700;color:var(--text);">Método de entrada</span>
-            <span style="font-size:12px;color:var(--text-3);">— escolha apenas um</span>
+            <span style="font-size:14px;font-weight:700;color:var(--text);">Como você quer gerar suas questões e flashcards?</span>
           </div>
 
-          <div class="source-tabs" id="sourceTabs">
-            <button class="source-tab active" id="tabPDF" onclick="switchInputMode('pdf')">
-              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
-              </svg>
-              Upload de PDF
+          <div class="source-options" id="sourceTabs">
+            <button class="source-option active" id="tabSubject" onclick="switchInputMode('subject')">
+              <div class="source-opt-icon">
+                <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                </svg>
+              </div>
+              <span class="source-opt-label">A partir do zero</span>
             </button>
-            <button class="source-tab" id="tabText" onclick="switchInputMode('text')">
-              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-              </svg>
-              Colar Texto
+            <button class="source-option" id="tabPDF" onclick="switchInputMode('pdf')">
+              <div class="source-opt-icon">
+                <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                </svg>
+              </div>
+              <span class="source-opt-label">A partir de um PDF</span>
             </button>
-            <button class="source-tab" id="tabSubject" onclick="switchInputMode('subject')">
-              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
-              </svg>
-              Criar do Zero
+            <button class="source-option" id="tabText" onclick="switchInputMode('text')">
+              <div class="source-opt-icon">
+                <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                </svg>
+              </div>
+              <span class="source-opt-label">A partir de um texto colado</span>
             </button>
           </div>
 
@@ -756,7 +805,7 @@ Mínimo: 500 caracteres · Máximo: 50.000 caracteres"
             </div>
           </div>
 
-          <div id="subjectInputArea" style="display:none;">
+          <div id="subjectInputArea">
             <div class="subject-field">
               <label for="subjectMateria">Matéria<span class="subject-required">*</span></label>
               <input type="text" id="subjectMateria"
@@ -781,7 +830,7 @@ Mínimo: 500 caracteres · Máximo: 50.000 caracteres"
             </div>
           </div>
 
-          <div id="dropZone" class="drop-zone" onclick="document.getElementById('fileInput').click()">
+          <div id="dropZone" class="drop-zone" style="display:none;" onclick="document.getElementById('fileInput').click()">
             <input type="file" id="fileInput" accept=".pdf" style="display:none;" />
             <div id="dropDefault">
               <svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.2" viewBox="0 0 24 24"
@@ -888,25 +937,25 @@ Mínimo: 500 caracteres · Máximo: 50.000 caracteres"
               <div id="modeDetailMode"></div>
               <div id="modeDetailDiff" class="detail-sep"></div>
             </div>
+
+            <div id="uploadActions" style="margin-top:14px;">
+              <div class="credits-row">
+                <div class="credits-row-left">
+                  <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" d="M12 6v12M8 10h5.5a2.5 2.5 0 010 5H8"/></svg>
+                  Você tem <strong class="credits-row-count" id="creditsRowCount">—</strong> créditos disponíveis
+                </div>
+                <span class="credits-row-cost" style="display:inline-flex;align-items:center;gap:4px;">
+                  <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><path stroke-linecap="round" d="M1 10h22"/></svg>
+                  1 crédito por geração
+                </span>
+              </div>
+              <button id="generateBtn" onclick="startGeneration()" disabled class="btn btn-generate btn-full">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                Gerar 50 questões + 100 flashcards
+              </button>
+            </div>
             </div><!-- /config-box-body -->
             </div><!-- /config-box -->
-          </div>
-
-          <div id="uploadActions" style="margin-top:16px;">
-            <div class="credits-row">
-              <div class="credits-row-left">
-                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" d="M12 6v12M8 10h5.5a2.5 2.5 0 010 5H8"/></svg>
-                Você tem <strong class="credits-row-count" id="creditsRowCount">—</strong> créditos disponíveis
-              </div>
-              <span class="credits-row-cost" style="display:inline-flex;align-items:center;gap:4px;">
-                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><path stroke-linecap="round" d="M1 10h22"/></svg>
-                1 crédito por geração
-              </span>
-            </div>
-            <button id="generateBtn" onclick="startGeneration()" disabled class="btn btn-generate btn-full">
-              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-              Gerar 50 questões + 100 flashcards
-            </button>
           </div>
 
           <div id="processingWrap" class="processing-wrap" style="display:none;">
@@ -989,7 +1038,7 @@ Mínimo: 500 caracteres · Máximo: 50.000 caracteres"
   /* ── State ──────────────────────────────────────────────── */
   let profile = null;
   let selectedFile = null;
-  let inputMode = 'pdf';
+  let inputMode = 'subject';
   let selectedMode = 'concurso';
   let selectedDifficulty = 'medio';
   let isUploading = false;
@@ -1477,36 +1526,46 @@ Mínimo: 500 caracteres · Máximo: 50.000 caracteres"
       {
         target: '#methodHeader',
         title: 'Bem-vindo ao CardsQuestõesAI',
-        text: 'Transforme qualquer conteúdo em questões e flashcards em menos de 2 minutos. Há <strong>3 formas</strong> de criar seu material — vamos conhecer cada uma.',
-      },
-      {
-        target: '#tabPDF',
-        title: 'Método 1 — Upload de PDF',
-        text: 'Envie qualquer PDF com até <strong>150 páginas</strong> e 50 MB. Arraste o arquivo ou clique para selecionar. Perfeito para apostilas, editais e livros digitalizados.',
-      },
-      {
-        target: '#tabText',
-        title: 'Método 2 — Colar Texto',
-        text: 'Copie e cole qualquer conteúdo textual: artigos, transcrições de aula, capítulos, leis ou resumos. O limite é de <strong>500 a 50.000 caracteres</strong>.',
+        text: 'Transforme qualquer conteúdo em questões e flashcards em menos de 2 minutos. Escolha entre <strong>3 modos de geração</strong> — vamos conhecer cada um.',
       },
       {
         target: '#tabSubject',
-        title: 'Método 3 — Criar do Zero',
-        text: 'Sem material? Basta digitar a <strong>Matéria</strong> e o <strong>Assunto</strong>. A IA usa seu conhecimento consolidado para criar questões e flashcards do tema que você definir.',
+        title: 'Modo padrão — A partir do zero',
+        text: 'Sem nenhum arquivo? Sem problema. Informe a <strong>Matéria</strong> e o <strong>Assunto</strong> e a IA gera questões e flashcards completos sobre o tema — este é o modo mais rápido.',
+        before: () => window.switchInputMode('subject'),
+      },
+      {
+        target: '#subjectInputArea',
+        title: 'Matéria, Assunto e Observações',
+        text: 'Quanto mais específico, melhores os resultados. Ex: <em>"Direito Constitucional"</em> + <em>"Princípios Fundamentais"</em>. Use o campo <strong>Observações</strong> para indicar banca, foco ou nível.',
+        before: () => window.switchInputMode('subject'),
+      },
+      {
+        target: '#tabPDF',
+        title: 'A partir de um PDF',
+        text: 'Envie qualquer PDF com até <strong>150 páginas</strong> e 50 MB. Arraste o arquivo na área que aparece abaixo ou clique para selecionar. Ideal para apostilas, editais e livros digitais.',
+        before: () => window.switchInputMode('pdf'),
+      },
+      {
+        target: '#tabText',
+        title: 'A partir de um texto colado',
+        text: 'Copie e cole qualquer conteúdo: artigo, transcrição de aula, capítulo, lei ou resumo. O texto deve ter entre <strong>500 e 50.000 caracteres</strong>.',
+        before: () => window.switchInputMode('text'),
       },
       {
         target: '#tourModeGrid',
         title: 'Modo de estudo',
-        text: 'Escolha o formato da prova: <strong>Concurso</strong> e <strong>OAB</strong> usam 5 alternativas com foco em lei seca e casos práticos; <strong>Vestibular</strong> e <strong>Faculdade</strong> usam 4 alternativas com linguagem contextualizada.',
+        text: '<strong>Concurso</strong> e <strong>OAB</strong> geram 5 alternativas com foco em lei seca e casos práticos. <strong>Vestibular</strong> e <strong>Faculdade</strong> geram 4 alternativas com linguagem contextualizada.',
+        before: () => window.switchInputMode('subject'),
       },
       {
         target: '#tourDiffGrid',
         title: 'Nível de dificuldade',
-        text: '<strong>Fácil</strong> — conceitos básicos. <strong>Médio</strong> — interpretação e aplicação. <strong>Difícil</strong> — análise com pegadinhas. <strong>Expert</strong> — domínio completo exigido, alternativas extremamente convincentes.',
+        text: '<strong>Fácil</strong> — conceitos diretos. <strong>Médio</strong> — interpretação e aplicação. <strong>Difícil</strong> — análise com pegadinhas. <strong>Expert</strong> — domínio completo, alternativas extremamente convincentes.',
       },
       {
         target: '#generateBtn',
-        title: 'Gerar material',
+        title: 'Gerar questões e flashcards',
         text: 'Custa <strong>1 crédito</strong> por geração. Você recebe <strong>50 questões de múltipla escolha + 100 flashcards</strong>. O processo leva até 2 minutos — não feche a aba.',
       },
       {
