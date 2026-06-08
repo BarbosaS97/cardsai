@@ -322,10 +322,21 @@
       display: grid; grid-template-columns: repeat(3, 1fr);
       gap: 8px; margin-bottom: 20px;
     }
-    @media (max-width: 500px) {
-      .source-options { grid-template-columns: 1fr; gap: 6px; }
+    @media (max-width: 640px) {
+      .source-options { grid-template-columns: 1fr; gap: 8px; }
+      .source-option {
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-start;
+        padding: 12px 16px;
+        text-align: left;
+        gap: 12px;
+      }
+      .source-opt-icon { width: 34px; height: 34px; flex-shrink: 0; }
+      .source-opt-label { font-size: 13px; font-weight: 600; }
+      .source-opt-badge { margin-left: auto; }
     }
-    @media (max-width: 780px) and (min-width: 501px) {
+    @media (max-width: 780px) and (min-width: 641px) {
       .source-option { padding: 12px 8px 10px; }
       .source-opt-icon { width: 30px; height: 30px; }
       .source-opt-label { font-size: 11px; }
@@ -617,12 +628,13 @@
       .credits-row-cost { width: 100%; }
       .method-header { padding-bottom: 10px; margin-bottom: 10px; }
       .config-box-body { padding: 12px 12px 6px; }
+      .btn-generate { padding: 15px 22px; font-size: 16px; }
     }
     @media (max-width: 380px) {
       .logo { font-size: 13px; }
       .btn-icon { padding: 5px; }
       .source-options { gap: 5px; }
-      .source-option { padding: 12px 8px 10px; }
+      .source-option { padding: 11px 14px; gap: 10px; }
     }
 
     /* ── Validation hints ──────────────────────────────────── */
