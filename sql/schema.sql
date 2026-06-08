@@ -85,16 +85,12 @@ RETURNS BOOLEAN AS $$
 $$ LANGUAGE sql SECURITY DEFINER STABLE;
 
 -- Cria perfil automaticamente ao registrar usuário
+-- Nota: promoção a admin deve ser feita manualmente via SQL, nunca por email hardcoded.
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
   INSERT INTO public.profiles (id, email, credits, is_admin)
-  VALUES (
-    NEW.id,
-    NEW.email,
-    CASE WHEN NEW.email = 'admin@cardsai.com' THEN 999999 ELSE 2 END,
-    CASE WHEN NEW.email = 'admin@cardsai.com' THEN TRUE ELSE FALSE END
-  )
+  VALUES (NEW.id, NEW.email, 2, FALSE)
   ON CONFLICT (id) DO NOTHING;
   RETURN NEW;
 END;

@@ -1,10 +1,20 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+const ALLOWED_ORIGINS = new Set([
+  'https://cardsquestoes.com.br',
+  'https://www.cardsquestoes.com.br',
+])
+
+function getCorsHeaders(req: Request): Record<string, string> {
+  const origin = req.headers.get('Origin') ?? ''
+  const allowed = ALLOWED_ORIGINS.has(origin) || origin.endsWith('.vercel.app')
+  return {
+    'Access-Control-Allow-Origin': allowed ? origin : 'https://cardsquestoes.com.br',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Vary': 'Origin',
+  }
 }
 
 export const timeout = 600000
@@ -451,6 +461,8 @@ function isJunk(text: string): boolean {
 }
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req)
+
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
@@ -463,6 +475,13 @@ serve(async (req) => {
 
     if (!materia || !assunto) {
       return new Response(JSON.stringify({ error: 'materia e assunto são obrigatórios' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
+    if (!generationId) {
+      return new Response(JSON.stringify({ error: 'generationId é obrigatório' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
@@ -494,6 +513,32 @@ serve(async (req) => {
       })
     }
     const userId = user.id
+
+    // A-4: Valida que o generationId pertence ao usuário autenticado
+    const { data: genOwnership, error: genOwnerErr } = await supabase
+      .from('generations')
+      .select('id')
+      .eq('id', generationId)
+      .eq('user_id', userId)
+      .single()
+
+    if (genOwnerErr || !genOwnership) {
+      return new Response(JSON.stringify({ error: 'Geração não encontrada ou sem permissão' }), {
+        status: 403,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
+    // A-3: Consome crédito ANTES de chamar a DeepSeek (previne TOCTOU)
+    const { data: creditOk, error: creditErr } = await supabase
+      .rpc('consume_credit', { p_user_id: userId })
+
+    if (creditErr || !creditOk) {
+      return new Response(JSON.stringify({ error: 'Créditos insuficientes' }), {
+        status: 402,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
 
     const config = modeConfig[modoEstudo] ?? modeConfig.concurso
     const diffConfig = difficultyConfig[dificuldade] ?? difficultyConfig.medio
@@ -734,14 +779,6 @@ serve(async (req) => {
       console.log(`✅ Geração ${generationId} marcada como completed`)
     }
 
-    try {
-      const { error: debitError } = await supabase.rpc('consume_credit', { p_user_id: userId })
-      if (debitError) console.error(`DEBIT_ERROR userId=${userId}:`, debitError.message)
-      else console.log(`DEBIT OK userId=${userId}`)
-    } catch (e: any) {
-      console.error(`DEBIT_EXCEPTION userId=${userId}:`, e.message)
-    }
-
     console.log(`🎉 Concluído em ${elapsed()}!`)
     return new Response(
       JSON.stringify({ success: true, questionCount: questionRows.length, flashcardCount: flashcardRows.length }),
@@ -749,7 +786,7 @@ serve(async (req) => {
     )
   } catch (error: any) {
     console.error('❌ Erro fatal:', error.message)
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ error: 'Erro interno ao processar. Tente novamente.' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })

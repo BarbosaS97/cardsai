@@ -504,6 +504,13 @@
       renderGenerations(q ? allGens.filter(g => (g.title || g.pdf_name || '').toLowerCase().includes(q)) : allGens);
     }
 
+    function escHtml(str) {
+      return String(str ?? '')
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
     function renderUsers(users) {
       const tbody = document.getElementById('usersTable');
       if (users.length === 0) {
@@ -516,19 +523,19 @@
       tbody.innerHTML = users.map(u => `
         <tr>
           <td>
-            <p style="font-weight:500;color:var(--text);">${u.full_name || '—'}</p>
-            <p style="font-size:12px;color:var(--text-3);margin-top:2px;">${u.email}</p>
+            <p style="font-weight:500;color:var(--text);">${escHtml(u.full_name || '—')}</p>
+            <p style="font-size:12px;color:var(--text-3);margin-top:2px;">${escHtml(u.email)}</p>
             <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px;">
               ${u.is_admin ? '<span style="font-size:11px;font-weight:600;color:var(--blue);background:var(--blue-bg);padding:2px 8px;border-radius:4px;border:1px solid var(--blue-bd);">ADMIN</span>' : ''}
               ${u.unlimited_access ? '<span style="font-size:11px;font-weight:600;color:#7C3AED;background:#F5F3FF;padding:2px 8px;border-radius:4px;border:1px solid #DDD6FE;">ILIMITADO</span>' : ''}
             </div>
           </td>
-          <td><span style="font-weight:600;color:var(--text);">${u.credits >= 999990 ? '∞' : u.credits}</span></td>
+          <td><span style="font-weight:600;color:var(--text);">${u.credits >= 999990 ? '∞' : Number(u.credits)}</span></td>
           <td style="color:var(--text);font-weight:500;">${gensByUser[u.id] || 0}</td>
           <td style="color:var(--text-3);font-size:12px;">${formatDate(u.created_at)}</td>
           <td>
             <div class="action-btns" style="display:flex;gap:6px;flex-wrap:wrap;">
-              <button onclick="openCreditsModal('${u.id}', '${u.email}', ${u.credits})" class="btn-ghost">Créditos</button>
+              <button onclick="openCreditsModal('${u.id}', ${Number(u.credits)})" class="btn-ghost">Créditos</button>
               <button onclick="viewUserGens('${u.id}')" class="btn-ghost">Gerações</button>
               <button onclick="toggleUnlimited('${u.id}', ${!!u.unlimited_access})" class="btn-ghost" style="${u.unlimited_access ? 'color:#7C3AED;border-color:#DDD6FE;' : ''}">${u.unlimited_access ? 'Rem. ∞' : 'Dar ∞'}</button>
               <button onclick="toggleAdmin('${u.id}', ${!!u.is_admin})" class="btn-ghost" style="${u.is_admin ? 'color:#DC2626;border-color:#FECACA;' : 'color:var(--blue);border-color:#BFDBFE;'}">${u.is_admin ? 'Rem. Admin' : 'Dar Admin'}</button>
@@ -550,12 +557,12 @@
       el.innerHTML = gens.map(g => `
         <div class="gen-card" style="border:1px solid var(--border);border-radius:8px;padding:14px 16px;background:var(--surface);display:flex;align-items:center;justify-content:space-between;gap:12px;">
           <div style="flex:1;min-width:0;">
-            <p style="font-size:14px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${g.title || g.pdf_name || 'Sem título'}</p>
+            <p style="font-size:14px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(g.title || g.pdf_name || 'Sem título')}</p>
             <p style="font-size:12px;color:var(--text-3);margin-top:2px;">
-              ${userMap[g.user_id] || g.user_id} · ${formatDate(g.created_at)}
-              ${g.status === 'completed' ? ` · ${g.question_count || 0}Q · ${g.flashcard_count || 0}FC` : ''}
+              ${escHtml(userMap[g.user_id] || g.user_id)} · ${formatDate(g.created_at)}
+              ${g.status === 'completed' ? ` · ${Number(g.question_count) || 0}Q · ${Number(g.flashcard_count) || 0}FC` : ''}
             </p>
-            ${g.status === 'failed' ? `<p style="font-size:12px;color:#DC2626;margin-top:2px;">${g.error_message || 'Erro'}</p>` : ''}
+            ${g.status === 'failed' ? `<p style="font-size:12px;color:#DC2626;margin-top:2px;">${escHtml(g.error_message || 'Erro')}</p>` : ''}
           </div>
           <div class="gen-actions" style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
             <span class="status-${g.status}">${{completed:'Concluído',processing:'Processando',pending:'Aguardando',failed:'Erro'}[g.status]||g.status}</span>
@@ -571,9 +578,10 @@
       renderGenerations(allGens.filter(g => g.user_id === userId));
     }
 
-    function openCreditsModal(userId, email, currentCredits) {
+    function openCreditsModal(userId, currentCredits) {
       selectedUserId = userId;
-      selectedUserEmail = email;
+      const user = allUsers.find(u => u.id === userId);
+      selectedUserEmail = user?.email ?? '';
       selectedUserCredits = currentCredits;
       document.getElementById('creditsModal').style.display = 'flex';
       document.getElementById('addCreditsInput').value = '';

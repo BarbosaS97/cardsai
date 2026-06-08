@@ -1,4 +1,11 @@
 // ─── Admin Coupons ────────────────────────────────────────────────────────────
+
+function escHtml(str) {
+  return String(str ?? '')
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
 let _coupons       = [];
 let _editingId     = null;
 let _couponsLoaded = false;
@@ -85,8 +92,8 @@ function _couponRow(c) {
   return `
     <tr>
       <td>
-        <span style="font-weight:700;color:var(--text);font-family:monospace;font-size:13px;">${c.code}</span>
-        ${c.description ? `<p style="font-size:11px;color:var(--text-3);margin-top:2px;">${c.description}</p>` : ''}
+        <span style="font-weight:700;color:var(--text);font-family:monospace;font-size:13px;">${escHtml(c.code)}</span>
+        ${c.description ? `<p style="font-size:11px;color:var(--text-3);margin-top:2px;">${escHtml(c.description)}</p>` : ''}
       </td>
       <td style="font-weight:600;color:var(--text);">${discount}</td>
       <td style="color:var(--text);">${uses}

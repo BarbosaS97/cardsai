@@ -1,11 +1,23 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+const ALLOWED_ORIGINS = new Set([
+  'https://cardsquestoes.com.br',
+  'https://www.cardsquestoes.com.br',
+])
+
+function getCorsHeaders(req: Request): Record<string, string> {
+  const origin = req.headers.get('Origin') ?? ''
+  const allowed = ALLOWED_ORIGINS.has(origin) || origin.endsWith('.vercel.app')
+  return {
+    'Access-Control-Allow-Origin': allowed ? origin : 'https://cardsquestoes.com.br',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Vary': 'Origin',
+  }
 }
+
+const MAX_PDF_TEXT_LENGTH = 500_000 // 500 KB de texto
 
 export const timeout = 600000
 
@@ -450,6 +462,8 @@ ${text.substring(0, 14000)}`,
 }
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req)
+
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
@@ -458,7 +472,24 @@ serve(async (req) => {
   const elapsed = () => `${Math.round((Date.now() - startTime) / 1000)}s`
 
   try {
-    const { pdfText, generationId, mode = 'concurso', difficulty = 'medio' } = await req.json()
+    const body = await req.json()
+    const { generationId, mode = 'concurso', difficulty = 'medio' } = body
+    const pdfText = String(body.pdfText ?? '')
+
+    // A-5 (M-5): Limite de tamanho do texto enviado
+    if (pdfText.length > MAX_PDF_TEXT_LENGTH) {
+      return new Response(
+        JSON.stringify({ error: 'Texto muito longo. Máximo: 500.000 caracteres.' }),
+        { status: 413, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      )
+    }
+
+    if (!generationId) {
+      return new Response(JSON.stringify({ error: 'generationId é obrigatório' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
 
     const authHeader = req.headers.get('Authorization') ?? ''
     if (!authHeader.startsWith('Bearer ')) {
@@ -487,11 +518,37 @@ serve(async (req) => {
     }
     const userId = user.id
 
+    // A-4: Valida que o generationId pertence ao usuário autenticado
+    const { data: genOwnership, error: genOwnerErr } = await supabase
+      .from('generations')
+      .select('id')
+      .eq('id', generationId)
+      .eq('user_id', userId)
+      .single()
+
+    if (genOwnerErr || !genOwnership) {
+      return new Response(JSON.stringify({ error: 'Geração não encontrada ou sem permissão' }), {
+        status: 403,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
+    // A-3: Consome crédito ANTES de chamar a DeepSeek (previne TOCTOU)
+    const { data: creditOk, error: creditErr } = await supabase
+      .rpc('consume_credit', { p_user_id: userId })
+
+    if (creditErr || !creditOk) {
+      return new Response(JSON.stringify({ error: 'Créditos insuficientes' }), {
+        status: 402,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
     const config = modeConfig[mode] ?? modeConfig.concurso
     const diffConfig = difficultyConfig[difficulty] ?? difficultyConfig.medio
 
-    const text = cleanText(pdfText ?? '')
-    console.log(`📄 Texto bruto: ${pdfText?.length ?? 0} chars → limpo: ${text.length} chars | modo: ${mode} | userId: ${userId}`)
+    const text = cleanText(pdfText)
+    console.log(`📄 Texto bruto: ${pdfText.length} chars → limpo: ${text.length} chars | modo: ${mode} | userId: ${userId}`)
 
     await supabase.from('generations').update({ status: 'processing' }).eq('id', generationId)
 
@@ -699,21 +756,13 @@ serve(async (req) => {
       console.log(`✅ Geração ${generationId} marcada como completed com sucesso`)
     }
 
-    try {
-      const { error: debitError } = await supabase.rpc('consume_credit', { p_user_id: userId })
-      if (debitError) console.error(`DEBIT_ERROR userId=${userId}:`, debitError.message)
-      else console.log(`DEBIT OK userId=${userId}`)
-    } catch (e: any) {
-      console.error(`DEBIT_EXCEPTION userId=${userId}:`, e.message)
-    }
-
     console.log(`🎉 Concluído em ${elapsed()}!`)
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   } catch (error: any) {
     console.error('❌ Erro fatal:', error.message)
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ error: 'Erro interno ao processar. Tente novamente.' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
