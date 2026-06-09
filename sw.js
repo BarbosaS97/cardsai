@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cardsquestoesai-v3';
+const CACHE_NAME = 'cardsquestoesai-v4';
 
 const PRECACHE_URLS = [
   '/index.html',
@@ -21,13 +21,18 @@ const PRECACHE_URLS = [
   '/static/images/icons/icon-512.png',
 ];
 
-// Domínios que nunca devem passar pelo cache (APIs externas)
+// Domínios que nunca devem passar pelo cache (APIs externas e analytics)
 const BYPASS_DOMAINS = [
   'supabase.co',
   'functions/v1',
   'cdn.jsdelivr.net',
   'cdnjs.cloudflare.com',
   'cdn.tailwindcss.com',
+  'googletagmanager.com',
+  'google-analytics.com',
+  'analytics.google.com',
+  'doubleclick.net',
+  'googlesyndication.com',
 ];
 
 // ── Install: pré-cacheia os assets principais ──────────────────
