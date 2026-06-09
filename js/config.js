@@ -11,3 +11,18 @@ const PIX_STATUS_URL = `${SUPABASE_URL}/functions/v1/pix-status`;
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 window.supabaseClient = db;
+
+// Lock mobile zoom — prevents spontaneous scale increase after page load
+if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+  const _vp = document.querySelector('meta[name="viewport"]');
+  const _vpContent = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
+  if (_vp) _vp.setAttribute('content', _vpContent);
+
+  let _lastW = window.innerWidth;
+  setInterval(() => {
+    if (window.innerWidth !== _lastW) {
+      if (_vp) _vp.setAttribute('content', _vpContent);
+      _lastW = window.innerWidth;
+    }
+  }, 100);
+}
