@@ -197,6 +197,8 @@ window.startCheckout = async function () {
       return;
     }
 
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({ event: 'begin_checkout', payment_method: 'card', credits: _pkg.qty });
     window.location.href = data.url;
 
   } catch (_e) {
@@ -238,6 +240,8 @@ window.startPixCheckout = async function () {
 
     _el('pixBeforeQR')?.classList.add('hidden');
     _el('pixQRSection')?.classList.remove('hidden');
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({ event: 'begin_checkout', payment_method: 'pix', credits: _pkg.qty });
 
     const img = _el('pixQRImage');
     if (img && data.qrCodeImage) img.src = data.qrCodeImage;
@@ -283,6 +287,8 @@ async function _pollPixStatus() {
       _pixCorrelationId = null;
       _el('pixQRSection')?.classList.add('hidden');
       _el('pixSuccess')?.classList.remove('hidden');
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push({ event: 'purchase', payment_method: 'pix', credits: _pkg.qty });
     } else if (data.status === 'expired') {
       clearInterval(_pixPollTimer);
       _pixPollTimer = null;
