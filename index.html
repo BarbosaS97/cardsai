@@ -29,6 +29,14 @@
       --amber-lt:  #FFFBEB;
       --amber-bd:  #FDE68A;
       --violet:    #7C3AED;
+      --surface:   #FAFAF9;
+      --surface-2: #F3F0EC;
+      --blue:      #4F46E5;
+      --blue-bg:   #EEF2FF;
+      --blue-bd:   #C7D2FE;
+      --green:     #15803D;
+      --green-bg:  #F0FDF4;
+      --green-bd:  #BBF7D0;
     }
     [data-theme="dark"] {
       --bg:        #0C0C0F;
@@ -45,6 +53,14 @@
       --amber-lt:  #1C1400;
       --amber-bd:  #78350F;
       --violet:    #8B5CF6;
+      --surface:   #0C0C0F;
+      --surface-2: #111116;
+      --blue:      #6366F1;
+      --blue-bg:   #1E1B4B;
+      --blue-bd:   #3730A3;
+      --green:     #4ADE80;
+      --green-bg:  #052E16;
+      --green-bd:  #166534;
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -741,50 +757,100 @@
       display: flex; align-items: center; justify-content: center;
       padding: 24px;
       background: rgba(12,12,15,.72);
+      backdrop-filter: blur(4px);
     }
     .modal-box {
       background: var(--bg); border: 1px solid var(--border);
-      border-radius: 12px; padding: 28px; width: 100%; max-width: 380px;
+      border-radius: 16px; padding: 28px;
+      width: 100%; max-width: 420px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.2);
     }
     .modal-header {
       display: flex; align-items: flex-start;
       justify-content: space-between; gap: 12px;
-      padding-bottom: 16px; margin-bottom: 20px;
-      border-bottom: 1px solid var(--border);
+      margin-bottom: 20px;
     }
-    .modal-title { font-size: 15px; font-weight: 700; color: var(--text); }
-    .modal-subtitle { font-size: 13px; color: var(--text-3); margin-top: 3px; }
+    .modal-title { font-size: 17px; font-weight: 700; color: var(--text); }
+    .modal-subtitle { font-size: 13px; color: var(--text-2); margin-top: 3px; }
     .modal-close {
-      background: none; border: none; font-size: 18px;
-      color: var(--text-3); cursor: pointer; padding: 0;
-      transition: color .15s; line-height: 1;
+      background: none; border: none; font-size: 20px;
+      color: var(--text-3); line-height: 1;
+      transition: color .15s; cursor: pointer; padding: 2px;
+      flex-shrink: 0;
     }
     .modal-close:hover { color: var(--text); }
-    .modal-notice {
-      border-left: 2px solid var(--accent);
-      padding: 8px 12px; margin-bottom: 20px;
+
+    .modal-summary {
+      background: var(--bg-alt); border: 1px solid var(--border);
+      border-radius: 10px; padding: 14px 16px; margin-bottom: 22px;
     }
-    .modal-notice-title { font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
-    .modal-notice-body { font-size: 12px; color: var(--text-2); line-height: 1.6; }
-    .modal-facts { margin-bottom: 20px; }
-    .modal-fact { font-size: 13px; color: var(--text-2); padding: 3px 0; }
-    .modal-fact::before { content: '—'; color: var(--text-3); margin-right: 8px; }
-    .modal-actions {
-      display: flex; align-items: center; gap: 24px;
-      padding-top: 16px; border-top: 1px solid var(--border);
+    .modal-summary-row {
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 13px; color: var(--text-2); padding: 3px 0;
     }
-    .btn-m-sec {
-      font-size: 13px; color: var(--text-3);
-      background: none; border: none; cursor: pointer;
-      font-family: inherit; padding: 0; transition: color .15s;
+    .modal-summary-row strong { color: var(--text); font-weight: 600; }
+    .modal-summary-divider { border: none; border-top: 1px solid var(--border); margin: 8px 0; }
+    .modal-summary-total {
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 14px; font-weight: 600; color: var(--text); padding: 3px 0;
     }
-    .btn-m-sec:hover { color: var(--text); }
-    .btn-m-pri {
-      font-size: 13px; font-weight: 600; color: var(--accent);
-      background: none; border: none; cursor: pointer;
-      font-family: inherit; text-decoration: none; transition: opacity .15s;
+    .modal-summary-total span { color: var(--blue); font-size: 18px; font-weight: 800; }
+
+    .modal-actions { display: flex; gap: 10px; }
+    .btn-modal-ghost {
+      flex: 1; padding: 11px 0;
+      border-radius: 9px; border: 1px solid var(--border);
+      background: transparent; color: var(--text-2);
+      font-size: 13px; font-weight: 600;
+      transition: background .15s, color .15s; cursor: pointer;
     }
-    .btn-m-pri:hover { opacity: .72; }
+    .btn-modal-ghost:hover { background: var(--bg-alt); color: var(--text); }
+    .btn-modal-primary {
+      flex: 2; padding: 11px 0;
+      border-radius: 9px; border: none;
+      background: var(--blue); color: #fff;
+      font-size: 13px; font-weight: 600;
+      transition: opacity .15s; cursor: pointer;
+      text-align: center;
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      text-decoration: none;
+    }
+    .btn-modal-primary:hover { opacity: .88; }
+
+    .payment-tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+    .payment-tab {
+      flex: 1; padding: 10px 8px;
+      border-radius: 9px; border: 1px solid var(--border);
+      background: transparent; color: var(--text-2);
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      transition: all .15s;
+    }
+    .payment-tab:hover { background: var(--bg-alt); color: var(--text); }
+    .payment-tab.pm-active {
+      background: var(--accent-bg); color: var(--accent);
+      border-color: var(--accent-bd);
+    }
+
+    .pix-qr-box { text-align: center; padding: 16px 0 8px; }
+    .pix-qr-box img { width: 180px; height: 180px; border-radius: 10px; border: 1px solid var(--border); }
+    .pix-code {
+      font-size: 11px; color: var(--text-3); word-break: break-all;
+      background: var(--bg-alt); border: 1px solid var(--border);
+      border-radius: 7px; padding: 9px 12px; margin: 10px 0;
+      max-height: 52px; overflow: hidden;
+      font-family: monospace; line-height: 1.4; cursor: pointer;
+    }
+    .pix-expiry { font-size: 12px; color: var(--text-3); text-align: center; margin-bottom: 12px; }
+    .pix-success-box { text-align: center; padding: 20px 0; }
+    .pix-success-icon {
+      width: 48px; height: 48px; border-radius: 50%;
+      background: var(--green-bg); border: 1px solid var(--green-bd);
+      display: inline-flex; align-items: center; justify-content: center;
+      color: var(--green); margin-bottom: 12px;
+    }
+    .pix-success-title { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+    .pix-success-desc { font-size: 13px; color: var(--text-2); margin-bottom: 18px; }
 
     /* ── Hero card carousel ─────────────────────────────────── */
     .hv-card { transition: opacity .22s ease, transform .22s ease; }
@@ -882,8 +948,9 @@
       .cta-box { padding: 40px 28px; border-radius: 16px; }
       .footer-inner { flex-direction: column; align-items: flex-start; }
       .modal-backdrop { padding: 0; align-items: flex-end; }
-      .modal-box { max-width: 100%; border-radius: 12px 12px 0 0; padding-bottom: 36px; }
-      .modal-actions { flex-direction: column; align-items: flex-start; gap: 14px; }
+      .modal-box { max-width: 100%; border-radius: 18px 18px 0 0; padding: 24px 18px 32px; }
+      .modal-actions { flex-direction: column; }
+      .btn-modal-primary, .btn-modal-ghost { flex: unset; width: 100%; padding: 13px; }
       .sf-section { padding: 56px 0; }
       .sf-stat-grid { grid-template-columns: repeat(2,1fr); }
     }
@@ -1300,7 +1367,7 @@
         <p class="plan-qty">5 gerações</p>
         <p class="plan-price">R$ 14,90</p>
         <p class="plan-per">R$ 2,98 por geração</p>
-        <button class="plan-btn plan-btn-ghost" onclick="openModal(5, 'R$ 14,90')">Comprar</button>
+        <button class="plan-btn plan-btn-ghost" onclick="openModal(5,'R$ 14,90','R$ 2,98',null,'price_1TgQkBIdpN6XOWwT9s2kbkQa')">Comprar</button>
       </div>
 
       <!-- 10 créditos — destaque -->
@@ -1310,7 +1377,7 @@
         <p class="plan-qty">10 gerações</p>
         <p class="plan-price">R$ 24,90</p>
         <p class="plan-per">R$ 2,49 por geração</p>
-        <button class="plan-btn plan-btn-accent" onclick="openModal(10, 'R$ 24,90')">Comprar</button>
+        <button class="plan-btn plan-btn-accent" onclick="openModal(10,'R$ 24,90','R$ 2,49','16%','price_1TgQkBIdpN6XOWwTTWoqbHri')">Comprar</button>
       </div>
 
       <!-- 20 créditos -->
@@ -1319,7 +1386,7 @@
         <p class="plan-qty">20 gerações</p>
         <p class="plan-price">R$ 39,90</p>
         <p class="plan-per">R$ 2,00 por geração</p>
-        <button class="plan-btn plan-btn-ghost" onclick="openModal(20, 'R$ 39,90')">Comprar</button>
+        <button class="plan-btn plan-btn-ghost" onclick="openModal(20,'R$ 39,90','R$ 2,00','33%','price_1TgQkBIdpN6XOWwTaHhFmuo0')">Comprar</button>
       </div>
 
       <!-- 50 créditos -->
@@ -1328,7 +1395,7 @@
         <p class="plan-qty">50 gerações</p>
         <p class="plan-price">R$ 79,90</p>
         <p class="plan-per">R$ 1,60 por geração</p>
-        <button class="plan-btn plan-btn-ghost" onclick="openModal(50, 'R$ 79,90')">Comprar</button>
+        <button class="plan-btn plan-btn-ghost" onclick="openModal(50,'R$ 79,90','R$ 1,60','46%','price_1TgQkBIdpN6XOWwTkLrqZFnd')">Comprar</button>
       </div>
 
     </div>
@@ -1383,23 +1450,173 @@
       </div>
       <button class="modal-close" onclick="closeModal()">&#x2715;</button>
     </div>
-    <div class="modal-notice">
-      <p class="modal-notice-title">Integração de pagamento pendente</p>
-      <p class="modal-notice-body">Configure o Stripe ou PagSeguro e adicione os links de checkout. Por enquanto, entre em contato — o admin adiciona os créditos manualmente.</p>
+
+    <!-- Estado: verificando sessão -->
+    <div id="modalLoading" style="text-align:center;padding:32px 0;">
+      <p style="font-size:13px;color:var(--text-3);">Verificando sessão…</p>
     </div>
-    <div class="modal-facts">
-      <p class="modal-fact">Pagamento único, sem assinatura</p>
-      <p class="modal-fact">Créditos não expiram</p>
-      <p class="modal-fact">Falha na geração = sem débito</p>
+
+    <!-- Estado: login necessário -->
+    <div id="loginRequiredSection" class="hidden" style="text-align:center;padding:12px 0 20px;">
+      <div style="width:48px;height:48px;border-radius:50%;background:var(--accent-bg);border:1px solid var(--accent-bd);display:inline-flex;align-items:center;justify-content:center;color:var(--accent);margin-bottom:14px;">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+      </div>
+      <p style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px;">Faça login para comprar</p>
+      <p style="font-size:13px;color:var(--text-2);margin-bottom:22px;line-height:1.6;">Para comprar créditos você precisa ter uma conta.<br>É grátis para criar!</p>
+      <a href="/register.html" class="btn-modal-primary" style="width:100%;justify-content:center;display:inline-flex;text-decoration:none;margin-bottom:8px;box-sizing:border-box;">
+        Criar conta gratuita
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M12 5l7 7-7 7"/>
+        </svg>
+      </a>
+      <a href="/login.html" class="btn-modal-ghost" style="width:100%;text-align:center;display:block;text-decoration:none;box-sizing:border-box;">Já tenho conta — Entrar</a>
     </div>
-    <div class="modal-actions">
-      <button class="btn-m-sec" onclick="closeModal()">Fechar</button>
-      <a href="mailto:contato@cardsquestoesai.com?subject=Compra de Créditos CardsQuestõesAI" class="btn-m-pri">Entrar em contato →</a>
-    </div>
+
+    <!-- Conteúdo de pagamento (exibido apenas se logado) -->
+    <div id="paymentContent" class="hidden">
+
+      <!-- Resumo do pacote -->
+      <div class="modal-summary">
+        <div class="modal-summary-row">
+          <span>Gerações incluídas</span>
+          <strong id="mQty">—</strong>
+        </div>
+        <div class="modal-summary-row">
+          <span>Questões geradas</span>
+          <strong id="mQuestions">—</strong>
+        </div>
+        <div class="modal-summary-row">
+          <span>Flashcards gerados</span>
+          <strong id="mFlashcards">—</strong>
+        </div>
+        <hr class="modal-summary-divider" />
+        <div class="modal-summary-row">
+          <span>Preço</span>
+          <strong id="mOriginalPrice">—</strong>
+        </div>
+        <div id="mDiscountRow" class="modal-summary-row hidden" style="color:var(--green);">
+          <span id="mDiscountLabel">Desconto (cupom)</span>
+          <strong id="mDiscountValue" style="color:var(--green);">—</strong>
+        </div>
+        <div class="modal-summary-total">
+          <span>Total</span>
+          <span id="mPrice">—</span>
+        </div>
+      </div>
+
+      <!-- Cupom -->
+      <div style="margin-bottom:20px;">
+        <label style="display:block;font-size:11px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Cupom de desconto</label>
+        <div style="display:flex;gap:8px;">
+          <input id="couponInput" type="text" placeholder="Ex: AMIGO10"
+            style="flex:1;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);background:var(--bg);outline:none;text-transform:uppercase;font-family:inherit;transition:border-color .15s;"
+            onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--border)'"
+            onkeydown="if(event.key==='Enter')applyCoupon()" />
+          <button id="btnApplyCoupon" onclick="applyCoupon()"
+            style="padding:9px 16px;border-radius:8px;border:1px solid var(--border);background:var(--bg-alt);color:var(--text);font-size:13px;font-weight:600;cursor:pointer;flex-shrink:0;transition:background .15s;"
+            onmouseover="this.style.background='var(--blue)';this.style.color='#fff';this.style.borderColor='var(--blue)'"
+            onmouseout="this.style.background='var(--bg-alt)';this.style.color='var(--text)';this.style.borderColor='var(--border)'">
+            Aplicar
+          </button>
+        </div>
+        <div id="couponApplied" class="hidden" style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px;padding:8px 12px;background:var(--green-bg);border:1px solid var(--green-bd);border-radius:8px;font-size:12px;color:var(--green);">
+          <span id="couponAppliedText"></span>
+          <button onclick="removeCoupon()" style="background:none;border:none;color:var(--green);cursor:pointer;font-size:16px;line-height:1;padding:0;" title="Remover cupom">×</button>
+        </div>
+        <div id="couponError" class="hidden" style="margin-top:8px;padding:8px 12px;background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;font-size:12px;color:#DC2626;"></div>
+      </div>
+
+      <!-- Forma de pagamento -->
+      <p style="font-size:11px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px;">Forma de pagamento</p>
+      <div class="payment-tabs">
+        <button id="tabCard" class="payment-tab pm-active" onclick="selectPaymentMethod('card')">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+            <line x1="1" y1="10" x2="23" y2="10"/>
+          </svg>
+          Cartão de Crédito
+        </button>
+        <button id="tabPix" class="payment-tab" onclick="selectPaymentMethod('pix')">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+          </svg>
+          PIX
+        </button>
+      </div>
+
+      <!-- Seção Cartão -->
+      <div id="sectionCard" class="modal-actions">
+        <button class="btn-modal-ghost" onclick="closeModal()">Cancelar</button>
+        <button id="btnCheckout" onclick="startCheckout()" class="btn-modal-primary">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+          Pagar com Cartão
+        </button>
+      </div>
+
+      <!-- Seção PIX -->
+      <div id="sectionPix" class="hidden">
+        <!-- Antes de gerar QR -->
+        <div id="pixBeforeQR" class="modal-actions">
+          <button class="btn-modal-ghost" onclick="closeModal()">Cancelar</button>
+          <button id="btnPixGenerate" onclick="startPixCheckout()" class="btn-modal-primary">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+              <rect x="3" y="14" width="7" height="7"/>
+              <path stroke-linecap="round" d="M14 14h3v3m0 4h4m-4 0v-4m-3 0h3"/>
+            </svg>
+            Gerar QR Code PIX
+          </button>
+        </div>
+
+        <!-- QR Code -->
+        <div id="pixQRSection" class="hidden">
+          <div class="pix-qr-box">
+            <img id="pixQRImage" alt="QR Code PIX" onerror="this.style.display='none'" />
+          </div>
+          <div class="pix-code" id="pixBrCode" onclick="copyPixCode()" title="Clique para copiar"></div>
+          <div class="pix-expiry" id="pixExpiry"></div>
+          <button onclick="copyPixCode()" class="btn-modal-primary" style="width:100%;margin-bottom:10px;">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+            </svg>
+            Copiar código PIX
+          </button>
+          <p style="font-size:12px;color:var(--text-3);text-align:center;margin-bottom:10px;">
+            Aguardando confirmação do pagamento…
+          </p>
+          <button onclick="closeModal()" class="btn-modal-ghost" style="width:100%;">Fechar (verificar depois)</button>
+        </div>
+
+        <!-- Sucesso PIX -->
+        <div id="pixSuccess" class="hidden">
+          <div class="pix-success-box">
+            <div class="pix-success-icon">
+              <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+              </svg>
+            </div>
+            <p class="pix-success-title">Pagamento confirmado!</p>
+            <p class="pix-success-desc">Seus créditos foram adicionados à conta.</p>
+            <button onclick="closeModal();" class="btn-modal-primary" style="width:100%;">Fechar</button>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /paymentContent -->
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/js/config.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/credits.js"></script>
 <script>
   /* ── Dark mode ───────────────────────────────────────────── */
   (function () {
@@ -1428,14 +1645,40 @@
   });
 
   /* ── Modal ───────────────────────────────────────────────── */
-  window.openModal = function (qty, price) {
+  window.openModal = async function (qty, price, perGen, savings, priceId) {
     document.getElementById('modalTitle').textContent = 'Pacote de ' + qty + ' gerações';
-    document.getElementById('modalSubtitle').textContent = qty + ' gerações por ' + price;
+    document.getElementById('modalSubtitle').textContent =
+      price + ' · ' + perGen + '/geração' + (savings ? ' · economize ' + savings : '');
+
+    document.getElementById('modalLoading').classList.remove('hidden');
+    document.getElementById('loginRequiredSection').classList.add('hidden');
+    document.getElementById('paymentContent').classList.add('hidden');
     document.getElementById('paymentModal').classList.remove('hidden');
     document.body.style.overflow = 'hidden';
+
+    const { data: { session } } = await db.auth.getSession();
+    document.getElementById('modalLoading').classList.add('hidden');
+
+    if (!session) {
+      document.getElementById('loginRequiredSection').classList.remove('hidden');
+      return;
+    }
+
+    document.getElementById('mQty').textContent = qty + ' gerações';
+    document.getElementById('mQuestions').textContent = (qty * 50).toLocaleString('pt-BR') + ' questões';
+    document.getElementById('mFlashcards').textContent = (qty * 100).toLocaleString('pt-BR') + ' flashcards';
+
+    const priceRaw = parseFloat(price.replace('R$', '').trim().replace(',', '.'));
+    initCouponModal(qty, priceRaw, price, priceId);
+
+    const btn = document.getElementById('btnCheckout');
+    if (btn) { btn.disabled = false; btn.textContent = 'Pagar com Cartão'; }
+
+    document.getElementById('paymentContent').classList.remove('hidden');
   };
 
   window.closeModal = function () {
+    if (typeof cleanupPixPolling === 'function') cleanupPixPolling();
     document.getElementById('paymentModal').classList.add('hidden');
     document.body.style.overflow = '';
   };
