@@ -1,0 +1,19 @@
+User-agent: *
+Allow: /
+Allow: /pricing
+Allow: /register
+Allow: /login
+Allow: /privacidade
+Allow: /termos
+
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /upload
+Disallow: /results
+Disallow: /anotacoes
+Disallow: /estatisticas
+Disallow: /criacoes
+Disallow: /forgot-password
+Disallow: /reset-password
+
+Sitemap: https://cardsquestoes.com.br/sitemap.xml
