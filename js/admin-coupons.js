@@ -104,7 +104,7 @@ function _couponRow(c) {
       <td><span class="${statusClass}">${statusLabel}</span></td>
       <td>
         <div style="display:flex;gap:6px;flex-wrap:wrap;">
-          <button onclick="openCouponModal(${JSON.stringify(JSON.stringify(c))})" class="btn-ghost">Editar</button>
+          <button onclick="openCouponModal('${c.id}')" class="btn-ghost">Editar</button>
           ${canToggle
             ? `<button onclick="toggleCouponActive('${c.id}',${c.is_active})" class="btn-ghost" style="${c.is_active ? 'color:#D97706;border-color:#FDE68A;' : 'color:var(--green);border-color:var(--green-bd);'}">${c.is_active ? 'Pausar' : 'Ativar'}</button>`
             : ''}
@@ -116,8 +116,8 @@ function _couponRow(c) {
 
 // ─── Modal create / edit ──────────────────────────────────────────────────────
 
-window.openCouponModal = function (couponJson) {
-  const coupon = couponJson ? JSON.parse(couponJson) : null;
+window.openCouponModal = function (couponId) {
+  const coupon = couponId ? _coupons.find(c => c.id === couponId) : null;
   _editingId   = coupon?.id ?? null;
 
   const modal   = document.getElementById('couponModal');
