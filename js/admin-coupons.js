@@ -16,10 +16,7 @@ window.loadCoupons = async function () {
   const wrap = document.getElementById('couponsTableWrap');
   if (wrap) wrap.innerHTML = '<p style="color:var(--text-3);padding:24px;text-align:center;">Carregando…</p>';
 
-  const { data, error } = await db
-    .from('coupons')
-    .select('*')
-    .order('created_at', { ascending: false });
+  const { data, error } = await db.rpc('get_all_coupons');
 
   if (error) {
     showToast('Erro ao carregar cupons: ' + error.message);

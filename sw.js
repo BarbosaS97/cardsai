@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cardsquestoesai-v2';
+const CACHE_NAME = 'cardsquestoesai-v3';
 
 const PRECACHE_URLS = [
   '/index.html',
