@@ -219,9 +219,7 @@ window.toggleCouponActive = async function (id, isActive) {
   const label = isActive ? 'pausar' : 'ativar';
   if (!confirm(`Deseja ${label} este cupom?`)) return;
 
-  const { error } = await db.from('coupons')
-    .update({ is_active: !isActive })
-    .eq('id', id);
+  const { error } = await db.rpc('toggle_coupon_active', { p_id: id, p_value: !isActive });
 
   if (error) { showToast('Erro: ' + error.message); return; }
   showToast(isActive ? 'Cupom pausado.' : 'Cupom ativado!', 'success');
