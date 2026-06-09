@@ -96,7 +96,7 @@
       align-items: start;
     }
     @media (max-width: 780px) {
-      .main-grid { grid-template-columns: 1fr; }
+      .main-grid { grid-template-columns: 1fr; gap: 12px; }
     }
 
     /* ── Header ─────────────────────────────────────────────── */
@@ -326,18 +326,12 @@
       gap: 8px; margin-bottom: 20px;
     }
     @media (max-width: 640px) {
-      .source-options { grid-template-columns: 1fr; gap: 8px; }
-      .source-option {
-        flex-direction: row;
-        align-items: center;
-        justify-content: flex-start;
-        padding: 12px 16px;
-        text-align: left;
-        gap: 12px;
-      }
-      .source-opt-icon { width: 34px; height: 34px; flex-shrink: 0; }
-      .source-opt-label { font-size: 13px; font-weight: 600; }
-      .source-opt-badge { margin-left: auto; }
+      /* Keep 3-column grid — stacking to 1 col adds ~200px of unused vertical space */
+      .source-options { gap: 6px; margin-bottom: 14px; }
+      .source-option { padding: 10px 6px; gap: 5px; }
+      .source-opt-icon { width: 28px; height: 28px; }
+      .source-opt-label { font-size: 10px; }
+      .source-opt-badge { display: none; }
     }
     @media (max-width: 780px) and (min-width: 641px) {
       .source-option { padding: 12px 8px 10px; }
@@ -623,8 +617,9 @@
       .credits-pill { font-size: 11px; padding: 3px 8px; }
       .credits-pill span { max-width: 70px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
       .upload-card { padding: 14px; }
-      .drop-zone { padding: 28px 14px; min-height: 170px; }
-      #textInputArea textarea { min-height: 200px; }
+      .drop-zone { padding: 18px 14px; min-height: 130px; }
+      #textInputArea textarea { min-height: 150px; }
+      .mode-detail-box { padding: 8px 10px; font-size: 11px; }
       .gen-card { padding: 12px; }
       .gen-card-title { font-size: 13px; }
       .credits-row { flex-wrap: wrap; gap: 6px; }
@@ -636,13 +631,15 @@
     @media (max-width: 380px) {
       .logo { font-size: 13px; }
       .btn-icon { padding: 5px; }
-      .source-options { gap: 5px; }
-      .source-option { padding: 11px 14px; gap: 10px; }
+      .source-options { gap: 4px; }
+      .source-option { padding: 8px 4px; }
+      .mode-detail-box { display: none; }
     }
 
     /* Prevent iOS Safari auto-zoom on input focus (requires font-size ≥ 16px) */
     @media (hover: none) and (pointer: coarse) {
       input, textarea, select { font-size: 16px !important; }
+      textarea { resize: none !important; }
     }
 
     /* ── Validation hints ──────────────────────────────────── */
