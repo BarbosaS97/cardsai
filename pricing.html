@@ -485,7 +485,7 @@
         <div class="pkg-price">R$ 14,90</div>
         <div class="pkg-per">R$ 2,98 por geração</div>
         <span class="pkg-spacer"></span>
-        <button class="btn-buy" onclick="openModal(5,'R$ 14,90','R$ 2,98',null)">Comprar</button>
+        <button class="btn-buy" onclick="openModal(5,'R$ 14,90','R$ 2,98',null,'price_1TgQkBIdpN6XOWwT9s2kbkQa')">Comprar</button>
       </div>
 
       <!-- 10 gerações — destaque -->
@@ -496,7 +496,7 @@
         <div class="pkg-price">R$ 24,90</div>
         <div class="pkg-per">R$ 2,49 por geração</div>
         <span class="pkg-savings">Economize 16%</span>
-        <button class="btn-buy btn-buy-primary" onclick="openModal(10,'R$ 24,90','R$ 2,49','16%')">Comprar</button>
+        <button class="btn-buy btn-buy-primary" onclick="openModal(10,'R$ 24,90','R$ 2,49','16%','price_1TgQkBIdpN6XOWwTTWoqbHri')">Comprar</button>
       </div>
 
       <!-- 20 gerações -->
@@ -506,7 +506,7 @@
         <div class="pkg-price">R$ 39,90</div>
         <div class="pkg-per">R$ 2,00 por geração</div>
         <span class="pkg-savings">Economize 33%</span>
-        <button class="btn-buy" onclick="openModal(20,'R$ 39,90','R$ 2,00','33%')">Comprar</button>
+        <button class="btn-buy" onclick="openModal(20,'R$ 39,90','R$ 2,00','33%','price_1TgQkBIdpN6XOWwTaHhFmuo0')">Comprar</button>
       </div>
 
       <!-- 50 gerações -->
@@ -516,7 +516,7 @@
         <div class="pkg-price">R$ 79,90</div>
         <div class="pkg-per">R$ 1,60 por geração</div>
         <span class="pkg-savings">Economize 46%</span>
-        <button class="btn-buy" onclick="openModal(50,'R$ 79,90','R$ 1,60','46%')">Comprar</button>
+        <button class="btn-buy" onclick="openModal(50,'R$ 79,90','R$ 1,60','46%','price_1TgQkBIdpN6XOWwTkLrqZFnd')">Comprar</button>
       </div>
 
     </div>
@@ -570,7 +570,7 @@
       </div>
       <div class="faq-item">
         <p class="faq-q">Como recebo os créditos após o pagamento?</p>
-        <p class="faq-a">Após confirmarmos o pagamento, os créditos são adicionados à sua conta em até 30 minutos.</p>
+        <p class="faq-a">Automaticamente. O Stripe nos notifica em tempo real e os créditos são adicionados à sua conta em segundos após a confirmação.</p>
       </div>
     </div>
 
@@ -651,27 +651,28 @@
       <div class="modal-step">
         <div class="step-num">2</div>
         <div>
-          <div class="step-title">Entre em contato</div>
-          <div class="step-desc">Envie sua solicitação por e-mail para finalizar o pagamento</div>
+          <div class="step-title">Pague com segurança</div>
+          <div class="step-desc">Cartão de crédito ou Pix via Stripe — ambiente criptografado</div>
         </div>
       </div>
       <div class="modal-step">
         <div class="step-num">3</div>
         <div>
-          <div class="step-title">Receba os créditos</div>
-          <div class="step-desc">Créditos adicionados à conta em até 30 minutos após confirmação</div>
+          <div class="step-title">Créditos automáticos</div>
+          <div class="step-desc">Adicionados à sua conta em segundos após a confirmação do pagamento</div>
         </div>
       </div>
     </div>
 
     <div class="modal-actions">
       <button class="btn-modal-ghost" onclick="closeModal()">Cancelar</button>
-      <a id="modalEmailBtn" href="#" class="btn-modal-primary">
+      <button id="btnCheckout" onclick="startCheckout()" class="btn-modal-primary">
         <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+          <path stroke-linecap="round" stroke-linejoin="round" d="M7 11V7a5 5 0 0 1 10 0v4"/>
         </svg>
-        Solicitar por e-mail
-      </a>
+        Pagar com Stripe
+      </button>
     </div>
   </div>
 </div>
@@ -705,6 +706,15 @@
 
   /* ── Init ── */
   async function init() {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('success') === 'true') {
+      showToast('Pagamento confirmado! Seus créditos foram adicionados.', 'success');
+      history.replaceState({}, '', window.location.pathname);
+    } else if (params.get('canceled') === 'true') {
+      showToast('Pagamento cancelado. Nenhum crédito foi alterado.', 'info');
+      history.replaceState({}, '', window.location.pathname);
+    }
+
     const session = await requireAuth();
     if (!session) return;
     const profile = await getProfile();
@@ -719,7 +729,7 @@
   }
 
   /* ── Modal ── */
-  window.openModal = function (qty, price, perGen, savings) {
+  window.openModal = function (qty, price, perGen, savings, priceId) {
     document.getElementById('modalTitle').textContent = 'Pacote de ' + qty + ' gerações';
     document.getElementById('modalSubtitle').textContent =
       price + ' · ' + perGen + '/geração' + (savings ? ' · ' + savings + ' de desconto' : '');
@@ -729,19 +739,11 @@
     document.getElementById('stepPackage').textContent =
       qty + ' gerações por ' + price + ' (' + perGen + '/geração)';
 
-    // Inicializa sistema de cupom (credits.js) com preço raw para cálculo
     const priceRaw = parseFloat(price.replace('R$', '').trim().replace(',', '.'));
-    if (typeof initCouponModal === 'function') {
-      initCouponModal(qty, priceRaw, price);
-    } else {
-      // Fallback se credits.js não carregou
-      document.getElementById('mOriginalPrice').textContent = price;
-      document.getElementById('mPrice').textContent = price;
-      document.getElementById('mDiscountRow').classList.add('hidden');
-      const subject = encodeURIComponent('Compra de Créditos — ' + qty + ' gerações (' + price + ')');
-      const body = encodeURIComponent('Olá!\n\nGostaria de adquirir o pacote de ' + qty + ' gerações por ' + price + '.\n\nMeu e-mail de conta: [informe seu e-mail aqui]');
-      document.getElementById('modalEmailBtn').href = 'mailto:contato@cardsquestoes.com.br?subject=' + subject + '&body=' + body;
-    }
+    initCouponModal(qty, priceRaw, price, priceId);
+
+    const btn = document.getElementById('btnCheckout');
+    if (btn) { btn.disabled = false; btn.textContent = 'Pagar com Stripe'; }
 
     document.getElementById('paymentModal').classList.remove('hidden');
     document.body.style.overflow = 'hidden';

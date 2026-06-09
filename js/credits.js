@@ -1,5 +1,5 @@
-// ─── Coupon state ────────────────────────────────────────────────────────────
-let _pkg = { qty: 0, priceRaw: 0, priceStr: '' };
+// ─── State ───────────────────────────────────────────────────────────────────
+let _pkg = { qty: 0, priceRaw: 0, priceStr: '', priceId: '' };
 let _coupon = null;
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -7,13 +7,13 @@ function _brl(value) {
   return 'R$ ' + value.toFixed(2).replace('.', ',');
 }
 
-function _couponEl(id) {
+function _el(id) {
   return document.getElementById(id);
 }
 
 function _setCouponMsg(msg, type) {
-  const err = _couponEl('couponError');
-  const ok  = _couponEl('couponApplied');
+  const err = _el('couponError');
+  const ok  = _el('couponApplied');
   if (!err || !ok) return;
   if (type === 'error') {
     err.textContent = msg;
@@ -27,28 +27,25 @@ function _setCouponMsg(msg, type) {
 }
 
 function _clearCouponMsg() {
-  const err = _couponEl('couponError');
-  const ok  = _couponEl('couponApplied');
+  const err = _el('couponError');
+  const ok  = _el('couponApplied');
   if (err) err.classList.add('hidden');
   if (ok)  ok.classList.add('hidden');
 }
 
 function _updatePricing() {
-  const mOrig     = _couponEl('mOriginalPrice');
-  const mDRow     = _couponEl('mDiscountRow');
-  const mDLabel   = _couponEl('mDiscountLabel');
-  const mDValue   = _couponEl('mDiscountValue');
-  const mTotal    = _couponEl('mPrice');
-  const emailBtn  = _couponEl('modalEmailBtn');
+  const mOrig   = _el('mOriginalPrice');
+  const mDRow   = _el('mDiscountRow');
+  const mDLabel = _el('mDiscountLabel');
+  const mDValue = _el('mDiscountValue');
+  const mTotal  = _el('mPrice');
 
   if (!mTotal) return;
-
   if (mOrig) mOrig.textContent = _pkg.priceStr;
 
   if (!_coupon) {
     if (mDRow) mDRow.classList.add('hidden');
     mTotal.textContent = _pkg.priceStr;
-    _resetEmailBtn(_pkg.priceRaw, null);
     return;
   }
 
@@ -66,60 +63,27 @@ function _updatePricing() {
   if (mDValue) mDValue.textContent = '−' + _brl(discount);
   if (mDRow)   mDRow.classList.remove('hidden');
   mTotal.textContent = _brl(finalPrice);
-
-  _resetEmailBtn(finalPrice, discount);
-}
-
-function _resetEmailBtn(finalPrice, discount) {
-  const btn = _couponEl('modalEmailBtn');
-  if (!btn) return;
-
-  const qty  = _pkg.qty;
-  let subject, body;
-
-  if (_coupon && discount !== null) {
-    subject = encodeURIComponent(
-      `Compra de Créditos — ${qty} gerações (${_brl(finalPrice)} com cupom ${_coupon.code})`
-    );
-    body = encodeURIComponent(
-      `Olá!\n\nGostaria de adquirir o pacote de ${qty} gerações.\n\n` +
-      `Cupom: ${_coupon.code}\n` +
-      `Preço original: ${_pkg.priceStr}\n` +
-      `Desconto: −${_brl(discount)}\n` +
-      `Total: ${_brl(finalPrice)}\n\n` +
-      `Meu e-mail de conta: [informe seu e-mail aqui]`
-    );
-  } else {
-    subject = encodeURIComponent(`Compra de Créditos — ${qty} gerações (${_pkg.priceStr})`);
-    body = encodeURIComponent(
-      `Olá!\n\nGostaria de adquirir o pacote de ${qty} gerações por ${_pkg.priceStr}.\n\n` +
-      `Meu e-mail de conta: [informe seu e-mail aqui]`
-    );
-  }
-
-  btn.href = `mailto:contato@cardsquestoes.com.br?subject=${subject}&body=${body}`;
 }
 
 // ─── API pública ─────────────────────────────────────────────────────────────
 
-// Chamada pelo openModal() em pricing.html ao abrir o modal
-window.initCouponModal = function (qty, priceRaw, priceStr) {
-  _pkg    = { qty, priceRaw, priceStr };
+window.initCouponModal = function (qty, priceRaw, priceStr, priceId) {
+  _pkg    = { qty, priceRaw, priceStr, priceId };
   _coupon = null;
 
-  const input = _couponEl('couponInput');
+  const input = _el('couponInput');
   if (input) input.value = '';
   _clearCouponMsg();
   _updatePricing();
 };
 
 window.applyCoupon = async function () {
-  const input = _couponEl('couponInput');
+  const input = _el('couponInput');
   const code  = (input?.value || '').trim().toUpperCase();
   if (!code) return;
 
-  const btn = _couponEl('btnApplyCoupon');
-  if (btn) setLoading(btn, true, 'Verificando…');
+  const btn = _el('btnApplyCoupon');
+  if (btn) { btn.disabled = true; btn.textContent = 'Verificando…'; }
   _clearCouponMsg();
 
   try {
@@ -136,7 +100,7 @@ window.applyCoupon = async function () {
     });
 
     const result = await res.json();
-    if (btn) setLoading(btn, false);
+    if (btn) { btn.disabled = false; btn.textContent = 'Aplicar'; }
 
     if (!result.valid) {
       _setCouponMsg(result.error || 'Cupom inválido', 'error');
@@ -152,15 +116,52 @@ window.applyCoupon = async function () {
     _setCouponMsg(`Cupom "${result.code}" aplicado! Desconto de ${pct}`, 'ok');
 
   } catch (_e) {
-    if (btn) setLoading(btn, false);
+    if (btn) { btn.disabled = false; btn.textContent = 'Aplicar'; }
     _setCouponMsg('Erro ao validar cupom. Tente novamente.', 'error');
   }
 };
 
 window.removeCoupon = function () {
   _coupon = null;
-  const input = _couponEl('couponInput');
+  const input = _el('couponInput');
   if (input) input.value = '';
   _clearCouponMsg();
   _updatePricing();
+};
+
+window.startCheckout = async function () {
+  const btn = _el('btnCheckout');
+  if (btn) { btn.disabled = true; btn.textContent = 'Redirecionando…'; }
+
+  try {
+    const { data: sessionData } = await db.auth.getSession();
+    const token = sessionData?.session?.access_token;
+
+    const res = await fetch(STRIPE_CHECKOUT_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token,
+      },
+      body: JSON.stringify({
+        credits: _pkg.qty,
+        priceId: _pkg.priceId,
+        stripeCouponId: _coupon?.stripe_coupon_id ?? null,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || !data.url) {
+      if (btn) { btn.disabled = false; btn.textContent = 'Pagar com Stripe'; }
+      showToast(data.error || 'Erro ao iniciar checkout. Tente novamente.', 'error');
+      return;
+    }
+
+    window.location.href = data.url;
+
+  } catch (_e) {
+    if (btn) { btn.disabled = false; btn.textContent = 'Pagar com Stripe'; }
+    showToast('Erro ao conectar com o servidor. Tente novamente.', 'error');
+  }
 };

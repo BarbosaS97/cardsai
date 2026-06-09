@@ -105,6 +105,7 @@ serve(async (req) => {
       discount_type: coupon.discount_type,
       discount_value: Number(coupon.discount_value),
       description: coupon.description ?? '',
+      stripe_coupon_id: coupon.stripe_coupon_id ?? null,
     })
 
   } catch (_err) {
