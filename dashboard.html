@@ -1,8 +1,8 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content" />
   <title>Dashboard — CardsQuestõesAI</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -638,6 +638,11 @@
       .btn-icon { padding: 5px; }
       .source-options { gap: 5px; }
       .source-option { padding: 11px 14px; gap: 10px; }
+    }
+
+    /* Prevent iOS Safari auto-zoom on input focus (requires font-size ≥ 16px) */
+    @media (hover: none) and (pointer: coarse) {
+      input, textarea, select { font-size: 16px !important; }
     }
 
     /* ── Validation hints ──────────────────────────────────── */

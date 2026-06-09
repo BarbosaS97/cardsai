@@ -44,12 +44,14 @@ function showToast(message, type = 'error') {
   const toast = document.createElement('div');
   toast.id = 'toast';
   toast.style.cssText = [
-    'position:fixed', 'top:24px', 'right:24px', 'z-index:9999',
+    'position:fixed', 'top:16px', 'right:16px', 'z-index:9999',
+    'max-width:min(360px,calc(100vw - 32px))',
+    'box-sizing:border-box',
     'padding:12px 18px', 'border-radius:12px',
     `background:${bg[type] || bg.error}`,
     'color:#fff', 'font-size:14px', 'font-weight:500',
     'box-shadow:0 8px 32px rgba(0,0,0,.25)',
-    'max-width:360px', 'line-height:1.5',
+    'line-height:1.5',
     'transition:opacity .3s,transform .3s',
     'pointer-events:none',
   ].join(';');

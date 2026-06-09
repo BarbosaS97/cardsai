@@ -187,9 +187,9 @@
       const vw  = window.innerWidth;
       const vh  = window.innerHeight;
       const gap = 14;
-      const pad = 10;
+      const pad = 20;
 
-      // Vertical: prefer below → above → best fit
+      // Vertical: prefer below → above → centered fallback
       let top;
       if (r.bottom + ch + gap + pad <= vh) {
         top = r.bottom + gap;
@@ -198,13 +198,15 @@
       } else {
         top = Math.max(pad, Math.min(vh / 2 - ch / 2, vh - ch - pad));
       }
+      top = Math.max(pad, Math.min(top, vh - ch - pad));
 
       // Horizontal: center over target, clamp to viewport
       let left = r.left + r.width / 2 - cw / 2;
       left = Math.max(pad, Math.min(left, vw - cw - pad));
 
-      this._card.style.top  = top  + 'px';
-      this._card.style.left = left + 'px';
+      this._card.style.top   = top  + 'px';
+      this._card.style.left  = left + 'px';
+      this._card.style.right = 'auto';
     }
 
     finish() {
