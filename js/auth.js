@@ -33,7 +33,7 @@ async function getProfile() {
 
 async function signOut() {
   await db.auth.signOut();
-  window.location.href = '/login.html';
+  window.location.href = '/index.html';
 }
 
 function showToast(message, type = 'error') {
