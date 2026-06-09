@@ -3,7 +3,6 @@ import Stripe from 'https://esm.sh/stripe@14?target=denonext'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') as string, {
-  apiVersion: '2024-11-20',
   httpClient: Stripe.createFetchHttpClient(),
 })
 

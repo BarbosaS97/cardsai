@@ -1,6 +1,9 @@
 // ─── State ───────────────────────────────────────────────────────────────────
 let _pkg = { qty: 0, priceRaw: 0, priceStr: '', priceId: '' };
 let _coupon = null;
+let _paymentMethod = 'card';
+let _pixCorrelationId = null;
+let _pixPollTimer = null;
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 function _brl(value) {
@@ -65,16 +68,35 @@ function _updatePricing() {
   mTotal.textContent = _brl(finalPrice);
 }
 
+function _resetPixUI() {
+  _el('pixBeforeQR')?.classList.remove('hidden');
+  _el('pixQRSection')?.classList.add('hidden');
+  _el('pixSuccess')?.classList.add('hidden');
+  const btn = _el('btnPixGenerate');
+  if (btn) { btn.disabled = false; btn.textContent = 'Gerar QR Code PIX'; }
+}
+
 // ─── API pública ─────────────────────────────────────────────────────────────
 
 window.initCouponModal = function (qty, priceRaw, priceStr, priceId) {
   _pkg    = { qty, priceRaw, priceStr, priceId };
   _coupon = null;
+  _paymentMethod = 'card';
+
+  if (_pixPollTimer) { clearInterval(_pixPollTimer); _pixPollTimer = null; }
+  _pixCorrelationId = null;
 
   const input = _el('couponInput');
   if (input) input.value = '';
   _clearCouponMsg();
   _updatePricing();
+  _resetPixUI();
+
+  // Reset payment method tabs to card
+  _el('tabCard')?.classList.add('pm-active');
+  _el('tabPix')?.classList.remove('pm-active');
+  _el('sectionCard')?.classList.remove('hidden');
+  _el('sectionPix')?.classList.add('hidden');
 };
 
 window.applyCoupon = async function () {
@@ -129,6 +151,23 @@ window.removeCoupon = function () {
   _updatePricing();
 };
 
+window.selectPaymentMethod = function (method) {
+  _paymentMethod = method;
+
+  if (method === 'card') {
+    _el('tabCard')?.classList.add('pm-active');
+    _el('tabPix')?.classList.remove('pm-active');
+    _el('sectionCard')?.classList.remove('hidden');
+    _el('sectionPix')?.classList.add('hidden');
+  } else {
+    _el('tabPix')?.classList.add('pm-active');
+    _el('tabCard')?.classList.remove('pm-active');
+    _el('sectionCard')?.classList.add('hidden');
+    _el('sectionPix')?.classList.remove('hidden');
+    _resetPixUI();
+  }
+};
+
 window.startCheckout = async function () {
   const btn = _el('btnCheckout');
   if (btn) { btn.disabled = true; btn.textContent = 'Redirecionando…'; }
@@ -146,14 +185,14 @@ window.startCheckout = async function () {
       body: JSON.stringify({
         credits: _pkg.qty,
         priceId: _pkg.priceId,
-        stripeCouponId: _coupon?.stripe_coupon_id ?? null,
+        couponCode: _coupon?.code ?? null,
       }),
     });
 
     const data = await res.json();
 
     if (!res.ok || !data.url) {
-      if (btn) { btn.disabled = false; btn.textContent = 'Pagar com Stripe'; }
+      if (btn) { btn.disabled = false; btn.textContent = 'Pagar com Cartão'; }
       showToast(data.error || 'Erro ao iniciar checkout. Tente novamente.', 'error');
       return;
     }
@@ -161,7 +200,109 @@ window.startCheckout = async function () {
     window.location.href = data.url;
 
   } catch (_e) {
-    if (btn) { btn.disabled = false; btn.textContent = 'Pagar com Stripe'; }
+    if (btn) { btn.disabled = false; btn.textContent = 'Pagar com Cartão'; }
     showToast('Erro ao conectar com o servidor. Tente novamente.', 'error');
   }
+};
+
+window.startPixCheckout = async function () {
+  const btn = _el('btnPixGenerate');
+  if (btn) { btn.disabled = true; btn.textContent = 'Gerando QR Code…'; }
+
+  try {
+    const { data: sessionData } = await db.auth.getSession();
+    const token = sessionData?.session?.access_token;
+
+    const res = await fetch(PIX_CHECKOUT_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token,
+      },
+      body: JSON.stringify({
+        credits: _pkg.qty,
+        priceRaw: _pkg.priceRaw,
+        couponCode: _coupon?.code ?? null,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      if (btn) { btn.disabled = false; btn.textContent = 'Gerar QR Code PIX'; }
+      showToast(data.error || 'Erro ao gerar QR Code PIX.', 'error');
+      return;
+    }
+
+    _pixCorrelationId = data.correlationID;
+
+    _el('pixBeforeQR')?.classList.add('hidden');
+    _el('pixQRSection')?.classList.remove('hidden');
+
+    const img = _el('pixQRImage');
+    if (img && data.qrCodeImage) img.src = data.qrCodeImage;
+
+    const brCodeEl = _el('pixBrCode');
+    if (brCodeEl) brCodeEl.textContent = data.brCode || '';
+
+    const expiryEl = _el('pixExpiry');
+    if (expiryEl && data.expiresDate) {
+      const mins = Math.max(1, Math.round((new Date(data.expiresDate) - new Date()) / 60000));
+      expiryEl.textContent = `QR Code válido por ${mins} minuto${mins !== 1 ? 's' : ''}`;
+    }
+
+    _pixPollTimer = setInterval(_pollPixStatus, 5000);
+
+  } catch (_e) {
+    if (btn) { btn.disabled = false; btn.textContent = 'Gerar QR Code PIX'; }
+    showToast('Erro ao conectar com o servidor.', 'error');
+  }
+};
+
+async function _pollPixStatus() {
+  if (!_pixCorrelationId) return;
+
+  try {
+    const { data: sessionData } = await db.auth.getSession();
+    const token = sessionData?.session?.access_token;
+
+    const res = await fetch(PIX_STATUS_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token,
+      },
+      body: JSON.stringify({ correlationId: _pixCorrelationId }),
+    });
+
+    const data = await res.json();
+
+    if (data.status === 'completed') {
+      clearInterval(_pixPollTimer);
+      _pixPollTimer = null;
+      _pixCorrelationId = null;
+      _el('pixQRSection')?.classList.add('hidden');
+      _el('pixSuccess')?.classList.remove('hidden');
+    } else if (data.status === 'expired') {
+      clearInterval(_pixPollTimer);
+      _pixPollTimer = null;
+      _pixCorrelationId = null;
+      _resetPixUI();
+      showToast('QR Code PIX expirado. Gere um novo.', 'info');
+    }
+  } catch (_e) {
+    // Ignore transient polling errors
+  }
+}
+
+window.copyPixCode = function () {
+  const code = _el('pixBrCode')?.textContent;
+  if (!code) return;
+  navigator.clipboard.writeText(code)
+    .then(() => showToast('Código PIX copiado!', 'success'))
+    .catch(() => showToast('Não foi possível copiar automaticamente.', 'info'));
+};
+
+window.cleanupPixPolling = function () {
+  if (_pixPollTimer) { clearInterval(_pixPollTimer); _pixPollTimer = null; }
 };

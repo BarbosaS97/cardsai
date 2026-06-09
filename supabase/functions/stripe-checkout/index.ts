@@ -3,7 +3,6 @@ import Stripe from 'https://esm.sh/stripe@14?target=denonext'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') as string, {
-  apiVersion: '2024-11-20',
   httpClient: Stripe.createFetchHttpClient(),
 })
 
@@ -18,7 +17,8 @@ function getCorsHeaders(req: Request): Record<string, string> {
   return {
     'Access-Control-Allow-Origin': allowed ? origin : 'https://cardsquestoes.com.br',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-client-info, apikey',
+    'Access-Control-Allow-Credentials': 'true',
     'Vary': 'Origin',
   }
 }
@@ -49,29 +49,70 @@ serve(async (req) => {
     const { data: { user }, error: userErr } = await userClient.auth.getUser()
     if (userErr || !user) return json({ error: 'Não autenticado' }, 401)
 
-    const { credits, priceId, stripeCouponId } = await req.json()
+    const { credits, priceId, couponCode } = await req.json()
 
     if (!priceId || !credits) {
       return json({ error: 'priceId e credits são obrigatórios' }, 400)
     }
 
-    const sessionParams: Stripe.Checkout.SessionCreateParams = {
-      payment_method_types: ['card', 'pix'],
+    const sessionParams: Record<string, unknown> = {
       line_items: [{ price: priceId, quantity: 1 }],
       mode: 'payment',
       success_url: 'https://cardsquestoes.com.br/pricing.html?success=true',
       cancel_url: 'https://cardsquestoes.com.br/pricing.html?canceled=true',
-      metadata: { user_id: user.id, credits: credits.toString() },
+      metadata: { user_id: user.id, credits: String(credits) },
     }
 
-    if (stripeCouponId) {
-      sessionParams.discounts = [{ coupon: stripeCouponId }]
+    if (couponCode) {
+      const svc = createClient(
+        Deno.env.get('SUPABASE_URL')!,
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+      )
+
+      const { data: coupon } = await svc
+        .from('coupons')
+        .select('id, stripe_coupon_id, discount_type, discount_value, is_active, expires_at, max_uses, used_count')
+        .eq('code', String(couponCode).toUpperCase().trim())
+        .single()
+
+      const isValid = coupon?.is_active
+        && !(coupon.expires_at && new Date(coupon.expires_at) < new Date())
+        && !(coupon.max_uses != null && coupon.used_count >= coupon.max_uses)
+
+      if (isValid) {
+        let stripeCouponId: string = coupon.stripe_coupon_id
+
+        if (!stripeCouponId) {
+          // Create Stripe coupon dynamically since admin didn't pre-link one
+          const params: Stripe.CouponCreateParams = { duration: 'once' }
+
+          if (coupon.discount_type === 'percentage') {
+            params.percent_off = Number(coupon.discount_value)
+          } else {
+            // amount_off must be in centavos (BRL smallest unit)
+            params.amount_off = Math.round(Number(coupon.discount_value) * 100)
+            params.currency = 'brl'
+          }
+
+          const created = await stripe.coupons.create(params)
+          stripeCouponId = created.id
+
+          // Cache for future uses
+          await svc.from('coupons').update({ stripe_coupon_id: stripeCouponId }).eq('id', coupon.id)
+        }
+
+        sessionParams.discounts = [{ coupon: stripeCouponId }]
+      }
     }
 
-    const session = await stripe.checkout.sessions.create(sessionParams)
+    const session = await stripe.checkout.sessions.create(
+      sessionParams as Stripe.Checkout.SessionCreateParams
+    )
 
     return json({ url: session.url })
   } catch (error) {
-    return json({ error: error.message }, 500)
+    const message = error instanceof Error ? error.message : String(error)
+    console.error('stripe-checkout error:', message)
+    return json({ error: message }, 500)
   }
 })

@@ -1,2 +1,17 @@
 [functions.verify-turnstile]
 verify_jwt = false
+
+[functions.stripe-checkout]
+verify_jwt = false
+
+[functions.stripe-webhook]
+verify_jwt = false
+
+[functions.pix-checkout]
+verify_jwt = false
+
+[functions.pix-webhook]
+verify_jwt = false
+
+[functions.pix-status]
+verify_jwt = false
