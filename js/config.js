@@ -18,11 +18,26 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
   const _vpContent = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
   if (_vp) _vp.setAttribute('content', _vpContent);
 
+  function _lockZoom() {
+    if (!_vp) return;
+    // Toggle trick: brief remove of maximum-scale forces iOS to re-evaluate at scale=1
+    _vp.setAttribute('content', 'width=device-width, initial-scale=1.0');
+    requestAnimationFrame(() => _vp.setAttribute('content', _vpContent));
+  }
+
+  // Primary: visualViewport.scale fires when iOS zooms in/out (innerWidth alone doesn't catch this)
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', () => {
+      if (window.visualViewport.scale > 1.05) _lockZoom();
+    });
+  }
+
+  // Fallback: orientation or layout-viewport changes
   let _lastW = window.innerWidth;
   setInterval(() => {
     if (window.innerWidth !== _lastW) {
-      if (_vp) _vp.setAttribute('content', _vpContent);
+      _lockZoom();
       _lastW = window.innerWidth;
     }
-  }, 100);
+  }, 200);
 }

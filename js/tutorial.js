@@ -114,8 +114,8 @@
         return;
       }
 
-      // Scroll target into view smoothly, then highlight + position
-      target.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      // Scroll target into view — 'auto' (instant) avoids iOS visual-viewport adjustment
+      target.scrollIntoView({ behavior: 'auto', block: 'nearest' });
 
       setTimeout(() => {
         this._applyHi(target);
