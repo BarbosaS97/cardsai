@@ -40,15 +40,19 @@ function showToast(message, type = 'error') {
   const existing = document.getElementById('toast');
   if (existing) existing.remove();
 
+  const bg = { error: '#EF4444', success: '#10B981', info: '#3B82F6', warning: '#F59E0B' };
   const toast = document.createElement('div');
   toast.id = 'toast';
-  const colors = {
-    error: 'bg-red-500/90 border-red-400',
-    success: 'bg-emerald-500/90 border-emerald-400',
-    info: 'bg-blue-500/90 border-blue-400',
-    warning: 'bg-amber-500/90 border-amber-400',
-  };
-  toast.className = `fixed top-6 right-6 z-50 px-5 py-3 rounded-xl border text-white text-sm font-medium shadow-2xl backdrop-blur-sm transition-all duration-300 max-w-sm ${colors[type] || colors.error}`;
+  toast.style.cssText = [
+    'position:fixed', 'top:24px', 'right:24px', 'z-index:9999',
+    'padding:12px 18px', 'border-radius:12px',
+    `background:${bg[type] || bg.error}`,
+    'color:#fff', 'font-size:14px', 'font-weight:500',
+    'box-shadow:0 8px 32px rgba(0,0,0,.25)',
+    'max-width:360px', 'line-height:1.5',
+    'transition:opacity .3s,transform .3s',
+    'pointer-events:none',
+  ].join(';');
   toast.textContent = message;
   document.body.appendChild(toast);
   setTimeout(() => {

@@ -30,13 +30,15 @@
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { overflow-x: hidden; }
     body {
       font-family: system-ui, -apple-system, 'Inter', sans-serif;
       font-size: 14px; line-height: 1.5;
       color: var(--text); background: var(--bg);
       -webkit-font-smoothing: antialiased;
       transition: background .2s, color .2s;
-      min-height: 100vh; display: flex; flex-direction: column;
+      min-height: 100vh; min-height: 100dvh;
+      overflow-x: hidden; display: flex; flex-direction: column;
     }
     body::before {
       content: '';

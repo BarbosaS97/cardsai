@@ -5,13 +5,19 @@
   /* ── Injected styles ──────────────────────────────────────── */
   const style = document.createElement('style');
   style.textContent = `
+    #_tourOverlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.50);
+      z-index: 9000;
+      pointer-events: none;
+    }
     .tour-hi {
       position: relative !important;
       z-index: 9001 !important;
       outline: 3px solid var(--blue, #2563EB) !important;
       outline-offset: 4px;
       border-radius: 10px;
-      box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.50) !important;
     }
     #_tourCard {
       position: fixed;
@@ -60,12 +66,13 @@
   /* ── Tour class ───────────────────────────────────────────── */
   class Tour {
     constructor(steps, lsKey) {
-      this.steps = steps;
-      this.key   = lsKey;
-      this.cur   = 0;
-      this._el   = null;   // highlighted element
-      this._card = null;
-      this._orig = {};     // original inline styles of highlighted el
+      this.steps    = steps;
+      this.key      = lsKey;
+      this.cur      = 0;
+      this._el      = null;
+      this._card    = null;
+      this._overlay = null;
+      this._orig    = {};
     }
 
     shouldShow() {
@@ -75,8 +82,13 @@
     start(force = false) {
       if (!force && !this.shouldShow()) return;
       this.cur = 0;
-      // Remove leftover card from a previous run
       document.getElementById('_tourCard')?.remove();
+      document.getElementById('_tourOverlay')?.remove();
+
+      this._overlay = document.createElement('div');
+      this._overlay.id = '_tourOverlay';
+      document.body.appendChild(this._overlay);
+
       this._card = document.createElement('div');
       this._card.id = '_tourCard';
       document.body.appendChild(this._card);
@@ -202,6 +214,8 @@
 
     _cleanup() {
       this._clearHi();
+      this._overlay?.remove();
+      this._overlay = null;
       this._card?.remove();
       this._card = null;
     }
