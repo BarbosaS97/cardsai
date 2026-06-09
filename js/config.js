@@ -8,3 +8,4 @@ const STRIPE_CHECKOUT_URL = `${SUPABASE_URL}/functions/v1/stripe-checkout`;
 
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+window.supabaseClient = db;
