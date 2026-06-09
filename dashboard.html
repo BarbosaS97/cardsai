@@ -97,7 +97,7 @@
     }
     @media (max-width: 780px) {
       .main-grid { grid-template-columns: 1fr; gap: 12px; }
-      .upload-card, .right-panel { min-width: 0; }
+      .main-grid > * { min-width: 0; }
     }
 
     /* ── Header ─────────────────────────────────────────────── */
@@ -626,7 +626,8 @@
       .gen-card-title { font-size: 13px; }
       .credits-row { flex-wrap: wrap; gap: 6px; }
       .credits-row-cost { width: 100%; }
-      .method-header { padding-bottom: 10px; margin-bottom: 10px; }
+      .method-header { padding-bottom: 10px; margin-bottom: 10px; justify-content: center; text-align: center; }
+      .config-box-header { justify-content: center; }
       .config-box-body { padding: 12px 12px 6px; }
       .btn-generate { padding: 15px 22px; font-size: 16px; }
     }
