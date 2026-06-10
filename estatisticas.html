@@ -371,8 +371,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <span id="creditsText">—</span>
       </a>
       <a href="/pricing.html" title="Comprar créditos"
-        style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:var(--blue);color:#fff;font-size:15px;font-weight:700;line-height:1;text-decoration:none;flex-shrink:0;transition:opacity .15s;"
-        onmouseover="this.style.opacity='.75'" onmouseout="this.style.opacity='1'">+</a>
+        style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--blue);color:#fff;text-decoration:none;flex-shrink:0;cursor:pointer;box-sizing:border-box;transition:opacity .15s;"
+        onmouseover="this.style.opacity='.75'" onmouseout="this.style.opacity='1'">
+        <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" d="M12 5v14M5 12h14"/>
+        </svg>
+      </a>
 
       <button id="darkToggle" class="btn-icon" onclick="toggleDark()" title="Alternar tema">
         <svg id="iconSun" class="hidden" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
