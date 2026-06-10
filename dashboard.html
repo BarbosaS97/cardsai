@@ -1,5 +1,5 @@
 ﻿<!DOCTYPE html>
-<html lang="pt-BR" data-theme="dark">
+<html lang="pt-BR" data-theme="light">
 <head>
 <!-- Google Tag Manager -->
 <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
@@ -1138,7 +1138,7 @@ Mínimo: 500 caracteres · Máximo: 50.000 caracteres"
   /* ── Dark mode ──────────────────────────────────────────── */
   (function () {
     const saved = localStorage.getItem('cardsai-theme');
-    applyDark(saved !== 'light');
+    applyDark(saved === 'dark');
   })();
 
   function applyDark(on) {

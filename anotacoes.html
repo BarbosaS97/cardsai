@@ -1,5 +1,5 @@
 ﻿<!DOCTYPE html>
-<html lang="pt-BR" data-theme="dark">
+<html lang="pt-BR" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
@@ -312,7 +312,7 @@
   /* ── Dark mode ──────────────────────────────────────────── */
   (function () {
     const saved = localStorage.getItem('cardsai-theme');
-    applyDark(saved !== 'light');
+    applyDark(saved === 'dark');
   })();
 
   function applyDark(on) {
