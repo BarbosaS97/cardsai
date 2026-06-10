@@ -141,14 +141,14 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       border-radius: 8px; box-shadow: var(--shadow-md);
       overflow: hidden; min-width: 120px; z-index: 50;
     }
-    .user-dropdown button {
+    .user-dropdown button, .user-dropdown a {
       display: block; width: 100%;
       padding: 9px 14px; text-align: left;
       font-size: 13px; font-weight: 500; color: var(--text-2);
-      background: none; border: none;
+      background: none; border: none; text-decoration: none;
       transition: background .12s, color .12s;
     }
-    .user-dropdown button:hover { background: var(--surface-2); color: var(--text); }
+    .user-dropdown button:hover, .user-dropdown a:hover { background: var(--surface-2); color: var(--text); }
 
     /* ── User avatar ────────────────────────────────────────── */
     .user-avatar {
@@ -370,6 +370,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         </svg>
         <span id="creditsText">—</span>
       </a>
+      <a href="/pricing.html" title="Comprar créditos"
+        style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:var(--blue);color:#fff;font-size:15px;font-weight:700;line-height:1;text-decoration:none;flex-shrink:0;transition:opacity .15s;"
+        onmouseover="this.style.opacity='.75'" onmouseout="this.style.opacity='1'">+</a>
 
       <button id="darkToggle" class="btn-icon" onclick="toggleDark()" title="Alternar tema">
         <svg id="iconSun" class="hidden" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -386,6 +389,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           <div id="userAvatar" class="user-avatar"><span id="userAvatarInitial">?</span></div>
         </button>
         <div id="userDropdown" class="user-dropdown hidden">
+          <a href="/pricing.html">Comprar créditos</a>
           <button onclick="signOut()">Sair</button>
         </div>
       </div>
