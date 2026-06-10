@@ -13,6 +13,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Créditos — CardsQuestõesAI</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <style>
     /* ── Design tokens (alinhados ao sistema) ── */
     :root {
@@ -368,7 +369,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     .pix-qr-box {
       text-align: center; padding: 16px 0 8px;
     }
-    .pix-qr-box img {
+    .pix-qr-box img, .pix-qr-box canvas {
       width: 180px; height: 180px;
       border-radius: 10px; border: 1px solid var(--border);
     }
@@ -866,7 +867,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <!-- QR Code -->
       <div id="pixQRSection" class="hidden">
         <div class="pix-qr-box">
-          <img id="pixQRImage" alt="QR Code PIX" onerror="this.style.display='none'" />
+          <div id="pixQRCanvas"></div>
         </div>
         <div class="pix-code" id="pixBrCode" onclick="copyPixCode()" title="Clique para copiar"></div>
         <div class="pix-expiry" id="pixExpiry"></div>

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cardsquestoesai-v4';
+const CACHE_NAME = 'cardsquestoesai-v5';
 
 const PRECACHE_URLS = [
   '/index.html',
@@ -33,6 +33,8 @@ const BYPASS_DOMAINS = [
   'analytics.google.com',
   'doubleclick.net',
   'googlesyndication.com',
+  'woovi.com',
+  'openpix.com.br',
 ];
 
 // ── Install: pré-cacheia os assets principais ──────────────────

@@ -72,6 +72,8 @@ function _resetPixUI() {
   _el('pixBeforeQR')?.classList.remove('hidden');
   _el('pixQRSection')?.classList.add('hidden');
   _el('pixSuccess')?.classList.add('hidden');
+  const qrContainer = _el('pixQRCanvas');
+  if (qrContainer) qrContainer.innerHTML = '';
   const btn = _el('btnPixGenerate');
   if (btn) { btn.disabled = false; btn.textContent = 'Gerar QR Code PIX'; }
 }
@@ -243,8 +245,16 @@ window.startPixCheckout = async function () {
     window.dataLayer = window.dataLayer || [];
     window.dataLayer.push({ event: 'begin_checkout', payment_method: 'pix', credits: _pkg.qty });
 
-    const img = _el('pixQRImage');
-    if (img && data.qrCodeImage) img.src = data.qrCodeImage;
+    const qrContainer = _el('pixQRCanvas');
+    if (qrContainer && data.brCode) {
+      qrContainer.innerHTML = '';
+      new QRCode(qrContainer, {
+        text: data.brCode,
+        width: 180,
+        height: 180,
+        correctLevel: QRCode.CorrectLevel.M,
+      });
+    }
 
     const brCodeEl = _el('pixBrCode');
     if (brCodeEl) brCodeEl.textContent = data.brCode || '';
