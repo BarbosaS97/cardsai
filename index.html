@@ -967,7 +967,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       width: 100%;
       background: #0D0D1A;
       color: #fff;
-      padding: 10px 52px 10px 24px;
+      padding: 13px 56px 13px 28px;
       position: relative;
       overflow: hidden;
     }
@@ -1020,6 +1020,26 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     .campaign-topbar-name  { font-weight: 700; letter-spacing: -.01em; }
     .campaign-topbar-sep   { opacity: .38; }
     .campaign-topbar-desc  { opacity: .8; }
+    .campaign-topbar-coupon {
+      display: none;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      opacity: .85;
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+    .campaign-topbar-coupon-code {
+      font-family: ui-monospace, monospace;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .05em;
+      background: rgba(255,255,255,.14);
+      border: 1px solid rgba(255,255,255,.28);
+      color: #fff;
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
     .campaign-topbar-cta {
       display: inline-flex;
       align-items: center;
@@ -1054,9 +1074,10 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     }
     .campaign-topbar-close:hover { color: #fff; }
     @media (max-width: 640px) {
-      .campaign-topbar { padding: 10px 40px 10px 14px; }
+      .campaign-topbar { padding: 12px 44px 12px 14px; }
       .campaign-topbar-body { font-size: 13px; gap: 4px; }
       .campaign-topbar-badge { display: none; }
+      .campaign-topbar-coupon { font-size: 11px; }
     }
   </style>
   <link rel="manifest" href="/manifest.json" />
@@ -1117,6 +1138,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <span class="campaign-topbar-sep">—</span>
       <span id="campaign-bar-desc" class="campaign-topbar-desc"></span>
     </div>
+    <span id="campaign-bar-coupon" class="campaign-topbar-coupon">
+      use o cupom
+      <code id="campaign-bar-coupon-code" class="campaign-topbar-coupon-code"></code>
+    </span>
     <a href="#" id="campaign-bar-link" class="campaign-topbar-cta">
       Aproveitar
       <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
@@ -1984,6 +2009,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
       document.getElementById('campaign-bar-name').textContent = c.nome;
       document.getElementById('campaign-bar-desc').textContent = c.descricao;
+
+      if (c.codigo_cupom) {
+        document.getElementById('campaign-bar-coupon-code').textContent = c.codigo_cupom;
+        document.getElementById('campaign-bar-coupon').style.display = 'inline-flex';
+      }
 
       const link = document.getElementById('campaign-bar-link');
       let href = c.link_destino || '/pricing.html';
