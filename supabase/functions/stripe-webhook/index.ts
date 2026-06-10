@@ -38,6 +38,14 @@ serve(async (req) => {
         console.error('Failed to increment credits:', error)
         return new Response(JSON.stringify({ error: 'Failed to update credits' }), { status: 500 })
       }
+
+      const couponId = session.metadata?.coupon_id
+      if (couponId) {
+        await supabase.rpc('record_coupon_usage', {
+          p_coupon_id: couponId,
+          p_user_id: userId,
+        })
+      }
     }
   }
 

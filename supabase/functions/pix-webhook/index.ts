@@ -20,7 +20,7 @@ serve(async (req) => {
 
     const { data: pixCharge, error: findErr } = await supabase
       .from('pix_charges')
-      .select('id, user_id, credits, status')
+      .select('id, user_id, credits, status, coupon_id')
       .eq('correlation_id', correlationID)
       .single()
 
@@ -47,6 +47,13 @@ serve(async (req) => {
     if (creditErr) {
       console.error('Failed to increment credits for PIX charge:', correlationID, creditErr)
       return new Response(JSON.stringify({ error: 'Failed to update credits' }), { status: 500 })
+    }
+
+    if (pixCharge.coupon_id) {
+      await supabase.rpc('record_coupon_usage', {
+        p_coupon_id: pixCharge.coupon_id,
+        p_user_id: pixCharge.user_id,
+      })
     }
 
     console.log(`PIX payment confirmed: ${correlationID} — ${pixCharge.credits} créditos para ${pixCharge.user_id}`)

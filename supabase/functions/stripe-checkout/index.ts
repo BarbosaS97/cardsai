@@ -60,7 +60,7 @@ serve(async (req) => {
       mode: 'payment',
       success_url: 'https://cardsquestoes.com.br/pricing.html?success=true',
       cancel_url: 'https://cardsquestoes.com.br/pricing.html?canceled=true',
-      metadata: { user_id: user.id, credits: String(credits) },
+      metadata: { user_id: user.id, credits: String(credits), coupon_id: '' },
     }
 
     if (couponCode) {
@@ -102,6 +102,7 @@ serve(async (req) => {
         }
 
         sessionParams.discounts = [{ coupon: stripeCouponId }]
+        ;(sessionParams.metadata as Record<string, string>).coupon_id = coupon.id
       }
     }
 

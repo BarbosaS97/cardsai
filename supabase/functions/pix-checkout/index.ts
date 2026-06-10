@@ -115,15 +115,24 @@ serve(async (req) => {
       return json({ error: 'Resposta inválida da OpenPix' }, 500)
     }
 
-    await svc.from('pix_charges').insert({
+    const expiresAt = charge.expiresDate
+      ? new Date(charge.expiresDate).toISOString()
+      : null
+
+    const { error: insertErr } = await svc.from('pix_charges').insert({
       user_id: user.id,
       correlation_id: correlationID,
       credits: Number(credits),
       amount: valueInCentavos,
       coupon_id: couponDbId,
       status: 'pending',
-      expires_at: charge.expiresDate ?? null,
+      expires_at: expiresAt,
     })
+
+    if (insertErr) {
+      console.error('pix_charges insert error:', JSON.stringify(insertErr))
+      return json({ error: 'Erro ao registrar cobrança PIX. Tente novamente.' }, 500)
+    }
 
     return json({
       correlationID,

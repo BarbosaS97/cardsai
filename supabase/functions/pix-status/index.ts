@@ -52,15 +52,24 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
     )
 
-    const { data: charge } = await svc
+    const { data: charge, error: queryErr } = await svc
       .from('pix_charges')
       .select('status, credits, expires_at')
       .eq('correlation_id', correlationId)
       .eq('user_id', user.id)
       .single()
 
+    if (queryErr) {
+      if (queryErr.code === 'PGRST116') {
+        // PostgREST "no rows returned" — cobrança não existe
+        return json({ status: 'not_found' })
+      }
+      console.error('pix_charges query error:', JSON.stringify(queryErr))
+      return json({ error: 'Erro ao consultar cobrança' }, 500)
+    }
+
     if (!charge) {
-      return json({ status: 'not_found' }, 404)
+      return json({ status: 'not_found' })
     }
 
     // Mark as expired if past expiry and still pending
