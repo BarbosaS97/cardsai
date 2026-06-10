@@ -125,7 +125,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     }
     .logo {
       font-size: 14px; font-weight: 700; letter-spacing: -.3px; color: var(--text);
+      display: flex; align-items: center; gap: 7px;
     }
+    .logo img { width: 24px; height: 24px; border-radius: 6px; flex-shrink: 0; }
     .header-right { display: flex; align-items: center; gap: 8px; }
 
     /* ── Credits pill ───────────────────────────────────────── */
@@ -780,7 +782,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
 <header>
   <div class="max-w header-inner">
-    <a href="/index.html" class="logo">CardsQuestõesAI</a>
+    <a href="/index.html" class="logo">
+      <img src="/static/images/logo1.png" alt="CardsQuestõesAI" />
+      CardsQuestõesAI
+    </a>
     <div class="header-right">
 
       <a href="/anotacoes.html" class="nav-desktop-link"
