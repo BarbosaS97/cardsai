@@ -441,38 +441,84 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       .yield-grid .yield-card:last-child { grid-column: unset; }
     }
 
-    /* ── Campaign banner ── */
-    .campaign-banner {
-      background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%);
-      border-radius: 12px;
-      padding: 16px 24px;
-      margin-bottom: 24px;
+    /* ── Campaign topbar ── */
+    .campaign-topbar {
+      width: 100%;
+      background: linear-gradient(90deg, #1D4ED8 0%, #6D28D9 100%);
       color: white;
+      padding: 11px 52px 11px 24px;
+      position: relative;
+      overflow: hidden;
     }
-    .campaign-content {
+    .campaign-topbar::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        -55deg, transparent, transparent 18px,
+        rgba(255,255,255,.04) 18px, rgba(255,255,255,.04) 36px
+      );
+      pointer-events: none;
+    }
+    .campaign-topbar-inner {
+      max-width: 900px;
+      margin: 0 auto;
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      justify-content: center;
+      gap: 10px;
+      position: relative;
+    }
+    .campaign-topbar-icon { flex-shrink: 0; opacity: .9; display: flex; }
+    .campaign-topbar-body {
+      display: flex;
+      align-items: center;
+      gap: 6px;
       flex-wrap: wrap;
-      gap: 16px;
+      justify-content: center;
+      font-size: 14px;
+      line-height: 1.4;
     }
-    .campaign-icon { font-size: 28px; flex-shrink: 0; }
-    .campaign-text { flex: 1; min-width: 0; }
-    .campaign-text strong { display: block; font-size: 16px; font-weight: 700; margin-bottom: 3px; }
-    .campaign-text span { font-size: 14px; opacity: .9; }
-    .campaign-cta {
-      background: white;
-      color: #3B82F6;
-      padding: 9px 18px;
-      border-radius: 8px;
+    .campaign-topbar-name  { font-weight: 700; letter-spacing: -.01em; }
+    .campaign-topbar-sep   { opacity: .45; }
+    .campaign-topbar-desc  { opacity: .88; }
+    .campaign-topbar-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(255,255,255,.16);
+      border: 1px solid rgba(255,255,255,.32);
+      color: white;
+      padding: 4px 13px;
+      border-radius: 20px;
+      font-size: 12px;
       font-weight: 700;
-      font-size: 13px;
       text-decoration: none;
-      transition: transform .15s, background .15s;
-      flex-shrink: 0;
+      transition: background .15s;
       white-space: nowrap;
+      flex-shrink: 0;
     }
-    .campaign-cta:hover { transform: scale(1.03); background: #f0f0f0; }
+    .campaign-topbar-cta:hover { background: rgba(255,255,255,.28); }
+    .campaign-topbar-close {
+      position: absolute;
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: rgba(255,255,255,.6);
+      cursor: pointer;
+      padding: 4px;
+      display: flex;
+      align-items: center;
+      line-height: 0;
+      transition: color .15s;
+    }
+    .campaign-topbar-close:hover { color: white; }
+    @media (max-width: 640px) {
+      .campaign-topbar { padding: 10px 40px 10px 14px; }
+      .campaign-topbar-body { font-size: 13px; gap: 4px; }
+    }
   </style>
   <link rel="manifest" href="/manifest.json" />
   <meta name="theme-color" content="#2563EB" />
@@ -512,6 +558,33 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     </div>
   </div>
 </header>
+
+<!-- ── Campaign topbar (exibido via JS se houver campanha ativa) ── -->
+<div id="campaign-bar" class="campaign-topbar" style="display:none;">
+  <div class="campaign-topbar-inner">
+    <span class="campaign-topbar-icon">
+      <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/>
+      </svg>
+    </span>
+    <div class="campaign-topbar-body">
+      <span id="campaign-bar-name" class="campaign-topbar-name"></span>
+      <span class="campaign-topbar-sep">—</span>
+      <span id="campaign-bar-desc" class="campaign-topbar-desc"></span>
+    </div>
+    <a href="#" id="campaign-bar-link" class="campaign-topbar-cta">
+      Aproveitar
+      <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M12 5l7 7-7 7"/>
+      </svg>
+    </a>
+  </div>
+  <button class="campaign-topbar-close" onclick="this.parentElement.style.display='none'" aria-label="Fechar">
+    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+    </svg>
+  </button>
+</div>
 
 <!-- ── Main ── -->
 <main>
@@ -576,18 +649,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         </div>
         <div class="yield-value">150</div>
         <div class="yield-label">páginas máximo aceitas por PDF enviado</div>
-      </div>
-    </div>
-
-    <!-- Banner de campanha (oculto por padrão, exibido via JS) -->
-    <div id="campaign-credits" class="campaign-banner" style="display:none;">
-      <div class="campaign-content">
-        <span class="campaign-icon">🎉</span>
-        <div class="campaign-text">
-          <strong id="campaign-credits-name"></strong>
-          <span id="campaign-credits-desc"></span>
-        </div>
-        <a href="#" id="campaign-credits-link" class="campaign-cta">Aproveitar →</a>
       </div>
     </div>
 
@@ -927,31 +988,31 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   });
 
   init();
-  loadCreditsCampaign();
+  loadCampaignBar('credits_page');
 </script>
 <script>
-  async function loadCreditsCampaign() {
+  async function loadCampaignBar(position) {
     try {
       const { data } = await db
         .from('campaigns')
         .select('nome, descricao, codigo_cupom, link_destino')
         .eq('ativo', true)
-        .in('posicao', ['credits_page', 'both'])
+        .in('posicao', [position, 'both'])
         .order('created_at', { ascending: false })
         .limit(1);
 
       if (!data || data.length === 0) return;
       const c = data[0];
 
-      document.getElementById('campaign-credits-name').textContent = c.nome;
-      document.getElementById('campaign-credits-desc').textContent = c.descricao;
+      document.getElementById('campaign-bar-name').textContent = c.nome;
+      document.getElementById('campaign-bar-desc').textContent = c.descricao;
 
-      const link = document.getElementById('campaign-credits-link');
+      const link = document.getElementById('campaign-bar-link');
       let href = c.link_destino || '/pricing.html';
       if (c.codigo_cupom) href += (href.includes('?') ? '&' : '?') + 'coupon=' + encodeURIComponent(c.codigo_cupom);
       link.href = href;
 
-      document.getElementById('campaign-credits').style.display = 'block';
+      document.getElementById('campaign-bar').style.display = 'block';
     } catch (_) {}
   }
 </script>
