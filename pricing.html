@@ -440,6 +440,39 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       .yield-grid { grid-template-columns: 1fr; }
       .yield-grid .yield-card:last-child { grid-column: unset; }
     }
+
+    /* ── Campaign banner ── */
+    .campaign-banner {
+      background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%);
+      border-radius: 12px;
+      padding: 16px 24px;
+      margin-bottom: 24px;
+      color: white;
+    }
+    .campaign-content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .campaign-icon { font-size: 28px; flex-shrink: 0; }
+    .campaign-text { flex: 1; min-width: 0; }
+    .campaign-text strong { display: block; font-size: 16px; font-weight: 700; margin-bottom: 3px; }
+    .campaign-text span { font-size: 14px; opacity: .9; }
+    .campaign-cta {
+      background: white;
+      color: #3B82F6;
+      padding: 9px 18px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 13px;
+      text-decoration: none;
+      transition: transform .15s, background .15s;
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+    .campaign-cta:hover { transform: scale(1.03); background: #f0f0f0; }
   </style>
   <link rel="manifest" href="/manifest.json" />
   <meta name="theme-color" content="#2563EB" />
@@ -543,6 +576,18 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         </div>
         <div class="yield-value">150</div>
         <div class="yield-label">páginas máximo aceitas por PDF enviado</div>
+      </div>
+    </div>
+
+    <!-- Banner de campanha (oculto por padrão, exibido via JS) -->
+    <div id="campaign-credits" class="campaign-banner" style="display:none;">
+      <div class="campaign-content">
+        <span class="campaign-icon">🎉</span>
+        <div class="campaign-text">
+          <strong id="campaign-credits-name"></strong>
+          <span id="campaign-credits-desc"></span>
+        </div>
+        <a href="#" id="campaign-credits-link" class="campaign-cta">Aproveitar →</a>
       </div>
     </div>
 
@@ -882,6 +927,33 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   });
 
   init();
+  loadCreditsCampaign();
+</script>
+<script>
+  async function loadCreditsCampaign() {
+    try {
+      const { data } = await db
+        .from('campaigns')
+        .select('nome, descricao, codigo_cupom, link_destino')
+        .eq('ativo', true)
+        .in('posicao', ['credits_page', 'both'])
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (!data || data.length === 0) return;
+      const c = data[0];
+
+      document.getElementById('campaign-credits-name').textContent = c.nome;
+      document.getElementById('campaign-credits-desc').textContent = c.descricao;
+
+      const link = document.getElementById('campaign-credits-link');
+      let href = c.link_destino || '/pricing.html';
+      if (c.codigo_cupom) href += (href.includes('?') ? '&' : '?') + 'coupon=' + encodeURIComponent(c.codigo_cupom);
+      link.href = href;
+
+      document.getElementById('campaign-credits').style.display = 'block';
+    } catch (_) {}
+  }
 </script>
 <script>if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/sw.js'); }</script>
 </body>

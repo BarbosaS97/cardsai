@@ -280,6 +280,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <button onclick="showTab('users')" id="tab-users" class="tab-btn active">Usuários</button>
       <button onclick="showTab('generations')" id="tab-generations" class="tab-btn">Gerações</button>
       <button onclick="showTab('coupons')" id="tab-coupons" class="tab-btn">Cupons</button>
+      <button onclick="showTab('campaigns')" id="tab-campaigns" class="tab-btn">Campanhas</button>
     </div>
 
     <!-- Users tab -->
@@ -314,6 +315,17 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <button onclick="openCouponModal(null)" class="btn-primary">+ Novo cupom</button>
       </div>
       <div id="couponsTableWrap" class="card" style="padding:0;overflow:hidden;overflow-x:auto;">
+        <p style="color:var(--text-3);padding:32px;text-align:center;">Clique na aba para carregar.</p>
+      </div>
+    </div>
+
+    <!-- Campaigns tab -->
+    <div id="tab-campaigns-content" class="hidden">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px;">
+        <h2 style="font-size:15px;font-weight:600;color:var(--text);">Campanhas promocionais</h2>
+        <button onclick="openCampaignModal(null)" class="btn-primary">+ Nova campanha</button>
+      </div>
+      <div id="campaignsTableWrap" class="card" style="padding:0;overflow:hidden;overflow-x:auto;">
         <p style="color:var(--text-3);padding:32px;text-align:center;">Clique na aba para carregar.</p>
       </div>
     </div>
@@ -461,9 +473,73 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     </div>
   </div>
 
+  <!-- Modal: criar / editar campanha -->
+  <div id="campaignModal" class="hidden" style="position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(15,23,42,0.5);backdrop-filter:blur(4px);">
+    <div class="card" style="width:100%;max-width:520px;padding:28px;max-height:90vh;overflow-y:auto;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+        <h3 id="campaignModalTitle" style="font-size:16px;font-weight:700;color:var(--text);">Nova campanha</h3>
+        <button onclick="closeCampaignModal()" style="color:var(--text-3);font-size:20px;background:none;border:none;cursor:pointer;line-height:1;">×</button>
+      </div>
+
+      <div class="space-y-4">
+
+        <!-- Nome -->
+        <div>
+          <label style="display:block;font-size:11px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">Nome *</label>
+          <input id="cfNome" type="text" placeholder="Ex: Black Friday 2025" class="input-field" maxlength="80" />
+        </div>
+
+        <!-- Descrição -->
+        <div>
+          <label style="display:block;font-size:11px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">Descrição *</label>
+          <input id="cfDescricao" type="text" placeholder="Ex: 30% OFF em todos os pacotes" class="input-field" maxlength="120" />
+        </div>
+
+        <!-- Cupom + Link -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div>
+            <label style="display:block;font-size:11px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">Código do cupom</label>
+            <input id="cfCupom" type="text" placeholder="Ex: BLACK30" class="input-field" style="text-transform:uppercase;" maxlength="24" />
+          </div>
+          <div>
+            <label style="display:block;font-size:11px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">Link de destino</label>
+            <input id="cfLink" type="text" placeholder="/pricing.html" class="input-field" />
+          </div>
+        </div>
+
+        <!-- Posição + Ativo -->
+        <div style="display:grid;grid-template-columns:1fr auto;gap:12px;align-items:end;">
+          <div>
+            <label style="display:block;font-size:11px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">Posição *</label>
+            <select id="cfPosicao" class="input-field">
+              <option value="both">Ambas</option>
+              <option value="credits_page">Página de créditos</option>
+              <option value="landing_page">Landing page</option>
+            </select>
+          </div>
+          <div style="padding-bottom:2px;">
+            <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text);cursor:pointer;padding:9px 0;">
+              <input id="cfAtivo" type="checkbox" checked style="width:16px;height:16px;cursor:pointer;" />
+              Ativa
+            </label>
+          </div>
+        </div>
+
+      </div>
+
+      <div id="campaignModalMsg" class="hidden" style="font-size:13px;padding:10px 14px;border-radius:8px;margin-top:16px;"></div>
+
+      <div style="display:flex;gap:8px;margin-top:20px;">
+        <button onclick="closeCampaignModal()" class="btn-ghost" style="flex:1;justify-content:center;">Cancelar</button>
+        <button id="btnSaveCampaign" onclick="saveCampaign()" class="btn-primary" style="flex:2;justify-content:center;">Criar campanha</button>
+      </div>
+    </div>
+  </div>
+
   <script src="/js/config.js"></script>
   <script src="/js/auth.js"></script>
   <script src="/js/admin-coupons.js"></script>
+  <script src="/js/admin-campaigns.js"></script>
   <script>
     let allUsers = [];
     let allGens = [];
@@ -497,12 +573,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     }
 
     function showTab(tab) {
-      ['users', 'generations', 'coupons'].forEach(t => {
+      ['users', 'generations', 'coupons', 'campaigns'].forEach(t => {
         document.getElementById(`tab-${t}`).className =
           'tab-btn' + (t === tab ? ' active' : '');
         document.getElementById(`tab-${t}-content`).classList.toggle('hidden', t !== tab);
       });
-      if (tab === 'coupons' && !_couponsLoaded) loadCoupons();
+      if (tab === 'coupons'   && !_couponsLoaded)   loadCoupons();
+      if (tab === 'campaigns' && !_campaignsLoaded) loadCampaigns();
     }
 
     function filterUsers() {
