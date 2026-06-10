@@ -73,7 +73,8 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       display: flex; align-items: center; justify-content: space-between;
       height: 100%; gap: 12px;
     }
-    .logo { font-size: 14px; font-weight: 700; color: var(--text); }
+    .logo { font-size: 14px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 7px; }
+    .logo img { width: 24px; height: 24px; border-radius: 6px; flex-shrink: 0; }
     .header-right { display: flex; align-items: center; gap: 8px; }
     .btn-icon {
       background: transparent; border: 1px solid var(--border);
@@ -577,7 +578,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- ── Header ── -->
 <header>
   <div class="header-inner">
-    <a href="/dashboard.html" class="logo">CardsQuestõesAI</a>
+    <a href="/dashboard.html" class="logo">
+      <img src="/static/images/logo1.png" alt="CardsQuestõesAI" />
+      CardsQuestõesAI
+    </a>
     <div class="header-right">
       <button id="darkToggle" class="btn-icon" onclick="toggleDark()" title="Alternar tema">
         <svg id="iconSun" class="hidden" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">

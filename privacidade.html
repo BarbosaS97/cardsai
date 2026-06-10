@@ -64,7 +64,8 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       justify-content: space-between; gap: 16px;
       height: 100%; max-width: 1080px; margin: 0 auto; padding: 0 24px;
     }
-    .logo { font-size: 18px; font-weight: 700; color: var(--text); letter-spacing: -.3px; }
+    .logo { font-size: 18px; font-weight: 700; color: var(--text); letter-spacing: -.3px; display: flex; align-items: center; gap: 7px; }
+    .logo img { width: 24px; height: 24px; border-radius: 6px; flex-shrink: 0; }
     .btn-icon {
       background: transparent; border: 1px solid var(--border);
       border-radius: 8px; padding: 7px; color: var(--text-2);
@@ -180,7 +181,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
 <header>
   <div class="header-inner">
-    <a href="/index.html" class="logo">CardsQuestõesAI</a>
+    <a href="/index.html" class="logo">
+      <img src="/static/images/logo1.png" alt="CardsQuestõesAI" />
+      CardsQuestõesAI
+    </a>
     <div style="display:flex;align-items:center;gap:8px;">
       <a href="/index.html" class="nav-back">
         <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
