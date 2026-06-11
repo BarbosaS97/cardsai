@@ -11,8 +11,8 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Dashboard — CardsQuestõesAI</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
   <style>
     :root {
       --bg:        #FAFAF9;
@@ -1129,7 +1129,9 @@ Mínimo: 500 caracteres · Máximo: 50.000 caracteres"
   </div>
 </main>
 
-<script src="/js/config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="/js/config.js"></script>
 <script src="/js/auth.js"></script>
 <script>
   pdfjsLib.GlobalWorkerOptions.workerSrc =
@@ -1750,5 +1752,4 @@ Mínimo: 500 caracteres · Máximo: 50.000 caracteres"
   </footer>
 </body>
 </html>
- 
- 
+
