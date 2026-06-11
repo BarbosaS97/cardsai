@@ -375,6 +375,48 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       transition: border-color .15s;
     }
     #noteTextarea:focus { border-color: #2563EB; }
+
+    /* ── Mind Map ───────────────────────────────────────────── */
+    #panelMindmap { flex:1; position:relative; min-height:0; overflow:hidden; }
+    .mm-ctrl-bar {
+      position:absolute; bottom:18px; left:50%; transform:translateX(-50%); z-index:10;
+      display:flex; align-items:center; gap:3px; padding:7px 10px; white-space:nowrap;
+      background:rgba(15,23,42,.88); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+      border:1px solid rgba(148,163,184,.18); border-radius:12px;
+      box-shadow:0 8px 32px rgba(0,0,0,.35),0 1px 0 rgba(255,255,255,.06) inset;
+    }
+    [data-theme="light"] .mm-ctrl-bar {
+      background:rgba(255,255,255,.92); border-color:rgba(203,213,225,.8);
+      box-shadow:0 4px 20px rgba(0,0,0,.1);
+    }
+    .mm-btn {
+      width:30px; height:30px; display:inline-flex; align-items:center; justify-content:center;
+      border:none; border-radius:7px; background:transparent; color:#94A3B8;
+      cursor:pointer; font-size:13px; font-family:inherit; transition:background .15s,color .15s;
+    }
+    .mm-btn:hover  { background:rgba(255,255,255,.1); color:#E2E8F0; }
+    .mm-btn.active { background:rgba(168,85,247,.28); color:#C084FC; }
+    [data-theme="light"] .mm-btn        { color:#64748B; }
+    [data-theme="light"] .mm-btn:hover  { background:rgba(0,0,0,.06); color:#1E293B; }
+    [data-theme="light"] .mm-btn.active { background:rgba(139,92,246,.12); color:#7C3AED; }
+    .mm-sep { width:1px; height:18px; background:rgba(148,163,184,.2); margin:0 3px; }
+    [data-theme="light"] .mm-sep { background:rgba(100,116,139,.2); }
+    #mmDetailCard {
+      position:absolute; bottom:72px; left:50%; transform:translateX(-50%);
+      width:min(400px,calc(100vw - 32px)); z-index:20; padding:14px 16px;
+      background:rgba(15,23,42,.93); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
+      border:1px solid rgba(168,85,247,.3); border-radius:12px;
+      box-shadow:0 12px 40px rgba(0,0,0,.4);
+    }
+    [data-theme="light"] #mmDetailCard {
+      background:rgba(255,255,255,.97); border-color:rgba(139,92,246,.25);
+      box-shadow:0 8px 30px rgba(0,0,0,.12);
+    }
+    #mmDetailCard.hidden { display:none !important; }
+    #mmDetailTitle { font-size:12px; font-weight:700; color:var(--text,#E2E8F0); margin:0 22px 6px 0; }
+    #mmDetailBody  { font-size:12px; line-height:1.6; color:var(--text-2,#94A3B8); margin:0; max-height:110px; overflow-y:auto; }
+    #mindmapCanvas { flex:1; min-height:500px; }
+    .mm-fullscreen { position:fixed !important; inset:0 !important; z-index:250 !important; }
   </style>
   <!-- PWA -->
   <link rel="manifest" href="/manifest.json" />
@@ -449,6 +491,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       class="px-4 py-2.5 text-sm font-medium text-slate-500 border-b-2 border-transparent transition-colors whitespace-nowrap">
       Resumo
     </button>
+    <button id="tabMindmap" onclick="switchTab('mindmap')"
+      class="px-4 py-2.5 text-sm font-medium text-slate-500 border-b-2 border-transparent transition-colors whitespace-nowrap">
+      Mapa Mental
+    </button>
   </nav>
 
   <!-- Modo foco bar — aparece após carregar os dados -->
@@ -467,7 +513,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   </div>
 
   <!-- Panels -->
-  <main class="flex-1 px-4 md:px-8 py-5 md:py-6 max-w-3xl mx-auto w-full">
+  <main id="mainContent" class="flex-1 px-4 md:px-8 py-5 md:py-6 max-w-3xl mx-auto w-full">
 
     <!-- ══ QUESTÕES ══════════════════════════════════════════ -->
     <section id="panelQuestions">
@@ -618,6 +664,52 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     </section>
 
   </main>
+
+  <!-- ══ MAPA MENTAL ══════════════════════════════════════════ -->
+  <div id="panelMindmap" style="display:none;flex:1;flex-direction:column;min-height:0;position:relative;overflow:hidden;">
+
+    <!-- Controls bar -->
+    <div class="mm-ctrl-bar">
+      <div style="display:flex;align-items:center;gap:2px;">
+        <button class="mm-btn" onclick="MM.zoomOut()" title="Diminuir zoom" style="font-size:17px;font-weight:300;line-height:1;">−</button>
+        <button class="mm-btn" onclick="MM.fitView()" title="Centralizar" style="font-size:9px;letter-spacing:.06em;font-weight:700;width:34px;">FIT</button>
+        <button class="mm-btn" onclick="MM.zoomIn()" title="Aumentar zoom" style="font-size:17px;font-weight:300;line-height:1;">+</button>
+      </div>
+      <div class="mm-sep"></div>
+      <div style="display:flex;align-items:center;gap:2px;">
+        <button class="mm-btn" id="mmDrawBtn" onclick="MM.toggleDraw()" title="Modo desenho (caneta)">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+        </button>
+        <button class="mm-btn" onclick="MM.undoLast()" title="Desfazer último traço">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M3 10h10a8 8 0 010 16h-3m-7-16l4-4M3 10l4 4"/></svg>
+        </button>
+        <button class="mm-btn" onclick="MM.clearDraw()" title="Limpar todos os desenhos">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+        </button>
+      </div>
+      <div class="mm-sep"></div>
+      <div style="display:flex;align-items:center;gap:2px;">
+        <button class="mm-btn" onclick="MM.exportSVG()" title="Exportar mapa como SVG">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+        </button>
+        <button class="mm-btn" id="mmFsBtn" onclick="MM.toggleFullscreen()" title="Tela cheia">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Node detail popup -->
+    <div id="mmDetailCard" class="hidden">
+      <button onclick="document.getElementById('mmDetailCard').classList.add('hidden')"
+        style="position:absolute;top:10px;right:10px;background:none;border:none;color:#64748B;cursor:pointer;font-size:18px;line-height:1;padding:0;">×</button>
+      <p id="mmDetailTitle"></p>
+      <p id="mmDetailBody"></p>
+    </div>
+
+    <!-- SVG canvas -->
+    <div id="mindmapCanvas"></div>
+  </div>
+
 </div>
 
 <!-- ── Focus Mode Overlay ──────────────────────────────────── -->
@@ -844,6 +936,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   let questions = [], flashcards = [];
   let qIdx = 0, fcIdx = 0, activeTab = 'questions';
   let generationId = null;
+  let genData = null;
   const _answeredSet = new Set();
   window._notesMap = {};
 
@@ -852,6 +945,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
   window.switchTab = function (tab) {
     activeTab = tab;
+    const isMM = tab === 'mindmap';
+
+    // Toggle main content vs mind map panel
+    document.getElementById('mainContent').style.display = isMM ? 'none' : '';
+    const mmPanel = document.getElementById('panelMindmap');
+    mmPanel.style.display = isMM ? 'flex' : 'none';
+
+    // Regular tabs
     TABS.forEach(t => {
       const key = t.charAt(0).toUpperCase() + t.slice(1);
       document.getElementById('panel' + key).classList.toggle('hidden', t !== tab);
@@ -859,6 +960,24 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       btn.classList.toggle('tab-active', t === tab);
       btn.classList.toggle('text-slate-500', t !== tab);
     });
+
+    // Mind map tab button
+    const mmBtn = document.getElementById('tabMindmap');
+    if (mmBtn) {
+      mmBtn.classList.toggle('tab-active', isMM);
+      mmBtn.classList.toggle('text-slate-500', !isMM);
+    }
+
+    // Focus mode bar (not relevant for mind map)
+    const fw = document.getElementById('focusBtnWrap');
+    if (fw && !fw.classList.contains('hidden')) {
+      fw.style.display = isMM ? 'none' : 'block';
+    }
+
+    // Render mind map lazily when tab is activated
+    if (isMM && genData) {
+      setTimeout(() => MM.render('mindmapCanvas'), 50);
+    }
   };
 
   /* ── Questions ─────────────────────────────────────────── */
@@ -1211,6 +1330,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       if (genRes.error) { window.location.href = '/dashboard.html'; return; }
 
       const gen  = genRes.data;
+      genData    = gen;
       questions  = qRes.data  || [];
       flashcards = fRes.data  || [];
 
@@ -1310,6 +1430,364 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         '</div>';
     }
   }
+
+  /* ════════════════════════════════════════════════════════════
+     MIND MAP ENGINE
+     ════════════════════════════════════════════════════════════ */
+  const MM = (() => {
+    const NS  = 'http://www.w3.org/2000/svg';
+    const xe  = (tag, a) => { const e = document.createElementNS(NS, tag); a && Object.entries(a).forEach(([k,v]) => e.setAttribute(k,v)); return e; };
+    const PAL = [['#8B5CF6','#D946EF'],['#3B82F6','#06B6D4'],['#10B981','#34D399'],['#F59E0B','#F97316'],['#EC4899','#F43F5E'],['#6366F1','#8B5CF6'],['#14B8A6','#0EA5E9'],['#EAB308','#EF4444']];
+    const ICO = ['⚖️','📜','🛡️','🎓','💡','🔬','📊','🌐','🏛️','🔑','📚','🎯'];
+    const cut = (s, n) => s && s.length > n ? s.slice(0, n-1) + '…' : (s || '');
+    const dark = () => document.documentElement.getAttribute('data-theme') === 'dark';
+    const mkS  = () => ({ tx:0, ty:0, sc:1, drag:false, px:0, py:0, draw:false, isDrawing:false, curPath:null, curData:'', strokes:[], svgEl:null, gEl:null, dlEl:null });
+
+    let S = mkS();
+    let _winReady = false;
+
+    /* ── Tree ── */
+    function buildTree() {
+      if (!genData) return null;
+      const topics = (genData.topics || []).slice(0, 8);
+      const byTp = {};
+      (flashcards || []).forEach(f => {
+        const t = (f.topic || 'Geral').trim();
+        (byTp[t] = byTp[t] || []).push(f);
+      });
+      const tpList = topics.length ? topics : Object.keys(byTp).slice(0, 8);
+      return {
+        id:'root', label:cut(genData.title || genData.pdf_name || 'Mapa Mental', 26), icon:'🧠', level:0,
+        children: tpList.map((tp, i) => ({
+          id:`t${i}`, label:cut(tp, 20), icon:ICO[i%ICO.length], level:1, ci:i,
+          children: (byTp[tp]||[]).slice(0,5).map((f,j) => ({
+            id:`s${i}_${j}`, label:cut(f.front,38), detail:f.back, level:2, ci:i, children:[]
+          }))
+        }))
+      };
+    }
+
+    /* ── Layout ── */
+    function layout(root, W, H) {
+      const cx=W/2, cy=H/2, n=root.children.length;
+      const R1=Math.min(W*.22,H*.28,220), R2=R1*.72;
+      const ns=[{ ...root, x:cx, y:cy, par:null }];
+      root.children.forEach((tp, i) => {
+        const a = (2*Math.PI*i/n) - Math.PI/2;
+        const tx2=cx+R1*Math.cos(a), ty2=cy+R1*Math.sin(a);
+        const tn={ ...tp, x:tx2, y:ty2, a, par:ns[0] };
+        ns.push(tn);
+        const m=tp.children.length;
+        tp.children.forEach((sb, j) => {
+          const sp = m>1 ? Math.min(.78,(m-1)*.22) : 0;
+          const sa = a + (m===1 ? 0 : -sp + sp*2*j/(m-1));
+          ns.push({ ...sb, x:tx2+R2*Math.cos(sa), y:ty2+R2*Math.sin(sa), a:sa, par:tn });
+        });
+      });
+      return ns;
+    }
+
+    /* ── Defs ── */
+    function mkDefs(W, H) {
+      const d = dark();
+      const defs = xe('defs');
+
+      const bg=xe('linearGradient',{id:'mmBg',x1:'0%',y1:'0%',x2:'100%',y2:'100%'});
+      bg.innerHTML=`<stop offset="0%" stop-color="${d?'#0F172A':'#F8FAFC'}"/><stop offset="100%" stop-color="${d?'#1E1B4B':'#EFF6FF'}"/>`;
+      defs.appendChild(bg);
+
+      const rg=xe('radialGradient',{id:'mmRg',cx:'50%',cy:'50%',r:'50%'});
+      rg.innerHTML=`<stop offset="0%" stop-color="${d?'rgba(139,92,246,.12)':'rgba(139,92,246,.06)'}"/><stop offset="100%" stop-color="transparent"/>`;
+      defs.appendChild(rg);
+
+      PAL.forEach(([a,b],i) => {
+        const g=xe('linearGradient',{id:`mmP${i}`,x1:'0%',y1:'0%',x2:'100%',y2:'100%'});
+        g.innerHTML=`<stop offset="0%" stop-color="${a}"/><stop offset="100%" stop-color="${b}"/>`;
+        defs.appendChild(g);
+      });
+
+      const rt=xe('linearGradient',{id:'mmRoot',x1:'0%',y1:'0%',x2:'100%',y2:'100%'});
+      rt.innerHTML='<stop offset="0%" stop-color="#7C3AED"/><stop offset="50%" stop-color="#A855F7"/><stop offset="100%" stop-color="#EC4899"/>';
+      defs.appendChild(rt);
+
+      const sf=xe('filter',{id:'mmSh',x:'-20%',y:'-20%',width:'140%',height:'140%'});
+      sf.innerHTML='<feDropShadow dx="0" dy="3" stdDeviation="6" flood-color="rgba(0,0,0,.32)"/>';
+      defs.appendChild(sf);
+
+      const hf=xe('filter',{id:'mmHv',x:'-40%',y:'-40%',width:'180%',height:'180%'});
+      hf.innerHTML='<feGaussianBlur in="SourceGraphic" stdDeviation="6" result="bl"/><feMerge><feMergeNode in="bl"/><feMergeNode in="SourceGraphic"/></feMerge>';
+      defs.appendChild(hf);
+
+      const pat=xe('pattern',{id:'mmDot',x:'0',y:'0',width:'28',height:'28',patternUnits:'userSpaceOnUse'});
+      pat.innerHTML=`<circle cx="14" cy="14" r="1" fill="${d?'rgba(148,163,184,.15)':'rgba(148,163,184,.3)'}"/>`;
+      defs.appendChild(pat);
+
+      return defs;
+    }
+
+    /* ── Connection ── */
+    function drawConn(layer, a, b) {
+      const [ca]=PAL[(b.ci||0)%PAL.length];
+      const dx=b.x-a.x, dy=b.y-a.y, len=Math.hypot(dx,dy)||1;
+      const ox=-dy/len*22, oy=dx/len*22;
+      const path=xe('path',{
+        d:`M${a.x},${a.y} C${a.x+dx*.3+ox},${a.y+dy*.3+oy} ${b.x-dx*.3+ox},${b.y-dy*.3+oy} ${b.x},${b.y}`,
+        fill:'none', stroke:ca, 'stroke-opacity':'.65',
+        'stroke-width':b.level===2?'1.5':'2.5', 'stroke-linecap':'round',
+      });
+      const al=len*1.4;
+      path.setAttribute('stroke-dasharray',al); path.setAttribute('stroke-dashoffset',al);
+      const anim=document.createElementNS(NS,'animate');
+      anim.setAttribute('attributeName','stroke-dashoffset');
+      anim.setAttribute('from',al); anim.setAttribute('to','0');
+      anim.setAttribute('dur',`${.28+(b.ci||0)*.05}s`); anim.setAttribute('fill','freeze');
+      path.appendChild(anim); layer.appendChild(path);
+    }
+
+    /* ── Node ── */
+    function drawNode(layer, nd) {
+      const {x,y,label,icon,level,ci=0,detail}=nd;
+      const d=dark();
+      const g=xe('g',{class:'mm-nd',style:'cursor:default;'});
+      g.style.transition='transform .18s ease';
+
+      if (level===0) {
+        const rw=Math.max(58,label.length*5.5+28);
+        g.appendChild(xe('ellipse',{cx:x,cy:y,rx:rw+8,ry:38,fill:'none',stroke:'rgba(168,85,247,.28)','stroke-width':'1.5'}));
+        const bg=xe('ellipse',{cx:x,cy:y,rx:rw,ry:30,fill:'url(#mmRoot)',filter:'url(#mmSh)'});
+        g.appendChild(bg);
+        const ic=xe('text',{x,y:y-8,'text-anchor':'middle','dominant-baseline':'middle','font-size':'18',style:'user-select:none'});
+        ic.textContent=icon; g.appendChild(ic);
+        const lb=xe('text',{x,y:y+12,'text-anchor':'middle','dominant-baseline':'middle',fill:'white','font-size':'12','font-weight':'700','font-family':'Inter,system-ui,sans-serif',style:'user-select:none'});
+        lb.textContent=label; g.appendChild(lb);
+        g.style.cursor='default';
+        g.addEventListener('mouseenter',()=>{bg.setAttribute('filter','url(#mmHv)');g.style.transform=`translate(${x}px,${y}px) scale(1.05) translate(-${x}px,-${y}px)`;});
+        g.addEventListener('mouseleave',()=>{bg.setAttribute('filter','url(#mmSh)');g.style.transform='';});
+
+      } else if (level===1) {
+        const rw=Math.max(42,label.length*4.6+18);
+        const [ca]=PAL[ci%PAL.length];
+        g.appendChild(xe('ellipse',{cx:x,cy:y,rx:rw+8,ry:26,fill:ca,opacity:'.18'}));
+        const bg=xe('ellipse',{cx:x,cy:y,rx:rw,ry:20,fill:`url(#mmP${ci%PAL.length})`,filter:'url(#mmSh)'});
+        g.appendChild(bg);
+        const ic=xe('text',{x,y:y-7,'text-anchor':'middle','dominant-baseline':'middle','font-size':'13',style:'user-select:none'});
+        ic.textContent=icon; g.appendChild(ic);
+        const lb=xe('text',{x,y:y+9,'text-anchor':'middle','dominant-baseline':'middle',fill:'white','font-size':'10','font-weight':'600','font-family':'Inter,system-ui,sans-serif',style:'user-select:none'});
+        lb.textContent=label; g.appendChild(lb);
+        g.addEventListener('mouseenter',()=>{bg.setAttribute('filter','url(#mmHv)');g.style.transform=`translate(${x}px,${y}px) scale(1.06) translate(-${x}px,-${y}px)`;});
+        g.addEventListener('mouseleave',()=>{bg.setAttribute('filter','url(#mmSh)');g.style.transform='';});
+
+      } else {
+        const [ca]=PAL[ci%PAL.length];
+        const rw=Math.max(26,label.length*3+16);
+        const bg=xe('rect',{x:x-rw,y:y-12,width:rw*2,height:24,rx:12,
+          fill:d?'rgba(30,27,75,.84)':'rgba(255,255,255,.94)',
+          stroke:ca,'stroke-width':'1.5','stroke-opacity':'.6',filter:'url(#mmSh)'});
+        g.appendChild(bg);
+        const lb=xe('text',{x,y,'text-anchor':'middle','dominant-baseline':'middle',
+          fill:d?'#C4B5FD':'#5B21B6','font-size':'9.5','font-weight':'500','font-family':'Inter,system-ui,sans-serif',style:'user-select:none'});
+        lb.textContent=label; g.appendChild(lb);
+        if (detail) {
+          g.style.cursor='pointer';
+          g.addEventListener('mouseenter',()=>{bg.setAttribute('stroke-opacity','1');g.style.transform='translate(0,-2px)';});
+          g.addEventListener('mouseleave',()=>{bg.setAttribute('stroke-opacity','.6');g.style.transform='';});
+          g.addEventListener('click', e => {
+            e.stopPropagation();
+            document.getElementById('mmDetailTitle').textContent = label.replace(/…$/, '');
+            document.getElementById('mmDetailBody').textContent  = detail || '';
+            document.getElementById('mmDetailCard').classList.remove('hidden');
+          });
+        }
+      }
+      layer.appendChild(g);
+    }
+
+    /* ── Transform ── */
+    function applyTx() {
+      if (S.gEl) S.gEl.setAttribute('transform',`translate(${S.tx},${S.ty}) scale(${S.sc})`);
+    }
+    function spt(clientX, clientY) {
+      const r = S.svgEl.getBoundingClientRect();
+      return { x:(clientX-r.left-S.tx)/S.sc, y:(clientY-r.top-S.ty)/S.sc };
+    }
+
+    /* ── Window-level handlers (registered once) ── */
+    function ensureWinHandlers() {
+      if (_winReady) return;
+      _winReady = true;
+      window.addEventListener('mousemove', e => {
+        if (S.drag && !S.draw && S.svgEl) {
+          S.tx = e.clientX - S.px; S.ty = e.clientY - S.py; applyTx();
+        }
+        if (S.isDrawing && S.curPath && S.svgEl) {
+          const {x,y}=spt(e.clientX,e.clientY);
+          S.curData += ` L${x},${y}`; S.curPath.setAttribute('d',S.curData);
+        }
+      });
+      window.addEventListener('mouseup', () => {
+        if (S.drag) { S.drag=false; if(S.svgEl) S.svgEl.style.cursor=S.draw?'crosshair':'grab'; }
+        if (S.isDrawing) {
+          S.isDrawing=false;
+          if (S.curPath && S.curData.length>5) { S.strokes.push(S.curData); saveDraw(); }
+          S.curPath=null; S.curData='';
+        }
+      });
+    }
+
+    /* ── SVG-level interaction ── */
+    function setupSVG(svg) {
+      S.svgEl = svg;
+
+      // Wheel zoom
+      svg.addEventListener('wheel', e => {
+        if (S.draw) return; e.preventDefault();
+        const d=e.deltaY<0?1.12:.9, r=svg.getBoundingClientRect();
+        const mx=e.clientX-r.left, my=e.clientY-r.top;
+        const ns=Math.max(.2,Math.min(4,S.sc*d)), f=ns/S.sc;
+        S.tx=mx+(S.tx-mx)*f; S.ty=my+(S.ty-my)*f; S.sc=ns; applyTx();
+      },{passive:false});
+
+      // Pan start
+      svg.addEventListener('mousedown', e => {
+        if (S.draw) {
+          if (e.button!==0) return;
+          e.preventDefault();
+          const {x,y}=spt(e.clientX,e.clientY);
+          S.curData=`M${x},${y}`;
+          S.curPath=xe('path',{fill:'none',stroke:'#A855F7','stroke-width':'2.5','stroke-linecap':'round','stroke-linejoin':'round',opacity:'.9'});
+          S.curPath.setAttribute('d',S.curData); S.dlEl.appendChild(S.curPath); S.isDrawing=true;
+        } else {
+          if (e.button!==0) return;
+          S.drag=true; S.px=e.clientX-S.tx; S.py=e.clientY-S.ty; svg.style.cursor='grabbing';
+        }
+      });
+
+      // Touch draw
+      svg.addEventListener('touchstart', e => {
+        if (!S.draw) return; e.preventDefault();
+        const t=e.touches[0];
+        const {x,y}=spt(t.clientX,t.clientY);
+        S.curData=`M${x},${y}`;
+        S.curPath=xe('path',{fill:'none',stroke:'#A855F7','stroke-width':'2.5','stroke-linecap':'round','stroke-linejoin':'round'});
+        S.curPath.setAttribute('d',S.curData); S.dlEl.appendChild(S.curPath); S.isDrawing=true;
+      },{passive:false});
+      svg.addEventListener('touchmove', e => {
+        if (!S.isDrawing||!S.curPath) return; e.preventDefault();
+        const t=e.touches[0]; const {x,y}=spt(t.clientX,t.clientY);
+        S.curData+=` L${x},${y}`; S.curPath.setAttribute('d',S.curData);
+      },{passive:false});
+      svg.addEventListener('touchend', () => {
+        if (!S.isDrawing) return; S.isDrawing=false;
+        if (S.curPath&&S.curData.length>5){S.strokes.push(S.curData);saveDraw();}
+        S.curPath=null; S.curData='';
+      });
+
+      svg.style.cursor='grab';
+    }
+
+    /* ── Persist drawings ── */
+    function saveDraw() {
+      if (!generationId) return;
+      try { localStorage.setItem(`mm_${generationId}`,JSON.stringify(S.strokes)); } catch(e){}
+    }
+    function loadDraw() {
+      if (!generationId) return;
+      try {
+        const saved=JSON.parse(localStorage.getItem(`mm_${generationId}`)||'null');
+        if (!saved) return;
+        S.strokes=saved;
+        saved.forEach(d => {
+          const p=xe('path',{d,fill:'none',stroke:'#A855F7','stroke-width':'2.5','stroke-linecap':'round','stroke-linejoin':'round',opacity:'.9'});
+          S.dlEl.appendChild(p);
+        });
+      } catch(e){}
+    }
+
+    /* ── Public API ── */
+    return {
+      render(cId) {
+        S = mkS();
+        const cnt=document.getElementById(cId);
+        if (!cnt) return;
+        cnt.innerHTML='';
+        const W=cnt.clientWidth||900, H=cnt.clientHeight||560;
+
+        const svg=xe('svg',{width:'100%',height:'100%',style:'display:block;user-select:none;'});
+        svg.id='mmSvg';
+        svg.appendChild(mkDefs(W,H));
+        svg.appendChild(xe('rect',{width:W,height:H,fill:'url(#mmBg)'}));
+        svg.appendChild(xe('rect',{width:W,height:H,fill:'url(#mmDot)'}));
+        svg.appendChild(xe('ellipse',{cx:W/2,cy:H/2,rx:W*.42,ry:H*.42,fill:'url(#mmRg)'}));
+
+        const g=xe('g'); svg.appendChild(g); S.gEl=g;
+        const cl=xe('g'); g.appendChild(cl);
+        const nl=xe('g'); g.appendChild(nl);
+        const dl=xe('g'); g.appendChild(dl); S.dlEl=dl;
+
+        const t=buildTree();
+        if (t&&t.children.length) {
+          const ns=layout(t,W,H);
+          ns.forEach(nd=>nd.par&&drawConn(cl,nd.par,nd));
+          ns.forEach(nd=>drawNode(nl,nd));
+        } else {
+          const emp=xe('text',{x:W/2,y:H/2,'text-anchor':'middle','dominant-baseline':'middle',
+            fill:dark()?'#475569':'#94A3B8','font-size':'14','font-family':'Inter,system-ui,sans-serif'});
+          emp.textContent='Nenhum tópico encontrado para gerar o mapa mental.';
+          nl.appendChild(emp);
+        }
+
+        cnt.appendChild(svg);
+        loadDraw();
+        setupSVG(svg);
+        ensureWinHandlers();
+      },
+
+      zoomIn()  { S.sc=Math.min(4,S.sc*1.2); applyTx(); },
+      zoomOut() { S.sc=Math.max(.2,S.sc/1.2); applyTx(); },
+      fitView() { S.tx=0; S.ty=0; S.sc=1; applyTx(); },
+
+      toggleDraw() {
+        S.draw=!S.draw;
+        if (S.svgEl) S.svgEl.style.cursor=S.draw?'crosshair':'grab';
+        document.getElementById('mmDrawBtn')?.classList.toggle('active',S.draw);
+      },
+
+      undoLast() {
+        if (!S.strokes.length||!S.dlEl) return;
+        S.strokes.pop();
+        const ps=S.dlEl.querySelectorAll('path');
+        if (ps.length) ps[ps.length-1].remove();
+        saveDraw();
+      },
+
+      clearDraw() {
+        if (!S.strokes.length) return;
+        if (!confirm('Limpar todos os desenhos?')) return;
+        S.strokes=[]; if(S.dlEl) S.dlEl.innerHTML=''; saveDraw();
+      },
+
+      exportSVG() {
+        const svg=document.getElementById('mmSvg');
+        if (!svg) return;
+        const d=new XMLSerializer().serializeToString(svg);
+        const b=new Blob([d],{type:'image/svg+xml;charset=utf-8'});
+        const u=URL.createObjectURL(b);
+        const a=document.createElement('a');
+        a.href=u; a.download='mapa-mental.svg';
+        document.body.appendChild(a); a.click();
+        document.body.removeChild(a); URL.revokeObjectURL(u);
+      },
+
+      toggleFullscreen() {
+        const p=document.getElementById('panelMindmap');
+        const fs=p.classList.toggle('mm-fullscreen');
+        const btn=document.getElementById('mmFsBtn');
+        if (btn) { btn.title=fs?'Sair da tela cheia':'Tela cheia'; btn.style.color=fs?'#C084FC':''; }
+        document.body.style.overflow=fs?'hidden':'';
+        setTimeout(()=>this.render('mindmapCanvas'),80);
+      },
+    };
+  })();
 
   loadData();
 })();
