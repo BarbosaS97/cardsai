@@ -284,6 +284,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <button onclick="showTab('generations')" id="tab-generations" class="tab-btn">Gerações</button>
       <button onclick="showTab('coupons')" id="tab-coupons" class="tab-btn">Cupons</button>
       <button onclick="showTab('campaigns')" id="tab-campaigns" class="tab-btn">Campanhas</button>
+      <button onclick="showTab('email-marketing')" id="tab-email-marketing" class="tab-btn">Email Marketing</button>
     </div>
 
     <!-- Users tab -->
@@ -331,6 +332,45 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <div id="campaignsTableWrap" class="card" style="padding:0;overflow:hidden;overflow-x:auto;">
         <p style="color:var(--text-3);padding:32px;text-align:center;">Clique na aba para carregar.</p>
       </div>
+    </div>
+
+    <!-- Email Marketing tab -->
+    <div id="tab-email-marketing-content" class="hidden">
+
+      <!-- Compose -->
+      <div id="emailComposeSection" style="margin-bottom:24px;">
+        <div class="card" style="padding:24px;">
+          <h2 style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:16px;">Compor e-mail</h2>
+          <div class="space-y-4">
+            <div>
+              <label style="display:block;font-size:11px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">Assunto *</label>
+              <input id="emailTitle" type="text" placeholder="Ex: Novidades no CardsQuestõesAI!" class="input-field" maxlength="100" />
+            </div>
+            <div>
+              <label style="display:block;font-size:11px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">Mensagem (HTML) *</label>
+              <textarea id="emailBody" rows="10" placeholder="Digite o HTML ou texto simples do e-mail…&#10;&#10;Ex: &lt;h2&gt;Olá!&lt;/h2&gt;&lt;p&gt;Temos novidades para você.&lt;/p&gt;&lt;a href=&quot;https://cardsquestoes.com.br&quot;&gt;Acesse agora&lt;/a&gt;" class="input-field" style="resize:vertical;min-height:200px;font-family:monospace;font-size:13px;line-height:1.5;"></textarea>
+              <p style="font-size:11px;color:var(--text-3);margin-top:4px;">Suporta HTML: &lt;h1&gt;, &lt;h2&gt;, &lt;p&gt;, &lt;a href="…"&gt;, &lt;strong&gt;, &lt;ul&gt;, etc.</p>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;align-items:center;">
+            <button onclick="previewEmailDraft()" class="btn-ghost">Prévia</button>
+            <button id="btnTestEmail" onclick="sendTestEmail()" class="btn-ghost" style="color:var(--blue);border-color:var(--blue-bd);">Enviar teste (só para mim)</button>
+            <button id="btnSendMass" onclick="sendMassEmail()" class="btn-primary" style="margin-left:auto;">Enviar para todos os usuários →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- History -->
+      <div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px;">
+          <h2 style="font-size:15px;font-weight:600;color:var(--text);">Histórico de envios</h2>
+          <button onclick="loadEmailHistory()" class="btn-ghost">Atualizar</button>
+        </div>
+        <div id="emailHistoryWrap" class="card" style="padding:0;overflow:hidden;overflow-x:auto;">
+          <p style="color:var(--text-3);padding:32px;text-align:center;">Clique na aba para carregar.</p>
+        </div>
+      </div>
+
     </div>
 
     <!-- Generations tab -->
@@ -476,6 +516,19 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     </div>
   </div>
 
+  <!-- Modal: prévia do e-mail -->
+  <div id="emailPreviewModal" class="hidden" style="position:fixed;inset:0;z-index:50;display:none;align-items:center;justify-content:center;padding:16px;background:rgba(15,23,42,0.5);backdrop-filter:blur(4px);">
+    <div class="card" style="width:100%;max-width:680px;padding:0;overflow:hidden;max-height:90vh;display:flex;flex-direction:column;">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);flex-shrink:0;">
+        <h3 style="font-size:15px;font-weight:700;color:var(--text);">Prévia do e-mail</h3>
+        <button onclick="closeEmailPreviewModal()" style="color:var(--text-3);font-size:22px;background:none;border:none;cursor:pointer;line-height:1;">×</button>
+      </div>
+      <div style="overflow:auto;flex:1;">
+        <iframe id="emailPreviewFrame" style="width:100%;height:540px;border:none;background:#f5f5f5;" sandbox="allow-same-origin"></iframe>
+      </div>
+    </div>
+  </div>
+
   <!-- Modal: criar / editar campanha -->
   <div id="campaignModal" class="hidden" style="position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(15,23,42,0.5);backdrop-filter:blur(4px);">
     <div class="card" style="width:100%;max-width:520px;padding:28px;max-height:90vh;overflow-y:auto;">
@@ -543,6 +596,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <script src="/js/auth.js"></script>
   <script src="/js/admin-coupons.js"></script>
   <script src="/js/admin-campaigns.js"></script>
+  <script src="/js/admin-email-marketing.js"></script>
   <script>
     let allUsers = [];
     let allGens = [];
@@ -576,13 +630,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     }
 
     function showTab(tab) {
-      ['users', 'generations', 'coupons', 'campaigns'].forEach(t => {
+      ['users', 'generations', 'coupons', 'campaigns', 'email-marketing'].forEach(t => {
         document.getElementById(`tab-${t}`).className =
           'tab-btn' + (t === tab ? ' active' : '');
         document.getElementById(`tab-${t}-content`).classList.toggle('hidden', t !== tab);
       });
-      if (tab === 'coupons'   && !_couponsLoaded)   loadCoupons();
-      if (tab === 'campaigns' && !_campaignsLoaded) loadCampaigns();
+      if (tab === 'coupons'         && !_couponsLoaded)  loadCoupons();
+      if (tab === 'campaigns'       && !_campaignsLoaded) loadCampaigns();
+      if (tab === 'email-marketing' && !_emailLoaded)    loadEmailMarketing();
     }
 
     function filterUsers() {
