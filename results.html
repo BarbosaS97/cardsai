@@ -413,6 +413,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     [data-theme="dark"] .sk-szbtn.active { background:#1E3A5F; border-color:#3B82F6; }
     .sk-dot { background:var(--text); border-radius:50%; pointer-events:none; }
     #sketchCanvasWrap { flex:1; position:relative; overflow:hidden; touch-action:none; }
+    /* Prevent browser zoom on fabric's generated canvas elements */
+    #sketchCanvasWrap canvas,
+    #sketchCanvasWrap .canvas-container { touch-action:none !important; }
     #sketchStatus {
       display:flex; align-items:center; justify-content:space-between; gap:8px;
       padding:3px 12px; font-size:11px; color:var(--text-3);
@@ -777,7 +780,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         </svg>
         <span id="skSaveText">Faça anotações sobre o que está estudando.</span>
       </div>
-      <span id="skZoomLabel">100%</span>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span id="skModeLabel" style="font-size:10px;font-weight:600;letter-spacing:.04em;padding:2px 7px;border-radius:4px;background:#EFF6FF;color:#2563EB;">Desenho</span>
+        <span id="skZoomLabel">100%</span>
+      </div>
     </div>
 
   </div>
@@ -1522,6 +1528,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     let _panning = false;
     let _panStart = null;
     let _prevTouchDist = 0, _prevTouchCenter = null;
+    let _mode = 'draw'; // 'draw' (pen/marker/eraser/text) | 'nav' (select/zoom/pan)
 
     /* ── helpers ─────────────────────────────────────────── */
     function _colorRgba(hex, a) {
@@ -1566,6 +1573,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         _applyBrush();
         _setupEvents();
         _loadSketch();
+        // Force touch-action:none on every element Fabric.js generates internally
+        [_canvas.upperCanvasEl, _canvas.lowerCanvasEl, _canvas.wrapperEl].forEach(el => {
+          if (el) el.style.touchAction = 'none';
+        });
       });
 
       window.addEventListener('resize', _resize);
@@ -1585,6 +1596,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       if (!_canvas) return;
 
       if (_activeTool === 'pen') {
+        _mode = 'draw';
         _canvas.isDrawingMode = true;
         _canvas.selection = false;
         const b = new fabric.PencilBrush(_canvas);
@@ -1595,6 +1607,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         _setWrapCursor('crosshair');
 
       } else if (_activeTool === 'marker') {
+        _mode = 'draw';
         _canvas.isDrawingMode = true;
         _canvas.selection = false;
         const b = new fabric.PencilBrush(_canvas);
@@ -1605,19 +1618,38 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         _setWrapCursor('crosshair');
 
       } else if (_activeTool === 'eraser') {
+        _mode = 'draw';
         _canvas.isDrawingMode = false;
         _canvas.selection = false;
         _setWrapCursor('cell');
 
       } else if (_activeTool === 'text') {
+        _mode = 'draw';
         _canvas.isDrawingMode = false;
         _canvas.selection = false;
         _setWrapCursor('text');
 
-      } else { // select
+      } else { // select → nav mode
+        _mode = 'nav';
         _canvas.isDrawingMode = false;
         _canvas.selection = true;
         _setWrapCursor('default');
+      }
+
+      _updateModeBar();
+    }
+
+    function _updateModeBar() {
+      const el = document.getElementById('skModeLabel');
+      if (!el) return;
+      if (_mode === 'nav') {
+        el.textContent = 'Pan / Zoom';
+        el.style.background = '#F0FDF4';
+        el.style.color = '#16A34A';
+      } else {
+        el.textContent = 'Desenho';
+        el.style.background = '#EFF6FF';
+        el.style.color = '#2563EB';
       }
     }
 
@@ -1705,14 +1737,15 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
       _canvas.on('object:modified', _pushHistory);
 
-      // Scroll-wheel zoom
+      // Scroll-wheel zoom — only in nav mode; always preventDefault to block page scroll
       _canvas.on('mouse:wheel', (opt) => {
+        opt.e.preventDefault();
+        opt.e.stopPropagation();
+        if (_mode !== 'nav') return;
         const delta = opt.e.deltaY;
         let z = _canvas.getZoom() * (0.999 ** delta);
         z = Math.min(Math.max(z, 0.1), 10);
         _canvas.zoomToPoint(new fabric.Point(opt.e.offsetX, opt.e.offsetY), z);
-        opt.e.preventDefault();
-        opt.e.stopPropagation();
         _updateZoomLabel();
       });
 
@@ -1732,44 +1765,59 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         if (ev.key === ' ') { _spaceDown = false; _applyBrush(); }
       });
 
-      // Touch: two-finger pinch-zoom + pan
+      // Touch: pinch-zoom + pan — ONLY in nav mode; always block browser zoom (passive:false)
       const wrap = document.getElementById('sketchCanvasWrap');
+
       wrap.addEventListener('touchstart', (ev) => {
-        if (ev.touches.length === 2) {
-          const t1 = ev.touches[0], t2 = ev.touches[1];
-          _prevTouchDist   = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
-          _prevTouchCenter = { x: (t1.clientX + t2.clientX) / 2, y: (t1.clientY + t2.clientY) / 2 };
+        if (ev.touches.length >= 2) {
+          // Always prevent browser pinch-zoom on the sketch area
+          ev.preventDefault();
+          // Only initialise tracking when in nav mode
+          if (_mode === 'nav') {
+            const t1 = ev.touches[0], t2 = ev.touches[1];
+            _prevTouchDist   = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+            _prevTouchCenter = { x: (t1.clientX + t2.clientX) / 2, y: (t1.clientY + t2.clientY) / 2 };
+          } else {
+            // Draw mode: cancel any in-progress stroke tracking for 2-finger input
+            _prevTouchDist   = 0;
+            _prevTouchCenter = null;
+          }
         }
-      }, { passive: true });
+      }, { passive: false }); // must be false to call preventDefault
 
       wrap.addEventListener('touchmove', (ev) => {
-        if (ev.touches.length !== 2) return;
-        const t1 = ev.touches[0], t2 = ev.touches[1];
-        const dist   = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
-        const center = { x: (t1.clientX + t2.clientX) / 2, y: (t1.clientY + t2.clientY) / 2 };
-        const rect   = wrap.getBoundingClientRect();
+        if (ev.touches.length >= 2) {
+          ev.preventDefault(); // Always block browser zoom
+          if (_mode !== 'nav' || _prevTouchDist === 0) return;
 
-        if (_prevTouchDist > 0) {
+          const t1 = ev.touches[0], t2 = ev.touches[1];
+          const dist   = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+          const center = { x: (t1.clientX + t2.clientX) / 2, y: (t1.clientY + t2.clientY) / 2 };
+          const rect   = wrap.getBoundingClientRect();
+
           const ratio = dist / _prevTouchDist;
           const pt    = new fabric.Point(center.x - rect.left, center.y - rect.top);
           const z     = Math.min(Math.max(_canvas.getZoom() * ratio, 0.1), 10);
           _canvas.zoomToPoint(pt, z);
+
           if (_prevTouchCenter) {
             _canvas.relativePan(new fabric.Point(
               center.x - _prevTouchCenter.x,
               center.y - _prevTouchCenter.y
             ));
           }
+
+          _prevTouchDist   = dist;
+          _prevTouchCenter = center;
           _updateZoomLabel();
         }
-        _prevTouchDist   = dist;
-        _prevTouchCenter = center;
-        ev.preventDefault();
       }, { passive: false });
 
-      wrap.addEventListener('touchend', () => {
-        _prevTouchDist   = 0;
-        _prevTouchCenter = null;
+      wrap.addEventListener('touchend', (ev) => {
+        if (ev.touches.length < 2) {
+          _prevTouchDist   = 0;
+          _prevTouchCenter = null;
+        }
       }, { passive: true });
     }
 
