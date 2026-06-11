@@ -412,7 +412,31 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     .sk-szbtn.active { background:#EFF6FF; border-color:#93C5FD; }
     [data-theme="dark"] .sk-szbtn.active { background:#1E3A5F; border-color:#3B82F6; }
     .sk-dot { background:var(--text); border-radius:50%; pointer-events:none; }
+    #panelSketch { position:relative; }
     #sketchCanvasWrap { flex:1; position:relative; overflow:hidden; touch-action:none; }
+    /* Help overlay */
+    #skHelpPanel {
+      display:none; position:absolute; inset:0; z-index:50;
+      background:rgba(0,0,0,.5); align-items:center; justify-content:center; padding:16px;
+    }
+    #skHelpPanel.open { display:flex; }
+    #skHelpBox {
+      background:var(--surface); border:1px solid var(--border); border-radius:14px;
+      padding:20px 22px; width:100%; max-width:460px; max-height:calc(100% - 32px);
+      overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,.3);
+    }
+    .sk-help-row {
+      display:flex; align-items:flex-start; gap:12px;
+      padding:9px 0; border-bottom:1px solid var(--border-sub);
+    }
+    .sk-help-row:last-child { border-bottom:none; }
+    .sk-help-icon {
+      width:30px; height:30px; flex-shrink:0; border-radius:7px;
+      border:1px solid var(--border); background:var(--bg);
+      display:flex; align-items:center; justify-content:center; color:var(--text-2);
+    }
+    .sk-help-title { font-size:13px; font-weight:600; color:var(--text); margin-bottom:2px; }
+    .sk-help-desc  { font-size:12px; color:var(--text-2); line-height:1.55; }
     /* Prevent browser zoom on fabric's generated canvas elements */
     #sketchCanvasWrap canvas,
     #sketchCanvasWrap .canvas-container { touch-action:none !important; }
@@ -682,7 +706,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <button class="sk-btn" id="skTool-select" onclick="SK.setTool('select')" title="Selecionar/mover (V)">
           <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 3l14 9-7 1-4 7L5 3z"/></svg>
         </button>
-        <button class="sk-btn active" id="skTool-pen" onclick="SK.setTool('pen')" title="Caneta (P)">
+        <button class="sk-btn" id="skTool-pen" onclick="SK.setTool('pen')" title="Caneta (P)">
           <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
         </button>
         <button class="sk-btn" id="skTool-marker" onclick="SK.setTool('marker')" title="Marcador (M)">
@@ -765,11 +789,79 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         </button>
       </div>
 
+      <div class="sk-sep"></div>
+
+      <!-- Help -->
+      <div class="sk-group">
+        <button class="sk-btn" id="skHelpBtn" onclick="SK.toggleHelp()" title="Guia de funcionalidades" style="font-size:13px;font-weight:700;">?</button>
+      </div>
+
     </div>
 
     <!-- Canvas -->
     <div id="sketchCanvasWrap">
       <canvas id="sketchCanvas"></canvas>
+    </div>
+
+    <!-- Help overlay -->
+    <div id="skHelpPanel" onclick="if(event.target===this)SK.toggleHelp()">
+      <div id="skHelpBox">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+          <p style="font-size:15px;font-weight:700;color:var(--text);margin:0;">Guia do Sketch</p>
+          <button onclick="SK.toggleHelp()" style="background:none;border:none;cursor:pointer;font-size:20px;line-height:1;color:var(--text-3);padding:0 2px;">×</button>
+        </div>
+
+        <div class="sk-help-row">
+          <div class="sk-help-icon"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 3l14 9-7 1-4 7L5 3z"/></svg></div>
+          <div><div class="sk-help-title">Selecionar / Pan / Zoom</div><div class="sk-help-desc">Ativa o modo navegação: arraste o canvas para mover, use a roda do mouse ou pinça (dois dedos) para aproximar. Permite também selecionar e mover objetos no canvas.</div></div>
+        </div>
+
+        <div class="sk-help-row">
+          <div class="sk-help-icon"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg></div>
+          <div><div class="sk-help-title">Caneta</div><div class="sk-help-desc">Desenho livre com traço fino e preciso. Clique novamente na caneta ativa para desativá-la (volta ao estado neutro). Com a correção de formas ligada, linhas tortas viram retas e círculos imperfeitos viram perfeitos.</div></div>
+        </div>
+
+        <div class="sk-help-row">
+          <div class="sk-help-icon"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m-6-8h6M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z"/></svg></div>
+          <div><div class="sk-help-title">Marcador</div><div class="sk-help-desc">Traço semi-transparente e largo, ideal para grifar. Ativa automaticamente a cor amarela. Clique novamente para desativar.</div></div>
+        </div>
+
+        <div class="sk-help-row">
+          <div class="sk-help-icon"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 20H7L3 16l10-10 7 7-2.5 2.5M6.5 17.5l4-4"/></svg></div>
+          <div><div class="sk-help-title">Borracha</div><div class="sk-help-desc">Toque em um objeto para apagá-lo completamente. O tamanho da borracha segue o espessura selecionada. Clique novamente para desativar.</div></div>
+        </div>
+
+        <div class="sk-help-row">
+          <div class="sk-help-icon"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M4 7V4h16v3M9 20h6M12 4v16"/></svg></div>
+          <div><div class="sk-help-title">Texto</div><div class="sk-help-desc">Clique em qualquer ponto do canvas para inserir uma caixa de texto editável. Clique novamente para desativar.</div></div>
+        </div>
+
+        <div class="sk-help-row">
+          <div class="sk-help-icon"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path stroke-linecap="round" d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/></svg></div>
+          <div><div class="sk-help-title">Correção de formas</div><div class="sk-help-desc">Quando ativo (azul), detecta automaticamente linhas tortas e as retifica, e círculos imperfeitos e os torna perfeitos. Clique para ligar/desligar.</div></div>
+        </div>
+
+        <div class="sk-help-row">
+          <div class="sk-help-icon" style="gap:2px;flex-direction:column;font-size:9px;font-weight:700;color:var(--text-2);">
+            <span>Z</span><span>Y</span>
+          </div>
+          <div><div class="sk-help-title">Desfazer / Refazer</div><div class="sk-help-desc">Ctrl+Z desfaz a última ação. Ctrl+Y (ou Ctrl+Shift+Z) refaz. Histórico de até 60 estados.</div></div>
+        </div>
+
+        <div class="sk-help-row">
+          <div class="sk-help-icon" style="font-size:9px;font-weight:700;letter-spacing:.02em;color:var(--text-2);">FIT</div>
+          <div><div class="sk-help-title">Zoom − / FIT / +</div><div class="sk-help-desc">Botões − e + controlam o zoom (sempre funcionam, em qualquer modo). FIT redefine para 100% e centraliza o canvas. No modo Pan/Zoom, a roda do mouse e a pinça também funcionam.</div></div>
+        </div>
+
+        <div class="sk-help-row">
+          <div class="sk-help-icon"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg></div>
+          <div><div class="sk-help-title">Exportar PNG</div><div class="sk-help-desc">Salva o conteúdo atual do sketch como imagem PNG. O sketch também é salvo automaticamente no Supabase enquanto você desenha.</div></div>
+        </div>
+
+        <p style="font-size:11px;color:var(--text-3);margin-top:14px;padding-top:12px;border-top:1px solid var(--border-sub);">
+          Estado neutro (nenhuma ferramenta ativa) → zoom/pan funcionam, canvas não desenha.
+        </p>
+      </div>
     </div>
 
     <!-- Status bar -->
@@ -1515,7 +1607,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
      ════════════════════════════════════════════════════════════ */
   const SK = (() => {
     let _canvas = null;
-    let _activeTool = 'pen';
+    let _activeTool = 'neutral'; // neutral | select | pen | marker | eraser | text
     let _activeColor = '#1a1a1a';
     let _activeSize  = 4;
     let _shapeCorrect = true;
@@ -1528,7 +1620,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     let _panning = false;
     let _panStart = null;
     let _prevTouchDist = 0, _prevTouchCenter = null;
-    let _mode = 'draw'; // 'draw' (pen/marker/eraser/text) | 'nav' (select/zoom/pan)
+    let _mode = 'nav'; // 'draw' (pen/marker/eraser/text) | 'nav' (neutral/select)
 
     /* ── helpers ─────────────────────────────────────────── */
     function _colorRgba(hex, a) {
@@ -1629,10 +1721,16 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         _canvas.selection = false;
         _setWrapCursor('text');
 
-      } else { // select → nav mode
+      } else if (_activeTool === 'select') {
         _mode = 'nav';
         _canvas.isDrawingMode = false;
-        _canvas.selection = true;
+        _canvas.selection = true;  // allow moving objects
+        _setWrapCursor('default');
+
+      } else { // neutral — nav mode, nothing draws, nothing selects
+        _mode = 'nav';
+        _canvas.isDrawingMode = false;
+        _canvas.selection = false;
         _setWrapCursor('default');
       }
 
@@ -1946,16 +2044,31 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     /* ── public API ─────────────────────────────────────── */
     function setTool(tool) {
-      _activeTool = tool;
+      // Draw tools toggle: clicking an already-active draw tool → back to neutral
+      const drawTools = ['pen', 'marker', 'eraser', 'text'];
+      if (drawTools.includes(tool) && _activeTool === tool) {
+        _activeTool = 'neutral';
+      } else {
+        _activeTool = tool; // select never toggles back to neutral
+      }
+
       _applyBrush();
+
+      // Update button highlights (select, pen, marker, eraser, text)
       ['select','pen','marker','eraser','text'].forEach(t => {
         const b = document.getElementById('skTool-' + t);
-        if (b) b.classList.toggle('active', t === tool);
+        if (b) b.classList.toggle('active', t === _activeTool);
       });
-      // Default to yellow when switching to marker
-      if (tool === 'marker' && !['#FACC15','#4ADE80'].includes(_activeColor)) {
+
+      // Auto-switch to yellow when activating marker
+      if (_activeTool === 'marker' && !['#FACC15','#4ADE80'].includes(_activeColor)) {
         setColor('#FACC15', 'yellow');
       }
+    }
+
+    function toggleHelp() {
+      const panel = document.getElementById('skHelpPanel');
+      if (panel) panel.classList.toggle('open');
     }
 
     function setColor(color, id) {
@@ -2036,7 +2149,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       _saveSketch();
     }
 
-    return { init, setTool, setColor, setSize, toggleShapeCorrection, undo, redo, clearAll, zoomIn, zoomOut, fitView, exportPNG, _flushSave };
+    return { init, setTool, setColor, setSize, toggleShapeCorrection, undo, redo, clearAll, zoomIn, zoomOut, fitView, exportPNG, toggleHelp, _flushSave };
   })();
 
   window.SK = SK;
