@@ -1527,50 +1527,44 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     }
 
     /* ── Layout ── */
-    function resolveOverlaps(ns) {
-      const MIN = [0, 240, 285];
-      for (let iter = 0; iter < 80; iter++) {
-        let moved = false;
-        for (let i = 1; i < ns.length; i++) {
-          for (let j = i + 1; j < ns.length; j++) {
-            const a = ns[i], b = ns[j];
-            if (a.level !== b.level) continue;
-            const minD = MIN[a.level] || 270;
-            const dx = b.x - a.x, dy = b.y - a.y;
-            const dist = Math.hypot(dx, dy) || 0.01;
-            if (dist < minD) {
-              const push = (minD - dist) / 2 + 1;
-              const ux = dx / dist, uy = dy / dist;
-              a.x -= ux * push; a.y -= uy * push;
-              b.x += ux * push; b.y += uy * push;
-              moved = true;
-            }
-          }
-        }
-        if (!moved) break;
-      }
-    }
-
     function layout(root, W, H, fullMode) {
-      const cx=W/2, cy=H/2, n=root.children.length;
+      const cx = W/2, cy = H/2, n = root.children.length;
+      // R1: center → topic node; R2: topic → subtopic column center
       const R1 = fullMode
-        ? Math.min(W*.36, H*.40, 510)
-        : Math.min(W*.38, H*.42, 660);
-      const R2 = Math.min(440, Math.max(310, R1*.67));
-      const ns=[{ ...root, x:cx, y:cy, par:null }];
+        ? Math.min(W*.28, H*.32, 400)
+        : Math.min(W*.28, H*.32, 460);
+      const R2 = fullMode
+        ? Math.min(270, Math.max(200, R1*.62))
+        : Math.min(310, Math.max(230, R1*.65));
+
+      const ns = [{ ...root, x:cx, y:cy, par:null }];
       root.children.forEach((tp, i) => {
         const a = (2*Math.PI*i/n) - Math.PI/2;
-        const tx2=cx+R1*Math.cos(a), ty2=cy+R1*Math.sin(a);
-        const tn={ ...tp, x:tx2, y:ty2, a, par:ns[0] };
+        const tx = cx + R1*Math.cos(a), ty = cy + R1*Math.sin(a);
+        const tn = { ...tp, x:tx, y:ty, a, par:ns[0] };
         ns.push(tn);
-        const m=tp.children.length;
-        tp.children.forEach((sb, j) => {
-          const sp = m>1 ? Math.min(1.9,(m-1)*.46) : 0;
-          const sa = a + (m===1 ? 0 : -sp + sp*2*j/(m-1));
-          ns.push({ ...sb, x:tx2+R2*Math.cos(sa), y:ty2+R2*Math.sin(sa), a:sa, par:tn });
+
+        const children = tp.children.slice(0, 5);
+        const m = children.length;
+        if (!m) return;
+
+        // Subtopics are placed in a line perpendicular to the radial axis.
+        // This guarantees: (a) each subtopic is exactly R2 from its parent,
+        // (b) no post-processing moves parents without moving children,
+        // (c) STEP=290 is large enough to prevent overlap in all radial angles.
+        const radX = Math.cos(a), radY = Math.sin(a);
+        const perpX = -Math.sin(a), perpY = Math.cos(a);
+        const STEP = 290;
+
+        children.forEach((sb, j) => {
+          const offset = (j - (m - 1) / 2) * STEP;
+          ns.push({ ...sb,
+            x: tx + radX * R2 + perpX * offset,
+            y: ty + radY * R2 + perpY * offset,
+            a, par: tn
+          });
         });
       });
-      resolveOverlaps(ns);
       return ns;
     }
 
