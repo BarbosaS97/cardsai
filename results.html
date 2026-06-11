@@ -1673,6 +1673,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
       requestAnimationFrame(() => {
         _resize();
+        _setupControls();
         _applyBrush();
         _setupEvents();
         _loadSketch();
@@ -2230,6 +2231,96 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       btn.innerHTML = isFs ? collapseSvg : expandSvg;
       btn.title     = isFs ? 'Sair da tela cheia (Esc)' : 'Tela cheia';
       requestAnimationFrame(_resize);
+    }
+
+    /* ── custom object controls ──────────────────────────── */
+    function _setupControls() {
+      const D = 22; // button diameter (px)
+
+      function _btn(ctx, left, top, bg, drawFn) {
+        ctx.save();
+        ctx.translate(left, top);
+        ctx.beginPath();
+        ctx.arc(0, 0, D / 2, 0, Math.PI * 2);
+        ctx.fillStyle = bg;
+        ctx.fill();
+        ctx.fillStyle = '#fff';
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 1.5;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        drawFn(ctx);
+        ctx.restore();
+      }
+
+      function _drawTrash(ctx) {
+        // lid
+        ctx.beginPath(); ctx.moveTo(-4.5, -2); ctx.lineTo(4.5, -2); ctx.stroke();
+        // lid handle
+        ctx.beginPath(); ctx.moveTo(-1.5, -2); ctx.lineTo(-1.5, -4.5);
+        ctx.lineTo(1.5, -4.5); ctx.lineTo(1.5, -2); ctx.stroke();
+        // body
+        ctx.beginPath(); ctx.moveTo(-3.5, -2); ctx.lineTo(-3, 4.5);
+        ctx.lineTo(3, 4.5); ctx.lineTo(3.5, -2); ctx.stroke();
+        // center rib
+        ctx.beginPath(); ctx.moveTo(0, -0.5); ctx.lineTo(0, 3.5); ctx.stroke();
+      }
+
+      function _drawRotate(ctx) {
+        const r = 4.2;
+        // 270° clockwise arc, gap at upper-right
+        ctx.beginPath();
+        ctx.arc(0, 0, r, Math.PI / 4, 1.75 * Math.PI, false);
+        ctx.stroke();
+        // arrowhead at the end of the arc (315° = upper-right)
+        const a  = 1.75 * Math.PI;
+        const ex = Math.cos(a) * r, ey = Math.sin(a) * r;   // arc end point
+        const tx = -Math.sin(a),    ty =  Math.cos(a);       // clockwise tangent
+        const px = -ty,             py =  tx;                // perpendicular
+        const L = 2.8, W = 1.6;
+        ctx.beginPath();
+        ctx.moveTo(ex + tx, ey + ty);
+        ctx.lineTo(ex + tx - tx * L + px * W, ey + ty - ty * L + py * W);
+        ctx.lineTo(ex + tx - tx * L - px * W, ey + ty - ty * L - py * W);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      // Keep only corner resize handles; remove middle-edge and default rotation
+      ['mt', 'mb', 'ml', 'mr', 'mtr'].forEach(k => {
+        delete fabric.Object.prototype.controls[k];
+      });
+
+      // Delete — above the object
+      fabric.Object.prototype.controls.deleteCtrl = new fabric.Control({
+        x: 0, y: -0.5, offsetY: -26,
+        sizeX: D, sizeY: D,
+        cursorStyle: 'pointer',
+        mouseUpHandler(_e, transform) {
+          const obj = transform.target, cv = obj.canvas;
+          if (obj.type === 'activeSelection') {
+            obj.forEachObject(o => cv.remove(o));
+            cv.discardActiveObject();
+          } else {
+            cv.remove(obj);
+          }
+          cv.requestRenderAll();
+          _pushHistory();
+          return true;
+        },
+        render(ctx, left, top) { _btn(ctx, left, top, '#EF4444', _drawTrash); },
+      });
+
+      // Rotate — below the object
+      fabric.Object.prototype.controls.rotateCtrl = new fabric.Control({
+        x: 0, y: 0.5, offsetY: 26,
+        sizeX: D, sizeY: D,
+        cursorStyle: 'grab',
+        actionName: 'rotate',
+        actionHandler: fabric.controlsUtils.rotationWithSnapping,
+        cursorStyleHandler: fabric.controlsUtils.rotationStyleHandler,
+        render(ctx, left, top) { _btn(ctx, left, top, '#334155', _drawRotate); },
+      });
     }
 
     function _flushSave() {
