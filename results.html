@@ -446,6 +446,13 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       background:var(--surface); border-top:1px solid var(--border); flex-shrink:0;
     }
     #skSaveStatus { display:flex; align-items:center; gap:5px; }
+    /* ── Fullscreen mode ──────────────────────────────────── */
+    #panelSketch.sk-fullscreen {
+      position: fixed; inset: 0; z-index: 1000;
+    }
+    #panelSketch.sk-fullscreen #sketchToolbar {
+      padding: 3px 6px;
+    }
 
   </style>
   <!-- PWA -->
@@ -782,10 +789,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
       <div class="sk-sep"></div>
 
-      <!-- Export -->
+      <!-- Export + Fullscreen -->
       <div class="sk-group">
         <button class="sk-btn" onclick="SK.exportPNG()" title="Exportar como PNG">
           <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+        </button>
+        <button class="sk-btn" id="skFullscreenBtn" onclick="SK.toggleFullscreen()" title="Tela cheia">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/></svg>
         </button>
       </div>
 
@@ -1869,6 +1879,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         if (activeTab !== 'sketch') return;
         const tag = ev.target.tagName;
         if (tag === 'INPUT' || tag === 'TEXTAREA' || ev.target.isContentEditable) return;
+        if (ev.key === 'Escape' && document.getElementById('panelSketch').classList.contains('sk-fullscreen')) {
+          toggleFullscreen(); ev.preventDefault(); return;
+        }
         if (ev.key === ' ') {
           if (!_spaceDown) { _spaceDown = true; _setWrapCursor('grab'); }
           ev.preventDefault();
@@ -2172,12 +2185,23 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       a.click();
     }
 
+    function toggleFullscreen() {
+      const panel = document.getElementById('panelSketch');
+      const btn   = document.getElementById('skFullscreenBtn');
+      const isFs  = panel.classList.toggle('sk-fullscreen');
+      const expandSvg   = `<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/></svg>`;
+      const collapseSvg = `<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 3v3a2 2 0 01-2 2H3m18 0h-3a2 2 0 01-2-2V3m0 18v-3a2 2 0 012-2h3M3 16h3a2 2 0 012 2v3"/></svg>`;
+      btn.innerHTML = isFs ? collapseSvg : expandSvg;
+      btn.title     = isFs ? 'Sair da tela cheia (Esc)' : 'Tela cheia';
+      requestAnimationFrame(_resize);
+    }
+
     function _flushSave() {
       clearTimeout(_saveTimer);
       _saveSketch();
     }
 
-    return { init, setTool, setColor, setSize, toggleShapeCorrection, undo, redo, clearAll, zoomIn, zoomOut, fitView, exportPNG, toggleHelp, _flushSave };
+    return { init, setTool, setColor, setSize, toggleShapeCorrection, undo, redo, clearAll, zoomIn, zoomOut, fitView, exportPNG, toggleHelp, toggleFullscreen, _flushSave };
   })();
 
   window.SK = SK;
