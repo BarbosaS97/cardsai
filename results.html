@@ -1623,6 +1623,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     let _shapeCorrect = true;
     let _history = [], _histIdx = -1;
     let _saveTimer = null;
+    let _resizeTimer = null;
     let _initialized = false;
     let _erasing = false;
     let _strokePts = [];
@@ -1681,16 +1682,32 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         });
       });
 
-      window.addEventListener('resize', _resize);
+      window.addEventListener('resize', _scheduleResize);
+      window.addEventListener('orientationchange', _scheduleResize);
+      if (screen.orientation) screen.orientation.addEventListener('change', _scheduleResize);
     }
 
     /* ── canvas resize ───────────────────────────────────── */
     function _resize() {
       const wrap = document.getElementById('sketchCanvasWrap');
       if (!wrap || !_canvas) return;
+      const vt = _canvas.viewportTransform.slice(); // preserve pan/zoom
       _canvas.setWidth(wrap.clientWidth);
       _canvas.setHeight(wrap.clientHeight);
+      _canvas.setViewportTransform(vt);
       _canvas.renderAll();
+      _updateZoomLabel();
+    }
+
+    // Debounced resize — handles both 'resize' and 'orientationchange'.
+    // Double RAF + 100 ms delay lets iOS Safari finish its layout reflow
+    // before we read the new dimensions.
+    function _scheduleResize() {
+      clearTimeout(_resizeTimer);
+      _resizeTimer = setTimeout(
+        () => requestAnimationFrame(() => requestAnimationFrame(_resize)),
+        100
+      );
     }
 
     /* ── apply tool to canvas ─────────────────────────────── */
@@ -2216,3 +2233,4 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   </footer>
 </body>
 </html>
+
