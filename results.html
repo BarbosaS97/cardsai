@@ -13,6 +13,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   <title>Material de Estudo — CardsQuestõesAI</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
   <style>
     /* ── CSS variables (light / dark) ─────────────────── */
     :root {
@@ -376,6 +377,49 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     }
     #noteTextarea:focus { border-color: #2563EB; }
 
+    /* ── Sketch ─────────────────────────────────────────────── */
+    #panelSketch { flex:1; flex-direction:column; background:#f8f8f6; overflow:hidden; }
+    [data-theme="dark"] #panelSketch { background:#111116; }
+    #sketchToolbar {
+      display:flex; align-items:center; gap:2px; padding:6px 10px;
+      background:var(--surface); border-bottom:1px solid var(--border);
+      overflow-x:auto; flex-shrink:0; scrollbar-width:none; -ms-overflow-style:none;
+    }
+    #sketchToolbar::-webkit-scrollbar { display:none; }
+    .sk-sep { width:1px; height:20px; background:var(--border); margin:0 5px; flex-shrink:0; }
+    .sk-group { display:flex; align-items:center; gap:2px; flex-shrink:0; }
+    .sk-btn {
+      width:32px; height:32px; display:inline-flex; align-items:center; justify-content:center;
+      border:1px solid transparent; border-radius:7px; background:transparent;
+      color:var(--text-2); cursor:pointer; flex-shrink:0;
+      transition:background .12s,border-color .12s,color .12s;
+    }
+    .sk-btn:hover { background:var(--border-sub); color:var(--text); }
+    .sk-btn.active { background:#EFF6FF; border-color:#93C5FD; color:#2563EB; }
+    [data-theme="dark"] .sk-btn.active { background:#1E3A5F; border-color:#3B82F6; color:#93C5FD; }
+    .sk-color {
+      width:20px; height:20px; border-radius:50%; cursor:pointer; flex-shrink:0;
+      border:2.5px solid transparent; transition:transform .12s,border-color .12s;
+    }
+    .sk-color:hover { transform:scale(1.18); }
+    .sk-color.active { border-color:#2563EB; box-shadow:0 0 0 1.5px rgba(37,99,235,.35); }
+    .sk-szbtn {
+      width:28px; height:28px; display:inline-flex; align-items:center; justify-content:center;
+      border:1px solid transparent; border-radius:6px; background:transparent;
+      cursor:pointer; flex-shrink:0; transition:background .12s,border-color .12s;
+    }
+    .sk-szbtn:hover { background:var(--border-sub); }
+    .sk-szbtn.active { background:#EFF6FF; border-color:#93C5FD; }
+    [data-theme="dark"] .sk-szbtn.active { background:#1E3A5F; border-color:#3B82F6; }
+    .sk-dot { background:var(--text); border-radius:50%; pointer-events:none; }
+    #sketchCanvasWrap { flex:1; position:relative; overflow:hidden; touch-action:none; }
+    #sketchStatus {
+      display:flex; align-items:center; justify-content:space-between; gap:8px;
+      padding:3px 12px; font-size:11px; color:var(--text-3);
+      background:var(--surface); border-top:1px solid var(--border); flex-shrink:0;
+    }
+    #skSaveStatus { display:flex; align-items:center; gap:5px; }
+
   </style>
   <!-- PWA -->
   <link rel="manifest" href="/manifest.json" />
@@ -449,6 +493,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <button id="tabSummary"    onclick="switchTab('summary')"
       class="px-4 py-2.5 text-sm font-medium text-slate-500 border-b-2 border-transparent transition-colors whitespace-nowrap">
       Resumo
+    </button>
+    <button id="tabSketch" onclick="switchTab('sketch')"
+      class="px-4 py-2.5 text-sm font-medium text-slate-500 border-b-2 border-transparent transition-colors whitespace-nowrap">
+      Sketch
     </button>
   </nav>
 
@@ -620,6 +668,119 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
   </main>
 
+  <!-- ══ SKETCH ══════════════════════════════════════════════ -->
+  <div id="panelSketch" style="display:none;">
+
+    <!-- Toolbar -->
+    <div id="sketchToolbar">
+
+      <!-- Tools -->
+      <div class="sk-group">
+        <button class="sk-btn" id="skTool-select" onclick="SK.setTool('select')" title="Selecionar/mover (V)">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 3l14 9-7 1-4 7L5 3z"/></svg>
+        </button>
+        <button class="sk-btn active" id="skTool-pen" onclick="SK.setTool('pen')" title="Caneta (P)">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+        </button>
+        <button class="sk-btn" id="skTool-marker" onclick="SK.setTool('marker')" title="Marcador (M)">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m-6-8h6M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z"/></svg>
+        </button>
+        <button class="sk-btn" id="skTool-eraser" onclick="SK.setTool('eraser')" title="Borracha (E)">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 20H7L3 16l10-10 7 7-2.5 2.5M6.5 17.5l4-4"/></svg>
+        </button>
+        <button class="sk-btn" id="skTool-text" onclick="SK.setTool('text')" title="Texto (T)">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M4 7V4h16v3M9 20h6M12 4v16"/></svg>
+        </button>
+      </div>
+
+      <div class="sk-sep"></div>
+
+      <!-- Colors -->
+      <div class="sk-group" style="gap:5px;">
+        <button class="sk-color active" id="skColor-black"  style="background:#1a1a1a;" onclick="SK.setColor('#1a1a1a','black')"   title="Preto"></button>
+        <button class="sk-color"        id="skColor-blue"   style="background:#2563EB;" onclick="SK.setColor('#2563EB','blue')"    title="Azul"></button>
+        <button class="sk-color"        id="skColor-red"    style="background:#DC2626;" onclick="SK.setColor('#DC2626','red')"     title="Vermelho"></button>
+        <button class="sk-color"        id="skColor-green"  style="background:#16A34A;" onclick="SK.setColor('#16A34A','green')"   title="Verde"></button>
+        <button class="sk-color"        id="skColor-yellow" style="background:#FACC15;" onclick="SK.setColor('#FACC15','yellow')"  title="Amarelo"></button>
+        <button class="sk-color"        id="skColor-lgreen" style="background:#4ADE80;" onclick="SK.setColor('#4ADE80','lgreen')"  title="Verde claro"></button>
+      </div>
+
+      <div class="sk-sep"></div>
+
+      <!-- Stroke sizes -->
+      <div class="sk-group">
+        <button class="sk-szbtn" id="skSize-2" onclick="SK.setSize(2)" title="Fino">
+          <span class="sk-dot" style="width:4px;height:4px;"></span>
+        </button>
+        <button class="sk-szbtn active" id="skSize-4" onclick="SK.setSize(4)" title="Médio">
+          <span class="sk-dot" style="width:7px;height:7px;"></span>
+        </button>
+        <button class="sk-szbtn" id="skSize-6" onclick="SK.setSize(6)" title="Grosso">
+          <span class="sk-dot" style="width:11px;height:11px;"></span>
+        </button>
+      </div>
+
+      <div class="sk-sep"></div>
+
+      <!-- Shape correction toggle -->
+      <div class="sk-group">
+        <button class="sk-btn active" id="skShapeBtn" onclick="SK.toggleShapeCorrection()" title="Correção automática de formas (ativo)">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path stroke-linecap="round" d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/></svg>
+        </button>
+      </div>
+
+      <div class="sk-sep"></div>
+
+      <!-- History -->
+      <div class="sk-group">
+        <button class="sk-btn" onclick="SK.undo()" title="Desfazer (Ctrl+Z)">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M3 10h10a8 8 0 010 16h-3m-7-16l4-4M3 10l4 4"/></svg>
+        </button>
+        <button class="sk-btn" onclick="SK.redo()" title="Refazer (Ctrl+Y)">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M21 10H11a8 8 0 000 16h3m7-16l-4-4m4 4l-4 4"/></svg>
+        </button>
+        <button class="sk-btn" onclick="SK.clearAll()" title="Limpar tudo">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+        </button>
+      </div>
+
+      <div class="sk-sep"></div>
+
+      <!-- Zoom -->
+      <div class="sk-group">
+        <button class="sk-btn" onclick="SK.zoomOut()" title="Diminuir zoom" style="font-size:17px;font-weight:300;line-height:1;">−</button>
+        <button class="sk-btn" onclick="SK.fitView()" title="Ajustar à tela" style="font-size:9px;font-weight:700;width:36px;letter-spacing:.04em;">FIT</button>
+        <button class="sk-btn" onclick="SK.zoomIn()" title="Aumentar zoom" style="font-size:17px;font-weight:300;line-height:1;">+</button>
+      </div>
+
+      <div class="sk-sep"></div>
+
+      <!-- Export -->
+      <div class="sk-group">
+        <button class="sk-btn" onclick="SK.exportPNG()" title="Exportar como PNG">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Canvas -->
+    <div id="sketchCanvasWrap">
+      <canvas id="sketchCanvas"></canvas>
+    </div>
+
+    <!-- Status bar -->
+    <div id="sketchStatus">
+      <div id="skSaveStatus">
+        <svg id="skSaveIcon" width="10" height="10" fill="none" stroke="#10b981" stroke-width="2.5" viewBox="0 0 24 24" style="display:none;flex-shrink:0;">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+        </svg>
+        <span id="skSaveText">Faça anotações sobre o que está estudando.</span>
+      </div>
+      <span id="skZoomLabel">100%</span>
+    </div>
+
+  </div>
 
 </div>
 
@@ -855,8 +1016,18 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   const TABS = ['questions', 'flashcards', 'summary'];
 
   window.switchTab = function (tab) {
+    const prevTab = activeTab;
     activeTab = tab;
+    const isSketch = tab === 'sketch';
 
+    // Save sketch before leaving
+    if (prevTab === 'sketch' && !isSketch) SK._flushSave();
+
+    // Toggle main content area vs sketch panel
+    document.getElementById('mainContent').style.display  = isSketch ? 'none' : '';
+    document.getElementById('panelSketch').style.display  = isSketch ? 'flex'  : 'none';
+
+    // Regular tab panels
     TABS.forEach(t => {
       const key = t.charAt(0).toUpperCase() + t.slice(1);
       document.getElementById('panel' + key).classList.toggle('hidden', t !== tab);
@@ -865,10 +1036,20 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       btn.classList.toggle('text-slate-500', t !== tab);
     });
 
+    // Sketch tab button
+    const skBtn = document.getElementById('tabSketch');
+    if (skBtn) {
+      skBtn.classList.toggle('tab-active', isSketch);
+      skBtn.classList.toggle('text-slate-500', !isSketch);
+    }
+
+    // Focus mode bar not applicable in Sketch
     const fw = document.getElementById('focusBtnWrap');
     if (fw && !fw.classList.contains('hidden')) {
-      fw.style.display = 'block';
+      fw.style.display = isSketch ? 'none' : 'block';
     }
+
+    if (isSketch) SK.init();
   };
 
   /* ── Questions ─────────────────────────────────────────── */
@@ -1322,6 +1503,495 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     }
   }
 
+
+  /* ════════════════════════════════════════════════════════════
+     SKETCH ENGINE
+     ════════════════════════════════════════════════════════════ */
+  const SK = (() => {
+    let _canvas = null;
+    let _activeTool = 'pen';
+    let _activeColor = '#1a1a1a';
+    let _activeSize  = 4;
+    let _shapeCorrect = true;
+    let _history = [], _histIdx = -1;
+    let _saveTimer = null;
+    let _initialized = false;
+    let _erasing = false;
+    let _strokePts = [];
+    let _spaceDown = false;
+    let _panning = false;
+    let _panStart = null;
+    let _prevTouchDist = 0, _prevTouchCenter = null;
+
+    /* ── helpers ─────────────────────────────────────────── */
+    function _colorRgba(hex, a) {
+      const r = parseInt(hex.slice(1,3),16);
+      const g = parseInt(hex.slice(3,5),16);
+      const b = parseInt(hex.slice(5,7),16);
+      return `rgba(${r},${g},${b},${a})`;
+    }
+
+    function _setWrapCursor(cur) {
+      const w = document.getElementById('sketchCanvasWrap');
+      if (w) w.style.cursor = cur;
+    }
+
+    function _updateZoomLabel() {
+      const el = document.getElementById('skZoomLabel');
+      if (el && _canvas) el.textContent = Math.round(_canvas.getZoom() * 100) + '%';
+    }
+
+    function _setSaveStatus(msg, ok) {
+      const t = document.getElementById('skSaveText');
+      const i = document.getElementById('skSaveIcon');
+      if (t) t.textContent = msg;
+      if (i) i.style.display = ok ? 'block' : 'none';
+    }
+
+    /* ── public init ─────────────────────────────────────── */
+    function init() {
+      if (_initialized) { requestAnimationFrame(_resize); return; }
+      _initialized = true;
+
+      _canvas = new fabric.Canvas('sketchCanvas', {
+        isDrawingMode: true,
+        selection: false,
+        backgroundColor: '#ffffff',
+        enableRetinaScaling: false,
+        allowTouchScrolling: false,
+      });
+
+      requestAnimationFrame(() => {
+        _resize();
+        _applyBrush();
+        _setupEvents();
+        _loadSketch();
+      });
+
+      window.addEventListener('resize', _resize);
+    }
+
+    /* ── canvas resize ───────────────────────────────────── */
+    function _resize() {
+      const wrap = document.getElementById('sketchCanvasWrap');
+      if (!wrap || !_canvas) return;
+      _canvas.setWidth(wrap.clientWidth);
+      _canvas.setHeight(wrap.clientHeight);
+      _canvas.renderAll();
+    }
+
+    /* ── apply tool to canvas ─────────────────────────────── */
+    function _applyBrush() {
+      if (!_canvas) return;
+
+      if (_activeTool === 'pen') {
+        _canvas.isDrawingMode = true;
+        _canvas.selection = false;
+        const b = new fabric.PencilBrush(_canvas);
+        b.color = _activeColor;
+        b.width = _activeSize;
+        b.strokeLineCap = 'round';
+        _canvas.freeDrawingBrush = b;
+        _setWrapCursor('crosshair');
+
+      } else if (_activeTool === 'marker') {
+        _canvas.isDrawingMode = true;
+        _canvas.selection = false;
+        const b = new fabric.PencilBrush(_canvas);
+        b.color = _colorRgba(_activeColor, 0.45);
+        b.width = 16;
+        b.strokeLineCap = 'square';
+        _canvas.freeDrawingBrush = b;
+        _setWrapCursor('crosshair');
+
+      } else if (_activeTool === 'eraser') {
+        _canvas.isDrawingMode = false;
+        _canvas.selection = false;
+        _setWrapCursor('cell');
+
+      } else if (_activeTool === 'text') {
+        _canvas.isDrawingMode = false;
+        _canvas.selection = false;
+        _setWrapCursor('text');
+
+      } else { // select
+        _canvas.isDrawingMode = false;
+        _canvas.selection = true;
+        _setWrapCursor('default');
+      }
+    }
+
+    /* ── event wiring ─────────────────────────────────────── */
+    function _setupEvents() {
+      // Track pointer points for shape correction
+      _canvas.on('mouse:down', (opt) => {
+        _strokePts = [];
+        const pt = opt.absolutePointer || _canvas.getPointer(opt.e, true);
+        if (pt) _strokePts.push({ x: pt.x, y: pt.y });
+
+        // Space-drag pan
+        if (_spaceDown) {
+          _panning = true;
+          _panStart = { x: opt.e.clientX, y: opt.e.clientY };
+          return;
+        }
+        // Middle-mouse pan
+        if (opt.e.button === 1) {
+          _panning = true;
+          _panStart = { x: opt.e.clientX, y: opt.e.clientY };
+          opt.e.preventDefault();
+          return;
+        }
+        // Text: create IText on click
+        if (_activeTool === 'text') {
+          const p = _canvas.getPointer(opt.e);
+          const itext = new fabric.IText('Texto', {
+            left: p.x, top: p.y,
+            fontSize: 16, fill: _activeColor,
+            fontFamily: 'system-ui,sans-serif',
+          });
+          _canvas.add(itext);
+          _canvas.setActiveObject(itext);
+          itext.enterEditing();
+          itext.selectAll();
+          _canvas.renderAll();
+        }
+        // Eraser
+        if (_activeTool === 'eraser') {
+          _erasing = true;
+          _eraseAt(_canvas.getPointer(opt.e, true));
+        }
+      });
+
+      _canvas.on('mouse:move', (opt) => {
+        const pt = opt.absolutePointer;
+        if (pt && _canvas.isDrawingMode) _strokePts.push({ x: pt.x, y: pt.y });
+
+        if (_panning && _panStart) {
+          const dx = opt.e.clientX - _panStart.x;
+          const dy = opt.e.clientY - _panStart.y;
+          _canvas.relativePan(new fabric.Point(dx, dy));
+          _panStart = { x: opt.e.clientX, y: opt.e.clientY };
+          return;
+        }
+        if (_erasing) _eraseAt(_canvas.getPointer(opt.e, true));
+      });
+
+      _canvas.on('mouse:up', () => {
+        if (_panning) {
+          _panning = false;
+          _panStart = null;
+          _applyBrush();
+          return;
+        }
+        if (_erasing) { _erasing = false; _pushHistory(); }
+      });
+
+      // Shape correction after freehand path
+      _canvas.on('path:created', (e) => {
+        const path = e.path;
+        if (_activeTool === 'marker') {
+          // Marker: keep as-is, just push history
+          _pushHistory();
+          return;
+        }
+        // Pen: try shape correction
+        if (_activeTool === 'pen' && _shapeCorrect && _strokePts.length > 3) {
+          _tryCorrectShape(path);
+        } else {
+          _pushHistory();
+        }
+      });
+
+      _canvas.on('object:modified', _pushHistory);
+
+      // Scroll-wheel zoom
+      _canvas.on('mouse:wheel', (opt) => {
+        const delta = opt.e.deltaY;
+        let z = _canvas.getZoom() * (0.999 ** delta);
+        z = Math.min(Math.max(z, 0.1), 10);
+        _canvas.zoomToPoint(new fabric.Point(opt.e.offsetX, opt.e.offsetY), z);
+        opt.e.preventDefault();
+        opt.e.stopPropagation();
+        _updateZoomLabel();
+      });
+
+      // Keyboard shortcuts (space pan, undo, redo)
+      document.addEventListener('keydown', (ev) => {
+        if (activeTab !== 'sketch') return;
+        const tag = ev.target.tagName;
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || ev.target.isContentEditable) return;
+        if (ev.key === ' ') {
+          if (!_spaceDown) { _spaceDown = true; _setWrapCursor('grab'); }
+          ev.preventDefault();
+        }
+        if ((ev.ctrlKey || ev.metaKey) && !ev.shiftKey && ev.key === 'z') { ev.preventDefault(); undo(); }
+        if ((ev.ctrlKey || ev.metaKey) && (ev.key === 'y' || (ev.shiftKey && ev.key === 'Z'))) { ev.preventDefault(); redo(); }
+      });
+      document.addEventListener('keyup', (ev) => {
+        if (ev.key === ' ') { _spaceDown = false; _applyBrush(); }
+      });
+
+      // Touch: two-finger pinch-zoom + pan
+      const wrap = document.getElementById('sketchCanvasWrap');
+      wrap.addEventListener('touchstart', (ev) => {
+        if (ev.touches.length === 2) {
+          const t1 = ev.touches[0], t2 = ev.touches[1];
+          _prevTouchDist   = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+          _prevTouchCenter = { x: (t1.clientX + t2.clientX) / 2, y: (t1.clientY + t2.clientY) / 2 };
+        }
+      }, { passive: true });
+
+      wrap.addEventListener('touchmove', (ev) => {
+        if (ev.touches.length !== 2) return;
+        const t1 = ev.touches[0], t2 = ev.touches[1];
+        const dist   = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+        const center = { x: (t1.clientX + t2.clientX) / 2, y: (t1.clientY + t2.clientY) / 2 };
+        const rect   = wrap.getBoundingClientRect();
+
+        if (_prevTouchDist > 0) {
+          const ratio = dist / _prevTouchDist;
+          const pt    = new fabric.Point(center.x - rect.left, center.y - rect.top);
+          const z     = Math.min(Math.max(_canvas.getZoom() * ratio, 0.1), 10);
+          _canvas.zoomToPoint(pt, z);
+          if (_prevTouchCenter) {
+            _canvas.relativePan(new fabric.Point(
+              center.x - _prevTouchCenter.x,
+              center.y - _prevTouchCenter.y
+            ));
+          }
+          _updateZoomLabel();
+        }
+        _prevTouchDist   = dist;
+        _prevTouchCenter = center;
+        ev.preventDefault();
+      }, { passive: false });
+
+      wrap.addEventListener('touchend', () => {
+        _prevTouchDist   = 0;
+        _prevTouchCenter = null;
+      }, { passive: true });
+    }
+
+    /* ── eraser ──────────────────────────────────────────── */
+    function _eraseAt(pt) {
+      if (!pt) return;
+      const radius = _activeSize * 3 + 8;
+      const toRemove = _canvas.getObjects().filter(obj => {
+        if (!obj.selectable && obj.evented === false) return false;
+        const br = obj.getBoundingRect(true, true);
+        if (pt.x < br.left - radius || pt.x > br.left + br.width  + radius) return false;
+        if (pt.y < br.top  - radius || pt.y > br.top  + br.height + radius) return false;
+        return obj.containsPoint(pt);
+      });
+      if (toRemove.length) {
+        toRemove.forEach(o => _canvas.remove(o));
+        _canvas.renderAll();
+      }
+    }
+
+    /* ── shape correction ─────────────────────────────────── */
+    function _tryCorrectShape(pathObj) {
+      const pts = _strokePts;
+      const br  = pathObj.getBoundingRect(true, true);
+      const w = br.width, h = br.height;
+      const maxD = Math.max(w, h), minD = Math.min(w, h);
+
+      if (maxD < 15 || pts.length < 4) { _pushHistory(); return; }
+
+      const first = pts[0], last = pts[pts.length - 1];
+      let totalLen = 0;
+      for (let i = 1; i < pts.length; i++) {
+        totalLen += Math.hypot(pts[i].x - pts[i-1].x, pts[i].y - pts[i-1].y);
+      }
+      if (totalLen < 10) { _pushHistory(); return; }
+
+      const endDist    = Math.hypot(last.x - first.x, last.y - first.y);
+      const straightness = endDist / totalLen;   // near 1 → straight line
+      const closedness   = endDist / maxD;        // near 0 → closed shape
+
+      const stroke = pathObj.stroke;
+      const sw     = pathObj.strokeWidth;
+
+      // LINE: mostly straight
+      if (straightness > 0.85) {
+        _canvas.remove(pathObj);
+        _canvas.add(new fabric.Line([first.x, first.y, last.x, last.y], {
+          stroke, strokeWidth: sw, strokeLineCap: 'round', fill: null,
+        }));
+        _canvas.renderAll();
+        _pushHistory();
+        return;
+      }
+
+      // CIRCLE: closed + roughly square bbox
+      if (closedness < 0.28 && minD / maxD > 0.62 && totalLen > 60) {
+        _canvas.remove(pathObj);
+        const r  = maxD / 2;
+        const cx = br.left + w / 2;
+        const cy = br.top  + h / 2;
+        _canvas.add(new fabric.Circle({
+          left: cx - r, top: cy - r, radius: r,
+          stroke, strokeWidth: sw, fill: 'transparent',
+        }));
+        _canvas.renderAll();
+        _pushHistory();
+        return;
+      }
+
+      // No correction: keep path
+      _pushHistory();
+    }
+
+    /* ── history (undo/redo) ─────────────────────────────── */
+    function _pushHistory() {
+      _history = _history.slice(0, _histIdx + 1);
+      _history.push(JSON.stringify(_canvas.toJSON()));
+      if (_history.length > 60) _history.shift();
+      _histIdx = _history.length - 1;
+      _scheduleSave();
+    }
+
+    /* ── persistence ─────────────────────────────────────── */
+    function _scheduleSave() {
+      clearTimeout(_saveTimer);
+      _setSaveStatus('Salvando…', false);
+      _saveTimer = setTimeout(_saveSketch, 1500);
+    }
+
+    async function _saveSketch() {
+      if (!_canvas || !generationId) return;
+      try {
+        const { data: { user } } = await db.auth.getUser();
+        if (!user) return;
+        const { error } = await db.from('sketches').upsert(
+          { generation_id: generationId, user_id: user.id, canvas_data: _canvas.toJSON() },
+          { onConflict: 'generation_id,user_id' }
+        );
+        if (error) throw error;
+        _setSaveStatus('Salvo', true);
+        setTimeout(() => _setSaveStatus('Faça anotações sobre o que está estudando.', false), 2500);
+      } catch {
+        _setSaveStatus('Erro ao salvar', false);
+      }
+    }
+
+    async function _loadSketch() {
+      if (!_canvas || !generationId) return;
+      try {
+        const { data: { user } } = await db.auth.getUser();
+        if (!user) return;
+        const { data } = await db.from('sketches')
+          .select('canvas_data')
+          .eq('generation_id', generationId)
+          .eq('user_id', user.id)
+          .single();
+        if (data?.canvas_data) {
+          _canvas.loadFromJSON(data.canvas_data, () => {
+            _canvas.renderAll();
+            _histIdx = -1;
+            _pushHistory();
+          });
+        }
+      } catch { /* no saved sketch yet */ }
+    }
+
+    /* ── public API ─────────────────────────────────────── */
+    function setTool(tool) {
+      _activeTool = tool;
+      _applyBrush();
+      ['select','pen','marker','eraser','text'].forEach(t => {
+        const b = document.getElementById('skTool-' + t);
+        if (b) b.classList.toggle('active', t === tool);
+      });
+      // Default to yellow when switching to marker
+      if (tool === 'marker' && !['#FACC15','#4ADE80'].includes(_activeColor)) {
+        setColor('#FACC15', 'yellow');
+      }
+    }
+
+    function setColor(color, id) {
+      _activeColor = color;
+      _applyBrush();
+      document.querySelectorAll('.sk-color').forEach(b => b.classList.remove('active'));
+      const b = document.getElementById('skColor-' + id);
+      if (b) b.classList.add('active');
+    }
+
+    function setSize(size) {
+      _activeSize = size;
+      _applyBrush();
+      document.querySelectorAll('.sk-szbtn').forEach(b => b.classList.remove('active'));
+      const b = document.getElementById('skSize-' + size);
+      if (b) b.classList.add('active');
+    }
+
+    function toggleShapeCorrection() {
+      _shapeCorrect = !_shapeCorrect;
+      const b = document.getElementById('skShapeBtn');
+      if (b) {
+        b.classList.toggle('active', _shapeCorrect);
+        b.title = _shapeCorrect ? 'Correção automática de formas (ativo)' : 'Correção automática de formas (inativo)';
+      }
+    }
+
+    function undo() {
+      if (_histIdx <= 0) return;
+      _histIdx--;
+      _canvas.loadFromJSON(JSON.parse(_history[_histIdx]), () => _canvas.renderAll());
+      _scheduleSave();
+    }
+
+    function redo() {
+      if (_histIdx >= _history.length - 1) return;
+      _histIdx++;
+      _canvas.loadFromJSON(JSON.parse(_history[_histIdx]), () => _canvas.renderAll());
+      _scheduleSave();
+    }
+
+    function clearAll() {
+      if (!confirm('Limpar todo o sketch? Esta ação não pode ser desfeita.')) return;
+      _canvas.clear();
+      _canvas.backgroundColor = '#ffffff';
+      _canvas.renderAll();
+      _pushHistory();
+    }
+
+    function zoomIn()  {
+      const z = Math.min(_canvas.getZoom() * 1.25, 10);
+      _canvas.zoomToPoint(new fabric.Point(_canvas.getWidth() / 2, _canvas.getHeight() / 2), z);
+      _updateZoomLabel();
+    }
+
+    function zoomOut() {
+      const z = Math.max(_canvas.getZoom() * 0.8, 0.1);
+      _canvas.zoomToPoint(new fabric.Point(_canvas.getWidth() / 2, _canvas.getHeight() / 2), z);
+      _updateZoomLabel();
+    }
+
+    function fitView() {
+      if (!_canvas) return;
+      _canvas.setViewportTransform([1,0,0,1,0,0]);
+      _updateZoomLabel();
+    }
+
+    function exportPNG() {
+      const url = _canvas.toDataURL({ format: 'png', quality: 1 });
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'sketch.png';
+      a.click();
+    }
+
+    function _flushSave() {
+      clearTimeout(_saveTimer);
+      _saveSketch();
+    }
+
+    return { init, setTool, setColor, setSize, toggleShapeCorrection, undo, redo, clearAll, zoomIn, zoomOut, fitView, exportPNG, _flushSave };
+  })();
+
+  window.SK = SK;
 
   loadData();
 })();
