@@ -1753,12 +1753,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         _setWrapCursor('text');
 
       } else if (_activeTool === 'select') {
-        // Nav mode + object interaction (move/resize)
+        // Nav mode + object interaction (move/resize/rotate)
         _mode = 'nav';
         _canvas.isDrawingMode = false;
         _canvas.selection = true;
         _canvas.skipTargetFind = false;
-        _setWrapCursor('grab');
+        _canvas.defaultCursor = 'default';
+        _canvas.hoverCursor   = 'move';
+        _setWrapCursor('default');
 
       } else { // neutral — nav mode, zero object interaction
         _mode = 'nav';
@@ -1899,6 +1901,21 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         if (ev.key === 'Escape' && document.getElementById('panelSketch').classList.contains('sk-fullscreen')) {
           toggleFullscreen(); ev.preventDefault(); return;
         }
+        if ((ev.key === 'Delete' || ev.key === 'Backspace') && _activeTool === 'select') {
+          const obj = _canvas.getActiveObject();
+          if (obj && !obj.isEditing) {
+            if (obj.type === 'activeSelection') {
+              obj.forEachObject(o => _canvas.remove(o));
+              _canvas.discardActiveObject();
+            } else {
+              _canvas.remove(obj);
+            }
+            _canvas.renderAll();
+            _pushHistory();
+            ev.preventDefault();
+          }
+          return;
+        }
         if (ev.key === ' ') {
           if (!_spaceDown) { _spaceDown = true; _setWrapCursor('grab'); }
           ev.preventDefault();
@@ -1924,12 +1941,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             _prevTouchDist   = 0;
             _prevTouchCenter = null;
           }
-        } else if (ev.touches.length === 1 && _mode === 'nav') {
-          // Single-finger pan in nav mode — intercept touch so canvas doesn't try to draw
+        } else if (ev.touches.length === 1 && _mode === 'nav' && _activeTool !== 'select') {
+          // Single-finger pan in neutral mode — intercept so canvas doesn't draw.
+          // In select mode we do NOT intercept: Fabric.js must receive the touch
+          // to handle tap-select, drag-move, and handle-resize/rotate.
           ev.preventDefault();
           _prevTouchCenter = { x: ev.touches[0].clientX, y: ev.touches[0].clientY };
         } else {
-          _prevTouchCenter = null; // draw mode: let Fabric handle the touch
+          _prevTouchCenter = null; // draw mode or select mode: let Fabric handle the touch
         }
       }, { passive: false });
 
@@ -1959,8 +1978,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           _prevTouchCenter = center;
           _updateZoomLabel();
 
-        } else if (ev.touches.length === 1 && _mode === 'nav' && _prevTouchCenter) {
-          // Single-finger pan
+        } else if (ev.touches.length === 1 && _mode === 'nav' && _prevTouchCenter && _activeTool !== 'select') {
+          // Single-finger pan (neutral mode only; select mode lets Fabric.js handle the drag)
           ev.preventDefault();
           const t = ev.touches[0];
           _canvas.relativePan(new fabric.Point(
