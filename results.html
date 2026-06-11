@@ -1527,13 +1527,36 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     }
 
     /* ── Layout ── */
+    function resolveOverlaps(ns) {
+      const MIN = [0, 240, 285];
+      for (let iter = 0; iter < 80; iter++) {
+        let moved = false;
+        for (let i = 1; i < ns.length; i++) {
+          for (let j = i + 1; j < ns.length; j++) {
+            const a = ns[i], b = ns[j];
+            if (a.level !== b.level) continue;
+            const minD = MIN[a.level] || 270;
+            const dx = b.x - a.x, dy = b.y - a.y;
+            const dist = Math.hypot(dx, dy) || 0.01;
+            if (dist < minD) {
+              const push = (minD - dist) / 2 + 1;
+              const ux = dx / dist, uy = dy / dist;
+              a.x -= ux * push; a.y -= uy * push;
+              b.x += ux * push; b.y += uy * push;
+              moved = true;
+            }
+          }
+        }
+        if (!moved) break;
+      }
+    }
+
     function layout(root, W, H, fullMode) {
       const cx=W/2, cy=H/2, n=root.children.length;
-      // fullMode uses actual viewport; static mode uses large virtual canvas
       const R1 = fullMode
-        ? Math.min(W*.30, H*.34, 420)
-        : Math.min(W*.27, H*.30, 360);
-      const R2 = Math.min(260, Math.max(190, R1*.70));
+        ? Math.min(W*.36, H*.40, 510)
+        : Math.min(W*.38, H*.42, 660);
+      const R2 = Math.min(440, Math.max(310, R1*.67));
       const ns=[{ ...root, x:cx, y:cy, par:null }];
       root.children.forEach((tp, i) => {
         const a = (2*Math.PI*i/n) - Math.PI/2;
@@ -1542,12 +1565,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         ns.push(tn);
         const m=tp.children.length;
         tp.children.forEach((sb, j) => {
-          // spread angle: generous spacing to prevent overlap
-          const sp = m>1 ? Math.min(1.2,(m-1)*.32) : 0;
+          const sp = m>1 ? Math.min(1.9,(m-1)*.46) : 0;
           const sa = a + (m===1 ? 0 : -sp + sp*2*j/(m-1));
           ns.push({ ...sb, x:tx2+R2*Math.cos(sa), y:ty2+R2*Math.sin(sa), a:sa, par:tn });
         });
       });
+      resolveOverlaps(ns);
       return ns;
     }
 
@@ -1899,10 +1922,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         // Static mode uses large virtual canvas; viewBox auto-fits to content
         const W = interactive
           ? Math.max((panel?.clientWidth)||window.innerWidth||900, 800)
-          : 1600;
+          : 2400;
         const H = interactive
           ? Math.max((panel?.clientHeight)||(window.innerHeight-90)||600, 500)
-          : 1000;
+          : 1700;
 
         const svg=xe('svg',{width:'100%',height:'100%',style:'display:block;user-select:none;'});
         svg.id='mmSvg';
@@ -1924,7 +1947,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
           if (!interactive) {
             // Compute viewBox from actual node positions — perfect auto-fit
-            const PX=150, PY=90;
+            const PX=240, PY=180;
             const xs=ns.map(n=>n.x), ys=ns.map(n=>n.y);
             const vx=Math.min(...xs)-PX, vy=Math.min(...ys)-PY;
             const vw=Math.max(...xs)-vx+PX, vh=Math.max(...ys)-vy+PY;
@@ -2053,6 +2076,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     };
   })();
 
+  window.MM = MM;
   loadData();
 })();
 </script>
