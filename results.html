@@ -1596,7 +1596,25 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           text: 'Adicione suas próprias anotações em qualquer card. Reveja tudo na página "Minhas Anotações" a qualquer momento.',
           before: () => window.switchTab?.('flashcards'),
         },
-      ], 'hasSeenResultsTutorial');
+        {
+          target: '#tabSketch',
+          title: 'Sketch — área de rascunho',
+          text: 'Abra o Sketch para fazer anotações visuais, esboços e diagramas enquanto estuda. O conteúdo é salvo automaticamente.',
+          before: () => window.switchTab?.('sketch'),
+        },
+        {
+          target: '#sketchToolbar',
+          title: 'Ferramentas de desenho',
+          text: 'Caneta, marcador, borracha e texto para escrever no canvas. Use ⛶ para expandir para tela cheia e ? para ver o guia completo de atalhos.',
+          before: () => window.switchTab?.('sketch'),
+        },
+        {
+          target: '#skTool-select',
+          title: 'Selecionar e manipular objetos',
+          text: 'No modo Selecionar, clique em qualquer objeto para ver as alças: arraste para mover, alças nos cantos para redimensionar, alça abaixo para girar e o botão vermelho acima para excluir.',
+          before: () => window.switchTab?.('sketch'),
+        },
+      ], 'hasSeenResultsTutorial_v2');
 
       // Slight delay so DOM settles before highlighting
       setTimeout(() => window._resultsTour.start(), 400);
