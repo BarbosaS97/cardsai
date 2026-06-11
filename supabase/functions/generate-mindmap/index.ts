@@ -18,10 +18,6 @@ function getCorsHeaders(req: Request): Record<string, string> {
 }
 
 
-function cut(s: string, n: number): string {
-  return s && s.length > n ? s.slice(0, n - 1) + '…' : (s || '')
-}
-
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req)
 
@@ -105,11 +101,14 @@ serve(async (req) => {
       .single()
 
     if (!existErr && existing) {
-      // Return cached map
-      return json({ topicos: existing.topicos, anotacoes: existing.anotacoes })
+      // Skip stale caches where topics have no children (topic mismatch on first build)
+      const hasChildren = (existing.topicos as any[])?.some((t: any) => (t.children?.length ?? 0) > 0)
+      if (hasChildren) {
+        return json({ topicos: existing.topicos, anotacoes: existing.anotacoes })
+      }
     }
 
-    // First time: build tree structure from flashcards + topics
+    // First time (or stale cache): build tree structure from flashcards
     const { data: flashcards } = await supa
       .from('flashcards')
       .select('front, back, topic')
@@ -123,15 +122,16 @@ serve(async (req) => {
       byTopic[t].push({ front: f.front as string, back: f.back as string })
     }
 
-    const rawTopics: string[] = Array.isArray(gen.topics) && gen.topics.length > 0
-      ? (gen.topics as string[]).slice(0, 5)
-      : Object.keys(byTopic).slice(0, 5)
+    // Always use actual flashcard topics as canonical list — avoids gen.topics mismatch
+    const rawTopics = Object.keys(byTopic).length > 0
+      ? Object.keys(byTopic).slice(0, 8)
+      : (Array.isArray(gen.topics) ? (gen.topics as string[]).slice(0, 8) : [])
 
     const topicos = rawTopics.map((tp, i) => ({
-      label: cut(tp, 24),
+      label: tp,
       colorIdx: i,
-      children: (byTopic[tp] ?? []).slice(0, 5).map((f) => ({
-        label: cut(f.front, 42),
+      children: (byTopic[tp] ?? []).slice(0, 6).map((f) => ({
+        label: f.front,
         detail: f.back,
       })),
     }))

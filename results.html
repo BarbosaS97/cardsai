@@ -1453,19 +1453,21 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     /* ── Tree ── */
     function buildTree() {
       if (!genData) return null;
-      const topics = (genData.topics || []).slice(0, 5);
       const byTp = {};
       (flashcards || []).forEach(f => {
         const t = (f.topic || 'Geral').trim();
         (byTp[t] = byTp[t] || []).push(f);
       });
-      const tpList = topics.length ? topics : Object.keys(byTp).slice(0, 5);
+      // Use actual flashcard topics as canonical list — avoids gen.topics string mismatch
+      const tpList = Object.keys(byTp).length > 0
+        ? Object.keys(byTp).slice(0, 8)
+        : (genData.topics || []).slice(0, 8);
       return {
-        id:'root', label:cut(genData.title || genData.pdf_name || 'Mapa Mental', 30), level:0,
+        id:'root', label: genData.title || genData.pdf_name || 'Mapa Mental', level:0,
         children: tpList.map((tp, i) => ({
-          id:`t${i}`, label:cut(tp, 24), level:1, ci:i,
-          children: (byTp[tp]||[]).slice(0,5).map((f,j) => ({
-            id:`s${i}_${j}`, label:cut(f.front,42), detail:f.back, level:2, ci:i, children:[]
+          id:`t${i}`, label: tp, level:1, ci:i,
+          children: (byTp[tp]||[]).slice(0,6).map((f,j) => ({
+            id:`s${i}_${j}`, label: f.front, detail: f.back, level:2, ci:i, children:[]
           }))
         }))
       };
@@ -1474,7 +1476,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     /* ── Layout ── */
     function layout(root, W, H) {
       const cx=W/2, cy=H/2, n=root.children.length;
-      const R1=Math.min(W*.24,H*.30,280), R2=R1*.68;
+      const R1=Math.min(W*.30,H*.36,360);
+      const R2=Math.min(220,Math.max(160,R1*.6));
       const ns=[{ ...root, x:cx, y:cy, par:null }];
       root.children.forEach((tp, i) => {
         const a = (2*Math.PI*i/n) - Math.PI/2;
@@ -1483,7 +1486,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         ns.push(tn);
         const m=tp.children.length;
         tp.children.forEach((sb, j) => {
-          const sp = m>1 ? Math.min(.78,(m-1)*.22) : 0;
+          const sp = m>1 ? Math.min(1.1,(m-1)*.28) : 0;
           const sa = a + (m===1 ? 0 : -sp + sp*2*j/(m-1));
           ns.push({ ...sb, x:tx2+R2*Math.cos(sa), y:ty2+R2*Math.sin(sa), a:sa, par:tn });
         });
@@ -1529,15 +1532,55 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       return defs;
     }
 
+    /* ── Text wrap helper ── */
+    function wrapSvg(text, maxChars, maxLines) {
+      if (!text) return [''];
+      const words = String(text).split(' ');
+      const lines = [];
+      let cur = '';
+      for (const w of words) {
+        const next = cur ? cur + ' ' + w : w;
+        if (next.length > maxChars && cur) {
+          lines.push(cur);
+          cur = w;
+          if (lines.length >= maxLines) { cur = ''; break; }
+        } else {
+          cur = next;
+        }
+      }
+      if (cur && lines.length < maxLines) lines.push(cur);
+      if (lines.length === maxLines) {
+        const last = lines[maxLines - 1];
+        if (String(text).length > lines.join(' ').length + 1)
+          lines[maxLines - 1] = last.slice(0, maxChars - 1) + '…';
+      }
+      return lines;
+    }
+
+    function addTextBlock(layer, cx, cy, lines, fontSize, fontWeight, fill, lh) {
+      const startY = cy - (lines.length * lh) / 2 + lh / 2;
+      lines.forEach((line, i) => {
+        const t = xe('text', {
+          x: String(cx), y: String(startY + i * lh),
+          'text-anchor': 'middle', 'dominant-baseline': 'middle',
+          fill: fill, 'font-size': String(fontSize), 'font-weight': String(fontWeight),
+          'font-family': 'Inter,system-ui,sans-serif', style: 'user-select:none'
+        });
+        t.textContent = line;
+        layer.appendChild(t);
+      });
+    }
+
     /* ── Connection ── */
     function drawConn(layer, a, b) {
       const [ca]=PAL[(b.ci||0)%PAL.length];
       const dx=b.x-a.x, dy=b.y-a.y, len=Math.hypot(dx,dy)||1;
-      const ox=-dy/len*22, oy=dx/len*22;
+      const perp = b.level===2 ? 14 : 26;
+      const ox=-dy/len*perp, oy=dx/len*perp;
       const path=xe('path',{
         d:`M${a.x},${a.y} C${a.x+dx*.3+ox},${a.y+dy*.3+oy} ${b.x-dx*.3+ox},${b.y-dy*.3+oy} ${b.x},${b.y}`,
-        fill:'none', stroke:ca, 'stroke-opacity':'.65',
-        'stroke-width':b.level===2?'1.5':'2.5', 'stroke-linecap':'round',
+        fill:'none', stroke:ca, 'stroke-opacity':'.55',
+        'stroke-width':b.level===2?'1.5':'2.2', 'stroke-linecap':'round',
       });
       const al=len*1.4;
       path.setAttribute('stroke-dasharray',al); path.setAttribute('stroke-dashoffset',al);
@@ -1550,50 +1593,92 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     /* ── Node ── */
     function drawNode(layer, nd) {
-      const {x,y,label,level,ci=0,detail}=nd;
-      const d=dark();
-      const g=xe('g',{class:'mm-nd',style:'cursor:default;'});
-      g.style.transition='transform .18s ease';
+      const {x, y, label, level, ci=0, detail} = nd;
+      const d = dark();
+      const [ca] = PAL[ci % PAL.length];
+      const g = xe('g', {class: 'mm-nd', style: 'cursor:default;'});
 
-      if (level===0) {
-        const rw=Math.max(72,label.length*6+28);
-        g.appendChild(xe('ellipse',{cx:x,cy:y,rx:rw+8,ry:38,fill:'none',stroke:'rgba(168,85,247,.28)','stroke-width':'1.5'}));
-        const bg=xe('ellipse',{cx:x,cy:y,rx:rw,ry:30,fill:'url(#mmRoot)',filter:'url(#mmSh)'});
+      if (level === 0) {
+        const lines = wrapSvg(label, 30, 2);
+        const W = 260, cardH = 22 + lines.length * 22;
+        g.appendChild(xe('rect', {
+          x: x-W/2-4, y: y-cardH/2-4, width: W+8, height: cardH+8, rx: '34',
+          fill: 'none', stroke: 'rgba(168,85,247,.3)', 'stroke-width': '1.5'
+        }));
+        const bg = xe('rect', {
+          x: x-W/2, y: y-cardH/2, width: W, height: cardH, rx: '30',
+          fill: 'url(#mmRoot)', filter: 'url(#mmSh)'
+        });
         g.appendChild(bg);
-        const lb=xe('text',{x,y,'text-anchor':'middle','dominant-baseline':'middle',fill:'white','font-size':'13','font-weight':'700','font-family':'Inter,system-ui,sans-serif',style:'user-select:none'});
-        lb.textContent=label; g.appendChild(lb);
-        g.style.cursor='default';
-        g.addEventListener('mouseenter',()=>{bg.setAttribute('filter','url(#mmHv)');g.style.transform=`translate(${x}px,${y}px) scale(1.05) translate(-${x}px,-${y}px)`;});
-        g.addEventListener('mouseleave',()=>{bg.setAttribute('filter','url(#mmSh)');g.style.transform='';});
+        addTextBlock(g, x, y, lines, 14, 700, 'white', 22);
+        g.addEventListener('mouseenter', () => bg.setAttribute('filter', 'url(#mmHv)'));
+        g.addEventListener('mouseleave', () => bg.setAttribute('filter', 'url(#mmSh)'));
 
-      } else if (level===1) {
-        const rw=Math.max(52,label.length*5.2+20);
-        const [ca]=PAL[ci%PAL.length];
-        g.appendChild(xe('ellipse',{cx:x,cy:y,rx:rw+8,ry:26,fill:ca,opacity:'.18'}));
-        const bg=xe('ellipse',{cx:x,cy:y,rx:rw,ry:20,fill:`url(#mmP${ci%PAL.length})`,filter:'url(#mmSh)'});
+      } else if (level === 1) {
+        const lines = wrapSvg(label, 20, 2);
+        const W = 192, cardH = 22 + lines.length * 20;
+        g.appendChild(xe('rect', {
+          x: x-W/2-5, y: y-cardH/2-5, width: W+10, height: cardH+10, rx: '18',
+          fill: ca, opacity: '.15'
+        }));
+        const bg = xe('rect', {
+          x: x-W/2, y: y-cardH/2, width: W, height: cardH, rx: '14',
+          fill: `url(#mmP${ci%PAL.length})`, filter: 'url(#mmSh)'
+        });
         g.appendChild(bg);
-        const lb=xe('text',{x,y,'text-anchor':'middle','dominant-baseline':'middle',fill:'white','font-size':'11','font-weight':'600','font-family':'Inter,system-ui,sans-serif',style:'user-select:none'});
-        lb.textContent=label; g.appendChild(lb);
-        g.addEventListener('mouseenter',()=>{bg.setAttribute('filter','url(#mmHv)');g.style.transform=`translate(${x}px,${y}px) scale(1.06) translate(-${x}px,-${y}px)`;});
-        g.addEventListener('mouseleave',()=>{bg.setAttribute('filter','url(#mmSh)');g.style.transform='';});
+        addTextBlock(g, x, y, lines, 12, 700, 'white', 20);
+        g.addEventListener('mouseenter', () => bg.setAttribute('filter', 'url(#mmHv)'));
+        g.addEventListener('mouseleave', () => bg.setAttribute('filter', 'url(#mmSh)'));
 
       } else {
-        const [ca]=PAL[ci%PAL.length];
-        const rw=Math.max(26,label.length*3+16);
-        const bg=xe('rect',{x:x-rw,y:y-12,width:rw*2,height:24,rx:12,
-          fill:d?'rgba(30,27,75,.84)':'rgba(255,255,255,.94)',
-          stroke:ca,'stroke-width':'1.5','stroke-opacity':'.6',filter:'url(#mmSh)'});
+        // Card: title (question) + detail preview (answer)
+        const TITLE_LH = 16, DETAIL_LH = 14, PAD = 13;
+        const titleLines = wrapSvg(label, 24, 2);
+        const detailLines = detail ? wrapSvg(detail, 26, 2) : [];
+        const SEP = detailLines.length > 0 ? 10 : 0;
+        const W = 224;
+        const titleH = titleLines.length * TITLE_LH;
+        const detailH = detailLines.length * DETAIL_LH;
+        const cardH = PAD * 2 + titleH + SEP + detailH;
+        const top = y - cardH / 2;
+
+        const bg = xe('rect', {
+          x: x-W/2, y: top, width: W, height: cardH, rx: '10',
+          fill: d ? '#16143C' : '#FFFFFF',
+          stroke: ca, 'stroke-width': '1.8', filter: 'url(#mmSh)'
+        });
         g.appendChild(bg);
-        const lb=xe('text',{x,y,'text-anchor':'middle','dominant-baseline':'middle',
-          fill:d?'#C4B5FD':'#5B21B6','font-size':'9.5','font-weight':'500','font-family':'Inter,system-ui,sans-serif',style:'user-select:none'});
-        lb.textContent=label; g.appendChild(lb);
+
+        // Title text
+        addTextBlock(g, x, top + PAD + titleH/2,
+          titleLines, 11.5, 600, d ? '#E2E8F0' : '#1E293B', TITLE_LH);
+
+        // Detail divider + text
+        if (detailLines.length > 0) {
+          const divY = top + PAD + titleH + SEP / 2;
+          g.appendChild(xe('line', {
+            x1: String(x-W/2+12), y1: String(divY),
+            x2: String(x+W/2-12), y2: String(divY),
+            stroke: d ? 'rgba(148,163,184,.2)' : 'rgba(100,116,139,.15)',
+            'stroke-width': '1'
+          }));
+          addTextBlock(g, x, divY + SEP/2 + detailH/2,
+            detailLines, 10, 400, d ? '#94A3B8' : '#64748B', DETAIL_LH);
+        }
+
         if (detail) {
-          g.style.cursor='pointer';
-          g.addEventListener('mouseenter',()=>{bg.setAttribute('stroke-opacity','1');g.style.transform='translate(0,-2px)';});
-          g.addEventListener('mouseleave',()=>{bg.setAttribute('stroke-opacity','.6');g.style.transform='';});
+          g.style.cursor = 'pointer';
+          g.addEventListener('mouseenter', () => {
+            bg.setAttribute('stroke-width', '2.5');
+            g.style.transform = 'translate(0,-2px)';
+          });
+          g.addEventListener('mouseleave', () => {
+            bg.setAttribute('stroke-width', '1.8');
+            g.style.transform = '';
+          });
           g.addEventListener('click', e => {
             e.stopPropagation();
-            document.getElementById('mmDetailTitle').textContent = label.replace(/…$/, '');
+            document.getElementById('mmDetailTitle').textContent = label;
             document.getElementById('mmDetailBody').textContent  = detail || '';
             document.getElementById('mmDetailCard').classList.remove('hidden');
           });
@@ -1734,8 +1819,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     function treeFromDB(topicos) {
       if (!topicos || !topicos.length) return null;
       return {
-        id:'root', label:cut(genData?.title||genData?.pdf_name||'Mapa Mental',30), level:0,
-        children: topicos.slice(0,5).map((tp, i) => ({
+        id:'root', label: genData?.title||genData?.pdf_name||'Mapa Mental', level:0,
+        children: topicos.slice(0,8).map((tp, i) => ({
           id:`t${i}`, label:tp.label, level:1, ci:tp.colorIdx??i,
           children: (tp.children||[]).map((sub, j) => ({
             id:`s${i}_${j}`, label:sub.label, detail:sub.detail, level:2, ci:tp.colorIdx??i, children:[]
