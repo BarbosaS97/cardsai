@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cardsquestoesai-v6';
+const CACHE_NAME = 'cardsquestoesai-v7';
 
 const PRECACHE_URLS = [
   '/index.html',
@@ -12,6 +12,7 @@ const PRECACHE_URLS = [
   '/pricing.html',
   '/upload.html',
   '/admin.html',
+  '/unsubscribe.html',
   '/manifest.json',
   '/js/config.js',
   '/js/auth.js',
