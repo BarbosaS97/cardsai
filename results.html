@@ -1691,6 +1691,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         _mode = 'draw';
         _canvas.isDrawingMode = true;
         _canvas.selection = false;
+        _canvas.skipTargetFind = false;
         const b = new fabric.PencilBrush(_canvas);
         b.color = _activeColor;
         b.width = _activeSize;
@@ -1702,6 +1703,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         _mode = 'draw';
         _canvas.isDrawingMode = true;
         _canvas.selection = false;
+        _canvas.skipTargetFind = false;
         const b = new fabric.PencilBrush(_canvas);
         b.color = _colorRgba(_activeColor, 0.45);
         b.width = 16;
@@ -1713,25 +1715,30 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         _mode = 'draw';
         _canvas.isDrawingMode = false;
         _canvas.selection = false;
+        _canvas.skipTargetFind = false;
         _setWrapCursor('cell');
 
       } else if (_activeTool === 'text') {
         _mode = 'draw';
         _canvas.isDrawingMode = false;
         _canvas.selection = false;
+        _canvas.skipTargetFind = false;
         _setWrapCursor('text');
 
       } else if (_activeTool === 'select') {
+        // Nav mode + object interaction (move/resize)
         _mode = 'nav';
         _canvas.isDrawingMode = false;
-        _canvas.selection = true;  // allow moving objects
-        _setWrapCursor('default');
+        _canvas.selection = true;
+        _canvas.skipTargetFind = false;
+        _setWrapCursor('grab');
 
-      } else { // neutral — nav mode, nothing draws, nothing selects
+      } else { // neutral — nav mode, zero object interaction
         _mode = 'nav';
         _canvas.isDrawingMode = false;
         _canvas.selection = false;
-        _setWrapCursor('default');
+        _canvas.skipTargetFind = true; // clicks pass through objects completely
+        _setWrapCursor('grab');
       }
 
       _updateModeBar();
@@ -1759,17 +1766,27 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         const pt = opt.absolutePointer || _canvas.getPointer(opt.e, true);
         if (pt) _strokePts.push({ x: pt.x, y: pt.y });
 
-        // Space-drag pan
+        // Space-drag pan (any mode)
         if (_spaceDown) {
           _panning = true;
           _panStart = { x: opt.e.clientX, y: opt.e.clientY };
+          _setWrapCursor('grabbing');
           return;
         }
-        // Middle-mouse pan
+        // Middle-mouse pan (any mode)
         if (opt.e.button === 1) {
           _panning = true;
           _panStart = { x: opt.e.clientX, y: opt.e.clientY };
           opt.e.preventDefault();
+          return;
+        }
+        // Nav mode: left-click drag pans the canvas.
+        // In select mode: only pan when clicking on empty canvas (opt.target === null).
+        // In neutral mode: skipTargetFind=true so opt.target is always null → always pans.
+        if (_mode === 'nav' && opt.e.button === 0 && !opt.target) {
+          _panning = true;
+          _panStart = { x: opt.e.clientX, y: opt.e.clientY };
+          _setWrapCursor('grabbing');
           return;
         }
         // Text: create IText on click
@@ -1868,20 +1885,23 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
       wrap.addEventListener('touchstart', (ev) => {
         if (ev.touches.length >= 2) {
-          // Always prevent browser pinch-zoom on the sketch area
-          ev.preventDefault();
-          // Only initialise tracking when in nav mode
+          ev.preventDefault(); // Always block browser pinch-zoom
           if (_mode === 'nav') {
             const t1 = ev.touches[0], t2 = ev.touches[1];
             _prevTouchDist   = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
             _prevTouchCenter = { x: (t1.clientX + t2.clientX) / 2, y: (t1.clientY + t2.clientY) / 2 };
           } else {
-            // Draw mode: cancel any in-progress stroke tracking for 2-finger input
             _prevTouchDist   = 0;
             _prevTouchCenter = null;
           }
+        } else if (ev.touches.length === 1 && _mode === 'nav') {
+          // Single-finger pan in nav mode — intercept touch so canvas doesn't try to draw
+          ev.preventDefault();
+          _prevTouchCenter = { x: ev.touches[0].clientX, y: ev.touches[0].clientY };
+        } else {
+          _prevTouchCenter = null; // draw mode: let Fabric handle the touch
         }
-      }, { passive: false }); // must be false to call preventDefault
+      }, { passive: false });
 
       wrap.addEventListener('touchmove', (ev) => {
         if (ev.touches.length >= 2) {
@@ -1908,14 +1928,22 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           _prevTouchDist   = dist;
           _prevTouchCenter = center;
           _updateZoomLabel();
+
+        } else if (ev.touches.length === 1 && _mode === 'nav' && _prevTouchCenter) {
+          // Single-finger pan
+          ev.preventDefault();
+          const t = ev.touches[0];
+          _canvas.relativePan(new fabric.Point(
+            t.clientX - _prevTouchCenter.x,
+            t.clientY - _prevTouchCenter.y
+          ));
+          _prevTouchCenter = { x: t.clientX, y: t.clientY };
         }
       }, { passive: false });
 
-      wrap.addEventListener('touchend', (ev) => {
-        if (ev.touches.length < 2) {
-          _prevTouchDist   = 0;
-          _prevTouchCenter = null;
-        }
+      wrap.addEventListener('touchend', () => {
+        _prevTouchDist   = 0;
+        _prevTouchCenter = null;
       }, { passive: true });
     }
 
