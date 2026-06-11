@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cardsquestoesai-v7';
+const CACHE_NAME = 'cardsquestoesai-v8';
 
 const PRECACHE_URLS = [
   '/index.html',
@@ -103,46 +103,56 @@ self.addEventListener('fetch', event => {
   const isBypass = BYPASS_DOMAINS.some(d => request.url.includes(d));
   if (isBypass) return;
 
-  // CDN de bibliotecas estáticas: serve do cache se disponível, sem re-cachear (opaque)
+  // CDN de bibliotecas estáticas: serve do cache se disponível
   const isCdn = CDN_CACHE_DOMAINS.some(d => request.url.includes(d));
   if (isCdn) {
     event.respondWith(
-      caches.match(request).then(cached => {
-        if (cached) return cached;
-        return fetch(request); // sem cachear: resposta opaque
-      })
+      caches.match(request).then(cached => cached || fetch(request))
     );
     return;
   }
 
+  // HTML/navegação: network-first — garante sempre o conteúdo mais recente.
+  // Fallback para cache apenas quando offline.
+  const isHtml = request.destination === 'document'
+    || url.pathname.endsWith('.html')
+    || url.pathname === '/';
+
+  if (isHtml) {
+    event.respondWith(
+      fetch(request).then(networkRes => {
+        if (networkRes.ok) {
+          const clone = networkRes.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(request, clone));
+        }
+        return networkRes;
+      }).catch(() =>
+        caches.match(request).then(cached => cached || caches.match('/index.html'))
+      )
+    );
+    return;
+  }
+
+  // Outros assets (JS, CSS, imagens): stale-while-revalidate
   event.respondWith(
     caches.match(request).then(cached => {
-      // Cache hit → retorna imediatamente, atualiza em background
       if (cached) {
-        // Stale-while-revalidate: atualiza cache sem bloquear
-        const fetchAndUpdate = fetch(request).then(networkRes => {
+        // Atualiza cache em background sem bloquear a resposta
+        fetch(request).then(networkRes => {
           if (networkRes.ok) {
             caches.open(CACHE_NAME).then(cache => cache.put(request, networkRes.clone()));
           }
-          return networkRes;
-        }).catch(() => cached);
-
-        return cached; // retorna o cacheado agora; atualiza em background
+        }).catch(() => {});
+        return cached;
       }
 
-      // Cache miss → busca na rede e armazena
       return fetch(request).then(networkRes => {
         if (networkRes.ok && networkRes.type !== 'opaque') {
           const clone = networkRes.clone();
           caches.open(CACHE_NAME).then(cache => cache.put(request, clone));
         }
         return networkRes;
-      }).catch(() => {
-        // Offline e sem cache: retorna página de fallback se for navegação
-        if (request.destination === 'document') {
-          return caches.match('/index.html');
-        }
-      });
+      }).catch(() => undefined);
     })
   );
 });
