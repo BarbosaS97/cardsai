@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+  <script>(function(){var t=localStorage.getItem('cardsai-theme');if(t)document.documentElement.setAttribute('data-theme',t);})()</script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Descadastrar — CardsQuestõesAI</title>
+  <style>
+    :root {
+      --bg: #FAFAF9; --surface: #FFFFFF; --surface-2: #F3F0EC; --border: #E2DDD7;
+      --text: #18181B; --text-2: #52525B; --text-3: #A1A1AA;
+      --blue: #2563EB; --blue-bg: #EFF6FF; --blue-bd: #BFDBFE;
+      --red: #DC2626; --red-bg: #FEF2F2; --red-bd: #FECACA;
+      --green: #15803D; --green-bg: #F0FDF4; --green-bd: #BBF7D0;
+    }
+    [data-theme="dark"] {
+      --bg: #0C0C0F; --surface: #18181B; --surface-2: #111116; --border: #27272A;
+      --text: #FAFAFA; --text-2: #A1A1AA; --text-3: #52525B;
+      --blue: #3B82F6; --blue-bg: #1E3A5F; --blue-bd: #1D4ED8;
+      --red: #F87171; --red-bg: #450A0A; --red-bd: #7F1D1D;
+      --green: #4ADE80; --green-bg: #052E16; --green-bd: #166534;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      color: var(--text); background: var(--bg);
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 24px 16px;
+    }
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: -1;
+      background-image: radial-gradient(circle, var(--border) 1px, transparent 1px);
+      background-size: 28px 28px; opacity: .45; pointer-events: none;
+    }
+    .card {
+      width: 100%; max-width: 440px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 36px 28px;
+      box-shadow: 0 2px 20px rgba(0,0,0,.06);
+      text-align: center;
+    }
+    .icon {
+      width: 56px; height: 56px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 20px;
+    }
+    .icon-mail { background: var(--blue-bg); border: 1px solid var(--blue-bd); color: var(--blue); }
+    .icon-ok   { background: var(--green-bg); border: 1px solid var(--green-bd); color: var(--green); }
+    .icon-err  { background: var(--red-bg);   border: 1px solid var(--red-bd);   color: var(--red); }
+    h1 { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 10px; }
+    .email-chip {
+      display: inline-block;
+      background: var(--surface-2); border: 1px solid var(--border);
+      border-radius: 6px; padding: 4px 12px;
+      font-size: 14px; font-weight: 600; color: var(--text);
+      word-break: break-all; margin: 4px 0 16px;
+    }
+    p { font-size: 14px; color: var(--text-2); line-height: 1.6; }
+    .note { font-size: 12px; color: var(--text-3); margin-top: 10px; }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      border: none; border-radius: 8px;
+      padding: 11px 24px; font-size: 14px; font-weight: 600;
+      cursor: pointer; transition: opacity .15s; font-family: inherit;
+      margin-top: 20px; width: 100%;
+    }
+    .btn-primary { background: var(--red); color: #fff; }
+    .btn-primary:hover { opacity: .88; }
+    .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+    .btn-ghost {
+      background: transparent; color: var(--text-2);
+      border: 1px solid var(--border);
+    }
+    .btn-ghost:hover { border-color: var(--text-3); color: var(--text); }
+    .hidden { display: none !important; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+  <link rel="icon" type="image/png" sizes="32x32" href="/static/images/favicon.png" />
+</head>
+<body>
+
+  <!-- State: confirm -->
+  <div id="stateConfirm" class="card">
+    <div class="icon icon-mail">
+      <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+      </svg>
+    </div>
+    <h1>Cancelar e-mails de marketing</h1>
+    <p>Você está removendo o endereço:</p>
+    <span id="emailDisplay" class="email-chip"></span>
+    <p>da nossa lista de e-mails promocionais e novidades.</p>
+    <p class="note">Você continuará recebendo e-mails transacionais importantes (confirmação de conta, recibos).</p>
+    <button id="btnConfirm" class="btn btn-primary" onclick="doUnsubscribe()">
+      Confirmar descadastro
+    </button>
+    <a href="/index.html" class="btn btn-ghost" style="margin-top:10px;text-decoration:none;">
+      Cancelar — manter inscrição
+    </a>
+  </div>
+
+  <!-- State: success -->
+  <div id="stateSuccess" class="card hidden">
+    <div class="icon icon-ok">
+      <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+      </svg>
+    </div>
+    <h1>Descadastro realizado</h1>
+    <p>O e-mail <strong id="emailSuccess"></strong> foi removido da nossa lista de marketing.</p>
+    <p class="note" style="margin-top:12px;">Você não receberá mais e-mails promocionais. Obrigado por usar o CardsQuestõesAI!</p>
+    <a href="/index.html" class="btn btn-ghost" style="margin-top:20px;text-decoration:none;">
+      Voltar ao início
+    </a>
+  </div>
+
+  <!-- State: already -->
+  <div id="stateAlready" class="card hidden">
+    <div class="icon icon-ok">
+      <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+      </svg>
+    </div>
+    <h1>Já descadastrado</h1>
+    <p>Este e-mail já não está na nossa lista de marketing.</p>
+    <a href="/index.html" class="btn btn-ghost" style="margin-top:20px;text-decoration:none;">
+      Voltar ao início
+    </a>
+  </div>
+
+  <!-- State: invalid (no email in URL) -->
+  <div id="stateInvalid" class="card hidden">
+    <div class="icon icon-err">
+      <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+      </svg>
+    </div>
+    <h1>Link inválido</h1>
+    <p>O link de descadastro está incompleto ou expirado. Se você deseja ser removido da lista, entre em contato pelo e-mail <strong>contato@cardsquestoes.com.br</strong>.</p>
+    <a href="/index.html" class="btn btn-ghost" style="margin-top:20px;text-decoration:none;">
+      Voltar ao início
+    </a>
+  </div>
+
+  <!-- State: error -->
+  <div id="stateError" class="card hidden">
+    <div class="icon icon-err">
+      <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+      </svg>
+    </div>
+    <h1>Erro ao processar</h1>
+    <p id="errorMsg">Não foi possível concluir o descadastro. Tente novamente ou entre em contato.</p>
+    <button class="btn btn-primary" style="background:var(--blue);" onclick="doUnsubscribe()">
+      Tentar novamente
+    </button>
+    <a href="/index.html" class="btn btn-ghost" style="margin-top:10px;text-decoration:none;">
+      Voltar ao início
+    </a>
+  </div>
+
+<script>
+  const SUPABASE_URL = 'https://gxkhmmbovlfulcxyupue.supabase.co'
+  const UNSUBSCRIBE_URL = `${SUPABASE_URL}/functions/v1/unsubscribe`
+
+  const params = new URLSearchParams(window.location.search)
+  const email  = (params.get('email') ?? '').trim().toLowerCase()
+
+  function showState(id) {
+    ['stateConfirm','stateSuccess','stateAlready','stateInvalid','stateError'].forEach(s => {
+      document.getElementById(s).classList.toggle('hidden', s !== id)
+    })
+  }
+
+  if (!email || !email.includes('@')) {
+    showState('stateInvalid')
+  } else {
+    document.getElementById('emailDisplay').textContent = email
+    document.getElementById('emailSuccess').textContent = email
+  }
+
+  async function doUnsubscribe() {
+    const btn = document.getElementById('btnConfirm')
+    if (btn) {
+      btn.disabled = true
+      btn.innerHTML = '<svg style="width:15px;height:15px;animation:spin 1s linear infinite;flex-shrink:0" viewBox="0 0 24 24" fill="none"><circle opacity=".25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path opacity=".75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg> Processando…'
+    }
+
+    try {
+      const res = await fetch(UNSUBSCRIBE_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok || data.error) {
+        document.getElementById('errorMsg').textContent = data.error || 'Erro desconhecido.'
+        showState('stateError')
+        return
+      }
+
+      showState(data.already ? 'stateAlready' : 'stateSuccess')
+    } catch (e) {
+      document.getElementById('errorMsg').textContent = e.message || 'Falha de conexão.'
+      showState('stateError')
+    }
+  }
+</script>
+</body>
+</html>

@@ -1,11 +1,15 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { SMTPClient } from 'https://deno.land/x/smtp@v0.7.0/mod.ts'
 
 const ALLOWED_ORIGINS = new Set([
   'https://cardsquestoes.com.br',
   'https://www.cardsquestoes.com.br',
 ])
+
+const FROM_NAME  = 'CardsQuestõesAI'
+const FROM_EMAIL = 'contato@cardsquestoes.com.br'
+const BATCH_SIZE = 100  // Resend batch limit
+const BASE_URL   = 'https://cardsquestoes.com.br'
 
 function getCorsHeaders(req: Request): Record<string, string> {
   const origin = req.headers.get('Origin') ?? ''
@@ -19,7 +23,14 @@ function getCorsHeaders(req: Request): Record<string, string> {
   }
 }
 
-function buildEmailHtml(title: string, body: string): string {
+function buildEmailHtml(title: string, body: string, recipientEmail: string, isTest: boolean): string {
+  const unsubscribeUrl = `${BASE_URL}/unsubscribe.html?email=${encodeURIComponent(recipientEmail)}`
+  const testBanner = isTest
+    ? `<div style="background:#FEF3C7;border:1px solid #FCD34D;border-radius:6px;padding:10px 16px;margin-bottom:20px;font-size:12px;color:#92400E;text-align:center;">
+        <strong>E-mail de teste</strong> — este é um envio de prévia, não foi enviado para todos os usuários.
+       </div>`
+    : ''
+
   return `<!DOCTYPE html>
 <html>
 <head>
@@ -33,12 +44,17 @@ function buildEmailHtml(title: string, body: string): string {
     <span style="color:#ffffff;font-size:18px;font-weight:700;">CardsQuestõesAI</span>
   </div>
   <div style="padding:32px;color:#18181B;font-size:15px;line-height:1.65;">
-    ${body}
+    ${testBanner}${body}
   </div>
   <div style="border-top:1px solid #e5e7eb;padding:20px 32px;background:#f9fafb;">
-    <p style="margin:0;font-size:12px;color:#9ca3af;">
+    <p style="margin:0 0 10px;font-size:12px;color:#9ca3af;">
       Você recebeu este e-mail por ser cadastrado em
-      <a href="https://cardsquestoes.com.br" style="color:#2563EB;text-decoration:none;">cardsquestoes.com.br</a>.
+      <a href="${BASE_URL}" style="color:#2563EB;text-decoration:none;">cardsquestoes.com.br</a>.
+    </p>
+    <p style="margin:0;font-size:12px;color:#9ca3af;text-align:center;">
+      <a href="${unsubscribeUrl}" style="color:#6B7280;text-decoration:underline;">
+        Não deseja mais receber nossos e-mails? Clique aqui para descadastrar.
+      </a>
     </p>
   </div>
 </div>
@@ -46,7 +62,41 @@ function buildEmailHtml(title: string, body: string): string {
 </html>`
 }
 
-serve(async (req) => {
+type BatchItem = { email: string; html: string }
+
+async function resendBatch(
+  apiKey: string,
+  items: BatchItem[],
+  subject: string,
+): Promise<{ sent: number; errors: number }> {
+  const payload = items.map(item => ({
+    from: `${FROM_NAME} <${FROM_EMAIL}>`,
+    to: [item.email],
+    subject,
+    html: item.html,
+  }))
+
+  const res = await fetch('https://api.resend.com/emails/batch', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  })
+
+  if (!res.ok) {
+    const err = await res.text()
+    console.error(`resend batch error (${res.status}):`, err)
+    return { sent: 0, errors: items.length }
+  }
+
+  const data = await res.json()
+  const sent = Array.isArray(data?.data) ? data.data.length : items.length
+  return { sent, errors: items.length - sent }
+}
+
+serve(async (req: Request) => {
   const corsHeaders = getCorsHeaders(req)
 
   if (req.method === 'OPTIONS') {
@@ -85,39 +135,44 @@ serve(async (req) => {
 
     if (!profile?.is_admin) return json({ error: 'Acesso negado' }, 403)
 
-    const body = await req.json()
-    const title: string = (body.title ?? '').trim()
-    const htmlBody: string = (body.html_body ?? '').trim()
-    const isTest: boolean = !!body.is_test
+    const reqBody = await req.json()
+    const title: string    = (reqBody.title     ?? '').trim()
+    const htmlBody: string = (reqBody.html_body  ?? '').trim()
+    const isTest: boolean  = !!reqBody.is_test
 
     if (!title || !htmlBody) {
       return json({ error: 'title e html_body são obrigatórios' }, 400)
     }
 
-    let recipients: string[]
+    const apiKey = Deno.env.get('RESEND_API_KEY') ?? ''
+    if (!apiKey) return json({ error: 'RESEND_API_KEY não configurada' }, 500)
+
+    let recipientEmails: string[]
 
     if (isTest) {
-      const adminEmail = profile.email || user.email
+      const adminEmail = (profile.email || (user.email ?? '')).trim()
       if (!adminEmail) return json({ error: 'E-mail do admin não encontrado' }, 400)
-      recipients = [adminEmail]
+      recipientEmails = [adminEmail]
     } else {
+      // Only send to users who consented to marketing emails
       const { data: profiles, error: profilesErr } = await svc
         .from('profiles')
         .select('email')
         .not('email', 'is', null)
+        .eq('marketing_consent', true)
 
       if (profilesErr) throw profilesErr
 
-      recipients = (profiles ?? [])
+      recipientEmails = (profiles ?? [])
         .map((p: { email: string }) => (p.email ?? '').trim())
         .filter(Boolean)
 
-      if (recipients.length === 0) {
-        return json({ error: 'Nenhum destinatário encontrado' }, 400)
+      if (recipientEmails.length === 0) {
+        return json({ error: 'Nenhum destinatário com consentimento encontrado' }, 400)
       }
     }
 
-    // Create send record in DB before sending (mass only)
+    // Create DB record before sending (mass only)
     let sendId: string | null = null
     if (!isTest) {
       const { data: record } = await svc
@@ -126,7 +181,7 @@ serve(async (req) => {
           title,
           html_body: htmlBody,
           sent_by: user.id,
-          total_recipients: recipients.length,
+          total_recipients: recipientEmails.length,
           sent_count: 0,
           error_count: 0,
           status: 'sending',
@@ -138,47 +193,22 @@ serve(async (req) => {
       sendId = record?.id ?? null
     }
 
-    const smtpHost = Deno.env.get('SMTP_HOST') ?? ''
-    const smtpPort = parseInt(Deno.env.get('SMTP_PORT') ?? '587')
-    const smtpTls  = Deno.env.get('SMTP_TLS') === 'true'
-    const smtpUser = Deno.env.get('SMTP_USER') ?? ''
-    const smtpPass = Deno.env.get('SMTP_PASS') ?? ''
-    const fromName = Deno.env.get('SMTP_FROM_NAME') ?? 'CardsQuestõesAI'
-
-    if (!smtpHost || !smtpUser || !smtpPass) {
-      return json({ error: 'Configurações SMTP ausentes (SMTP_HOST, SMTP_USER, SMTP_PASS)' }, 500)
-    }
-
-    const smtp = new SMTPClient({
-      connection: {
-        hostname: smtpHost,
-        port: smtpPort,
-        tls: smtpTls,
-        auth: { username: smtpUser, password: smtpPass },
-      },
-    })
-
-    const htmlContent = buildEmailHtml(title, htmlBody)
-    let sentCount = 0
+    let sentCount  = 0
     let errorCount = 0
 
-    for (const email of recipients) {
-      try {
-        await smtp.send({
-          from: `${fromName} <${smtpUser}>`,
-          to: email,
-          subject: title,
-          content: 'Ative o suporte a HTML para visualizar este e-mail.',
-          html: htmlContent,
-        })
-        sentCount++
-      } catch (e) {
-        console.error(`send-mass-email: failed for ${email}:`, e instanceof Error ? e.message : e)
-        errorCount++
-      }
-    }
+    // Build per-recipient items (each gets their own unsubscribe link)
+    const allItems: BatchItem[] = recipientEmails.map(email => ({
+      email,
+      html: buildEmailHtml(title, htmlBody, email, isTest),
+    }))
 
-    try { await smtp.close() } catch (_) { /* ignore */ }
+    // Process in batches of BATCH_SIZE (Resend limit = 100)
+    for (let i = 0; i < allItems.length; i += BATCH_SIZE) {
+      const batch = allItems.slice(i, i + BATCH_SIZE)
+      const result = await resendBatch(apiKey, batch, title)
+      sentCount  += result.sent
+      errorCount += result.errors
+    }
 
     if (!isTest && sendId) {
       await svc
@@ -195,7 +225,7 @@ serve(async (req) => {
     return json({
       success: true,
       is_test: isTest,
-      total: recipients.length,
+      total: recipientEmails.length,
       sent: sentCount,
       errors: errorCount,
     })

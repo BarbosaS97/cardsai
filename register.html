@@ -276,6 +276,16 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           <label class="q-label" for="confirmPassword">Confirmar senha</label>
           <input id="confirmPassword" type="password" required placeholder="Repita a senha" class="q-input" autocomplete="new-password" />
         </div>
+        <div style="margin-top:14px;padding:12px 14px;border:1px solid var(--border);border-radius:8px;background:var(--surface-2);">
+          <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;">
+            <input type="checkbox" id="marketingConsent" checked
+              style="margin-top:2px;flex-shrink:0;width:15px;height:15px;cursor:pointer;accent-color:var(--accent);">
+            <span style="font-size:12px;color:var(--text-2);line-height:1.5;">
+              Aceito receber ofertas de cupons e novidades sobre atualizações por e-mail.
+              <span style="display:block;color:var(--text-3);font-size:11px;margin-top:1px;">Você pode cancelar a qualquer momento.</span>
+            </span>
+          </label>
+        </div>
         <div id="turnstile-widget" style="margin-top:14px;"></div>
         <div id="errorMsg" class="q-banner q-banner-error hidden" style="margin-top:10px;"></div>
       </form>
@@ -383,6 +393,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     const email = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value;
     const confirm = document.getElementById('confirmPassword').value;
+    const marketingConsent = document.getElementById('marketingConsent').checked;
 
     errDiv.classList.add('hidden');
 
@@ -430,7 +441,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     window.dataLayer = window.dataLayer || [];
     window.dataLayer.push({ event: 'sign_up', method: 'email' });
     if (data.session) {
-      if (name) await db.from('profiles').update({ full_name: name }).eq('id', data.user.id);
+      const updates = { marketing_consent: marketingConsent };
+      if (name) updates.full_name = name;
+      await db.from('profiles').update(updates).eq('id', data.user.id);
       window.location.href = '/dashboard.html';
       return;
     }
