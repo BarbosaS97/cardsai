@@ -689,6 +689,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       </div>
       <div class="mm-sep"></div>
       <div style="display:flex;align-items:center;gap:2px;">
+        <button class="mm-btn" onclick="MM.exportPNG()" title="Baixar como PNG">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path stroke-linecap="round" d="M3 9h18M9 21V9"/></svg>
+        </button>
         <button class="mm-btn" onclick="MM.exportSVG()" title="Exportar mapa como SVG">
           <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
         </button>
@@ -974,9 +977,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       fw.style.display = isMM ? 'none' : 'block';
     }
 
-    // Render mind map lazily when tab is activated
+    // Load mind map lazily when tab is activated (fetches from DB, falls back to client)
     if (isMM && genData) {
-      setTimeout(() => MM.render('mindmapCanvas'), 50);
+      setTimeout(() => MM.load('mindmapCanvas'), 50);
     }
   };
 
@@ -1441,10 +1444,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     const ICO = ['⚖️','📜','🛡️','🎓','💡','🔬','📊','🌐','🏛️','🔑','📚','🎯'];
     const cut = (s, n) => s && s.length > n ? s.slice(0, n-1) + '…' : (s || '');
     const dark = () => document.documentElement.getAttribute('data-theme') === 'dark';
-    const mkS  = () => ({ tx:0, ty:0, sc:1, drag:false, px:0, py:0, draw:false, isDrawing:false, curPath:null, curData:'', strokes:[], svgEl:null, gEl:null, dlEl:null });
+    const mkS  = () => ({ tx:0, ty:0, sc:1, drag:false, px:0, py:0, draw:false, isDrawing:false, curPath:null, curData:'', strokes:[], svgEl:null, gEl:null, dlEl:null, dbStrokes:null });
 
     let S = mkS();
-    let _winReady = false;
+    let _winReady  = false;
+    let _drawTimer = null;
+    const MM_URL   = `${SUPABASE_URL}/functions/v1/generate-mindmap`;
 
     /* ── Tree ── */
     function buildTree() {
@@ -1688,24 +1693,65 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     /* ── Persist drawings ── */
     function saveDraw() {
       if (!generationId) return;
+      // Immediate localStorage write
       try { localStorage.setItem(`mm_${generationId}`,JSON.stringify(S.strokes)); } catch(e){}
+      // Debounced DB write (2 s)
+      clearTimeout(_drawTimer);
+      _drawTimer = setTimeout(async () => {
+        try {
+          const { data: { session } } = await db.auth.getSession();
+          if (!session) return;
+          await fetch(MM_URL, {
+            method: 'POST',
+            headers: { 'Content-Type':'application/json', 'Authorization':`Bearer ${session.access_token}` },
+            body: JSON.stringify({ generationId, action:'save-draw', anotacoes:S.strokes }),
+          });
+        } catch(e) { /* localStorage is the fallback */ }
+      }, 2000);
     }
+
+    function applyStrokes(strokes) {
+      strokes.forEach(d => {
+        const p=xe('path',{d,fill:'none',stroke:'#A855F7','stroke-width':'2.5','stroke-linecap':'round','stroke-linejoin':'round',opacity:'.9'});
+        S.dlEl.appendChild(p);
+      });
+    }
+
     function loadDraw() {
+      // DB strokes take priority (set by MM.load() before render)
+      if (S.dbStrokes) {
+        S.strokes = S.dbStrokes;
+        applyStrokes(S.strokes);
+        S.dbStrokes = null;
+        return;
+      }
+      // Fallback: localStorage
       if (!generationId) return;
       try {
         const saved=JSON.parse(localStorage.getItem(`mm_${generationId}`)||'null');
-        if (!saved) return;
+        if (!saved || !saved.length) return;
         S.strokes=saved;
-        saved.forEach(d => {
-          const p=xe('path',{d,fill:'none',stroke:'#A855F7','stroke-width':'2.5','stroke-linecap':'round','stroke-linejoin':'round',opacity:'.9'});
-          S.dlEl.appendChild(p);
-        });
+        applyStrokes(S.strokes);
       } catch(e){}
+    }
+
+    /* ── Build tree from prebuilt DB data ── */
+    function treeFromDB(topicos) {
+      if (!topicos || !topicos.length) return null;
+      return {
+        id:'root', label:cut(genData?.title||genData?.pdf_name||'Mapa Mental',26), icon:'🧠', level:0,
+        children: topicos.map((tp, i) => ({
+          id:`t${i}`, label:tp.label, icon:tp.icon||ICO[i%ICO.length], level:1, ci:tp.colorIdx??i,
+          children: (tp.children||[]).map((sub, j) => ({
+            id:`s${i}_${j}`, label:sub.label, detail:sub.detail, level:2, ci:tp.colorIdx??i, children:[]
+          }))
+        }))
+      };
     }
 
     /* ── Public API ── */
     return {
-      render(cId) {
+      render(cId, prebuiltTopicos = null) {
         S = mkS();
         const cnt=document.getElementById(cId);
         if (!cnt) return;
@@ -1724,7 +1770,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         const nl=xe('g'); g.appendChild(nl);
         const dl=xe('g'); g.appendChild(dl); S.dlEl=dl;
 
-        const t=buildTree();
+        const t = prebuiltTopicos ? treeFromDB(prebuiltTopicos) : buildTree();
         if (t&&t.children.length) {
           const ns=layout(t,W,H);
           ns.forEach(nd=>nd.par&&drawConn(cl,nd.par,nd));
@@ -1740,6 +1786,31 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         loadDraw();
         setupSVG(svg);
         ensureWinHandlers();
+      },
+
+      async load(cId) {
+        const cnt=document.getElementById(cId);
+        if (cnt) {
+          const d=dark();
+          cnt.innerHTML=`<div style="flex:1;display:flex;align-items:center;justify-content:center;background:${d?'#0F172A':'#F8FAFC'};"><p style="font-size:13px;color:${d?'#475569':'#94A3B8'};">Carregando mapa mental…</p></div>`;
+        }
+        try {
+          const { data:{ session } } = await db.auth.getSession();
+          if (!session) throw new Error('sem sessão');
+          const res = await fetch(MM_URL, {
+            method:'POST',
+            headers:{ 'Content-Type':'application/json', 'Authorization':`Bearer ${session.access_token}` },
+            body: JSON.stringify({ generationId, action:'get' }),
+          });
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const { topicos, anotacoes } = await res.json();
+          // Store DB strokes so loadDraw() picks them up
+          S.dbStrokes = (anotacoes && anotacoes.length) ? anotacoes : null;
+          this.render(cId, topicos && topicos.length ? topicos : null);
+        } catch(e) {
+          console.warn('[MM] DB load failed, using client data:', e.message);
+          this.render(cId);
+        }
       },
 
       zoomIn()  { S.sc=Math.min(4,S.sc*1.2); applyTx(); },
@@ -1778,13 +1849,47 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         document.body.removeChild(a); URL.revokeObjectURL(u);
       },
 
+      exportPNG() {
+        const svg=document.getElementById('mmSvg');
+        if (!svg) return;
+        const bbox=svg.getBoundingClientRect();
+        const W=Math.round(bbox.width)||1200, H=Math.round(bbox.height)||700;
+
+        // Clone SVG with fixed pixel dimensions for correct rendering
+        const clone=svg.cloneNode(true);
+        clone.setAttribute('width', W);
+        clone.setAttribute('height', H);
+        clone.setAttribute('xmlns','http://www.w3.org/2000/svg');
+
+        const svgStr=new XMLSerializer().serializeToString(clone);
+        const blob=new Blob([svgStr],{type:'image/svg+xml;charset=utf-8'});
+        const url=URL.createObjectURL(blob);
+
+        const img=new Image();
+        img.onload=() => {
+          const canvas=document.createElement('canvas');
+          canvas.width=W*2; canvas.height=H*2;
+          const ctx=canvas.getContext('2d');
+          ctx.scale(2,2);
+          ctx.drawImage(img,0,0,W,H);
+          const a=document.createElement('a');
+          a.href=canvas.toDataURL('image/png');
+          a.download='mapa-mental.png';
+          document.body.appendChild(a); a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        };
+        img.onerror=()=>{ URL.revokeObjectURL(url); alert('Erro ao gerar PNG. Use "Exportar SVG" como alternativa.'); };
+        img.src=url;
+      },
+
       toggleFullscreen() {
         const p=document.getElementById('panelMindmap');
         const fs=p.classList.toggle('mm-fullscreen');
         const btn=document.getElementById('mmFsBtn');
         if (btn) { btn.title=fs?'Sair da tela cheia':'Tela cheia'; btn.style.color=fs?'#C084FC':''; }
         document.body.style.overflow=fs?'hidden':'';
-        setTimeout(()=>this.render('mindmapCanvas'),80);
+        setTimeout(()=>this.load('mindmapCanvas'),80);
       },
     };
   })();
