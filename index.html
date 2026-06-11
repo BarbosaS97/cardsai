@@ -919,6 +919,25 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     .sf-row-bar-fill { height: 100%; border-radius: 99px; }
     .sf-row-pct { font-size: 10px; font-weight: 700; width: 24px; text-align: right; flex-shrink: 0; }
 
+    /* ── Sketch bento card ───────────────────────────────────── */
+    .diff-sketch { grid-column: 1 / -1; background: #F0FDFA; border-color: #99F6E4; }
+    .diff-sketch:hover { border-color: #2DD4BF; }
+    [data-theme="dark"] .diff-sketch { background: #051C18; border-color: #065F46; }
+    [data-theme="dark"] .diff-sketch:hover { border-color: #0D9488; }
+    .diff-icon-box.teal { background: #CCFBF1; border-color: #99F6E4; color: #0D9488; }
+    [data-theme="dark"] .diff-icon-box.teal { background: #042F2E; border-color: #0F766E; color: #2DD4BF; }
+    .diff-tag.teal { color: #0D9488; background: #CCFBF1; border-color: #99F6E4; }
+    [data-theme="dark"] .diff-tag.teal { color: #2DD4BF; background: #042F2E; border-color: #0F766E; }
+    .diff-glow-teal {
+      position: absolute; bottom: -48px; right: -48px;
+      width: 200px; height: 200px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(20,184,166,.10) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .diff-sketch-body { display: flex; gap: 40px; align-items: center; flex-wrap: wrap; }
+    .diff-sketch-text { flex: 1; min-width: 220px; }
+    .diff-sketch-visual { flex: 0 0 auto; width: 300px; max-width: 100%; }
+
     /* ── Responsive ──────────────────────────────────────────── */
     @media (max-width: 960px) {
       .hero-layout { gap: 48px; }
@@ -1381,6 +1400,71 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <p class="diff-p">Notas em qualquer card. Pesquise no Google com um clique — sem copiar, sem colar.</p>
       </div>
 
+      <!-- Card 5 — Sketch (full width) -->
+      <div class="diff-cell diff-sketch">
+        <div class="diff-glow-teal" aria-hidden="true"></div>
+        <div class="diff-sketch-body">
+
+          <div class="diff-sketch-text">
+            <div class="diff-icon-box teal">
+              <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+              </svg>
+            </div>
+            <h3 class="diff-h">Sketch — canvas de anotações</h3>
+            <p class="diff-p">Canvas de desenho integrado ao seu material. Faça esboços, destaque conceitos com marcador, insira textos e monte diagramas — tudo salvo automaticamente enquanto você estuda.</p>
+            <div class="diff-tags" style="margin-top:18px;">
+              <span class="diff-tag teal">Caneta &amp; Marcador</span>
+              <span class="diff-tag teal">Texto</span>
+              <span class="diff-tag teal">Tela cheia</span>
+              <span class="diff-tag teal">Auto-save</span>
+            </div>
+          </div>
+
+          <div class="diff-sketch-visual">
+            <div style="background:var(--bg);border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.07);">
+              <!-- Mini toolbar -->
+              <div style="display:flex;align-items:center;gap:4px;padding:7px 10px;background:var(--bg-alt);border-bottom:1px solid var(--border);">
+                <div style="width:22px;height:22px;border-radius:5px;background:#EFF6FF;border:1px solid #93C5FD;display:flex;align-items:center;justify-content:center;color:#2563EB;flex-shrink:0;">
+                  <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                </div>
+                <div style="width:22px;height:22px;border-radius:5px;display:flex;align-items:center;justify-content:center;color:var(--text-3);flex-shrink:0;">
+                  <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m-6-8h6M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z"/></svg>
+                </div>
+                <div style="width:1px;height:14px;background:var(--border);margin:0 3px;flex-shrink:0;"></div>
+                <div style="width:11px;height:11px;border-radius:50%;background:#1a1a1a;border:2px solid #2563EB;flex-shrink:0;"></div>
+                <div style="width:11px;height:11px;border-radius:50%;background:#2563EB;flex-shrink:0;"></div>
+                <div style="width:11px;height:11px;border-radius:50%;background:#DC2626;flex-shrink:0;"></div>
+                <div style="width:11px;height:11px;border-radius:50%;background:#FACC15;flex-shrink:0;"></div>
+                <div style="flex:1;"></div>
+                <span style="font-size:10px;font-weight:700;color:var(--text-3);">?</span>
+              </div>
+              <!-- Canvas -->
+              <div style="background:#ffffff;padding:12px 14px;">
+                <svg width="100%" viewBox="0 0 260 130" style="display:block;overflow:visible;">
+                  <defs>
+                    <marker id="diff-sk-arr" markerWidth="6" markerHeight="4" refX="4" refY="2" orient="auto">
+                      <path d="M0,0 L0,4 L6,2z" fill="#2563EB"/>
+                    </marker>
+                  </defs>
+                  <rect x="10" y="30" width="85" height="10" rx="2" fill="rgba(250,204,21,0.45)"/>
+                  <path d="M10 20 C28 12 48 18 66 14 C84 10 100 17 118 13" stroke="#1a1a1a" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+                  <text x="12" y="41" font-family="system-ui,-apple-system,sans-serif" font-size="12" font-weight="600" fill="#1a1a1a">Ciclo de Krebs</text>
+                  <ellipse cx="188" cy="58" rx="30" ry="23" stroke="#2563EB" stroke-width="1.5" fill="rgba(37,99,235,.06)"/>
+                  <text x="188" y="53" text-anchor="middle" font-family="system-ui,-apple-system,sans-serif" font-size="11" font-weight="700" fill="#2563EB">ATP</text>
+                  <text x="188" y="67" text-anchor="middle" font-family="system-ui,-apple-system,sans-serif" font-size="8" fill="#2563EB">→ ADP+Pi</text>
+                  <path d="M100 40 C130 33 152 44 157 52" stroke="#2563EB" stroke-width="1.5" fill="none" stroke-linecap="round" marker-end="url(#diff-sk-arr)"/>
+                  <ellipse cx="48" cy="95" rx="38" ry="15" stroke="#DC2626" stroke-width="1.5" fill="none"/>
+                  <text x="48" y="99" text-anchor="middle" font-family="system-ui,-apple-system,sans-serif" font-size="10" fill="#1a1a1a">REVISAR !</text>
+                  <path d="M140 108 C155 98 170 105 185 98 C200 91 212 101 228 96" stroke="#DC2626" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
     </div>
   </div>
 </section>
@@ -1508,8 +1592,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <div class="how-step">
         <div class="how-num">03</div>
         <div>
-          <h3 class="how-h">Estude com questões e flashcards</h3>
-          <p class="how-p">50 questões interativas + 100 flashcards com flip, modo foco, anotações e pesquisa integrada.</p>
+          <h3 class="how-h">Estude com questões, flashcards e Sketch</h3>
+          <p class="how-p">50 questões + 100 flashcards com flip, modo foco e anotações. Use o Sketch para esboços e diagramas — salvo automaticamente.</p>
         </div>
       </div>
 
