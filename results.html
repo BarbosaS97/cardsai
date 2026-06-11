@@ -415,7 +415,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     #mmDetailCard.hidden { display:none !important; }
     #mmDetailTitle { font-size:12px; font-weight:700; color:var(--text,#E2E8F0); margin:0 22px 6px 0; }
     #mmDetailBody  { font-size:12px; line-height:1.6; color:var(--text-2,#94A3B8); margin:0; max-height:110px; overflow-y:auto; }
-    #mindmapCanvas { flex:1; min-height:500px; }
+    #mindmapCanvas { position:absolute; inset:0; }
     .mm-fullscreen { position:fixed !important; inset:0 !important; z-index:250 !important; }
   </style>
   <!-- PWA -->
@@ -1441,7 +1441,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     const NS  = 'http://www.w3.org/2000/svg';
     const xe  = (tag, a) => { const e = document.createElementNS(NS, tag); a && Object.entries(a).forEach(([k,v]) => e.setAttribute(k,v)); return e; };
     const PAL = [['#8B5CF6','#D946EF'],['#3B82F6','#06B6D4'],['#10B981','#34D399'],['#F59E0B','#F97316'],['#EC4899','#F43F5E'],['#6366F1','#8B5CF6'],['#14B8A6','#0EA5E9'],['#EAB308','#EF4444']];
-    const ICO = ['⚖️','📜','🛡️','🎓','💡','🔬','📊','🌐','🏛️','🔑','📚','🎯'];
     const cut = (s, n) => s && s.length > n ? s.slice(0, n-1) + '…' : (s || '');
     const dark = () => document.documentElement.getAttribute('data-theme') === 'dark';
     const mkS  = () => ({ tx:0, ty:0, sc:1, drag:false, px:0, py:0, draw:false, isDrawing:false, curPath:null, curData:'', strokes:[], svgEl:null, gEl:null, dlEl:null, dbStrokes:null });
@@ -1454,19 +1453,19 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     /* ── Tree ── */
     function buildTree() {
       if (!genData) return null;
-      const topics = (genData.topics || []).slice(0, 8);
+      const topics = (genData.topics || []).slice(0, 5);
       const byTp = {};
       (flashcards || []).forEach(f => {
         const t = (f.topic || 'Geral').trim();
         (byTp[t] = byTp[t] || []).push(f);
       });
-      const tpList = topics.length ? topics : Object.keys(byTp).slice(0, 8);
+      const tpList = topics.length ? topics : Object.keys(byTp).slice(0, 5);
       return {
-        id:'root', label:cut(genData.title || genData.pdf_name || 'Mapa Mental', 26), icon:'🧠', level:0,
+        id:'root', label:cut(genData.title || genData.pdf_name || 'Mapa Mental', 30), level:0,
         children: tpList.map((tp, i) => ({
-          id:`t${i}`, label:cut(tp, 20), icon:ICO[i%ICO.length], level:1, ci:i,
+          id:`t${i}`, label:cut(tp, 24), level:1, ci:i,
           children: (byTp[tp]||[]).slice(0,5).map((f,j) => ({
-            id:`s${i}_${j}`, label:cut(f.front,38), detail:f.back, level:2, ci:i, children:[]
+            id:`s${i}_${j}`, label:cut(f.front,42), detail:f.back, level:2, ci:i, children:[]
           }))
         }))
       };
@@ -1475,7 +1474,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     /* ── Layout ── */
     function layout(root, W, H) {
       const cx=W/2, cy=H/2, n=root.children.length;
-      const R1=Math.min(W*.22,H*.28,220), R2=R1*.72;
+      const R1=Math.min(W*.24,H*.30,280), R2=R1*.68;
       const ns=[{ ...root, x:cx, y:cy, par:null }];
       root.children.forEach((tp, i) => {
         const a = (2*Math.PI*i/n) - Math.PI/2;
@@ -1551,33 +1550,29 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     /* ── Node ── */
     function drawNode(layer, nd) {
-      const {x,y,label,icon,level,ci=0,detail}=nd;
+      const {x,y,label,level,ci=0,detail}=nd;
       const d=dark();
       const g=xe('g',{class:'mm-nd',style:'cursor:default;'});
       g.style.transition='transform .18s ease';
 
       if (level===0) {
-        const rw=Math.max(58,label.length*5.5+28);
+        const rw=Math.max(72,label.length*6+28);
         g.appendChild(xe('ellipse',{cx:x,cy:y,rx:rw+8,ry:38,fill:'none',stroke:'rgba(168,85,247,.28)','stroke-width':'1.5'}));
         const bg=xe('ellipse',{cx:x,cy:y,rx:rw,ry:30,fill:'url(#mmRoot)',filter:'url(#mmSh)'});
         g.appendChild(bg);
-        const ic=xe('text',{x,y:y-8,'text-anchor':'middle','dominant-baseline':'middle','font-size':'18',style:'user-select:none'});
-        ic.textContent=icon; g.appendChild(ic);
-        const lb=xe('text',{x,y:y+12,'text-anchor':'middle','dominant-baseline':'middle',fill:'white','font-size':'12','font-weight':'700','font-family':'Inter,system-ui,sans-serif',style:'user-select:none'});
+        const lb=xe('text',{x,y,'text-anchor':'middle','dominant-baseline':'middle',fill:'white','font-size':'13','font-weight':'700','font-family':'Inter,system-ui,sans-serif',style:'user-select:none'});
         lb.textContent=label; g.appendChild(lb);
         g.style.cursor='default';
         g.addEventListener('mouseenter',()=>{bg.setAttribute('filter','url(#mmHv)');g.style.transform=`translate(${x}px,${y}px) scale(1.05) translate(-${x}px,-${y}px)`;});
         g.addEventListener('mouseleave',()=>{bg.setAttribute('filter','url(#mmSh)');g.style.transform='';});
 
       } else if (level===1) {
-        const rw=Math.max(42,label.length*4.6+18);
+        const rw=Math.max(52,label.length*5.2+20);
         const [ca]=PAL[ci%PAL.length];
         g.appendChild(xe('ellipse',{cx:x,cy:y,rx:rw+8,ry:26,fill:ca,opacity:'.18'}));
         const bg=xe('ellipse',{cx:x,cy:y,rx:rw,ry:20,fill:`url(#mmP${ci%PAL.length})`,filter:'url(#mmSh)'});
         g.appendChild(bg);
-        const ic=xe('text',{x,y:y-7,'text-anchor':'middle','dominant-baseline':'middle','font-size':'13',style:'user-select:none'});
-        ic.textContent=icon; g.appendChild(ic);
-        const lb=xe('text',{x,y:y+9,'text-anchor':'middle','dominant-baseline':'middle',fill:'white','font-size':'10','font-weight':'600','font-family':'Inter,system-ui,sans-serif',style:'user-select:none'});
+        const lb=xe('text',{x,y,'text-anchor':'middle','dominant-baseline':'middle',fill:'white','font-size':'11','font-weight':'600','font-family':'Inter,system-ui,sans-serif',style:'user-select:none'});
         lb.textContent=label; g.appendChild(lb);
         g.addEventListener('mouseenter',()=>{bg.setAttribute('filter','url(#mmHv)');g.style.transform=`translate(${x}px,${y}px) scale(1.06) translate(-${x}px,-${y}px)`;});
         g.addEventListener('mouseleave',()=>{bg.setAttribute('filter','url(#mmSh)');g.style.transform='';});
@@ -1739,9 +1734,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     function treeFromDB(topicos) {
       if (!topicos || !topicos.length) return null;
       return {
-        id:'root', label:cut(genData?.title||genData?.pdf_name||'Mapa Mental',26), icon:'🧠', level:0,
-        children: topicos.map((tp, i) => ({
-          id:`t${i}`, label:tp.label, icon:tp.icon||ICO[i%ICO.length], level:1, ci:tp.colorIdx??i,
+        id:'root', label:cut(genData?.title||genData?.pdf_name||'Mapa Mental',30), level:0,
+        children: topicos.slice(0,5).map((tp, i) => ({
+          id:`t${i}`, label:tp.label, level:1, ci:tp.colorIdx??i,
           children: (tp.children||[]).map((sub, j) => ({
             id:`s${i}_${j}`, label:sub.label, detail:sub.detail, level:2, ci:tp.colorIdx??i, children:[]
           }))
@@ -1756,7 +1751,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         const cnt=document.getElementById(cId);
         if (!cnt) return;
         cnt.innerHTML='';
-        const W=cnt.clientWidth||900, H=cnt.clientHeight||560;
+        const panel=document.getElementById('panelMindmap');
+        const W=(panel?.clientWidth)||cnt.clientWidth||window.innerWidth||900;
+        const H=(panel?.clientHeight)||(window.innerHeight-90)||600;
 
         const svg=xe('svg',{width:'100%',height:'100%',style:'display:block;user-select:none;'});
         svg.id='mmSvg';

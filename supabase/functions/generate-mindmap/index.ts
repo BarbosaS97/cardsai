@@ -17,7 +17,6 @@ function getCorsHeaders(req: Request): Record<string, string> {
   }
 }
 
-const ICONS = ['⚖️','📜','🛡️','🎓','💡','🔬','📊','🌐','🏛️','🔑','📚','🎯']
 
 function cut(s: string, n: number): string {
   return s && s.length > n ? s.slice(0, n - 1) + '…' : (s || '')
@@ -125,15 +124,14 @@ serve(async (req) => {
     }
 
     const rawTopics: string[] = Array.isArray(gen.topics) && gen.topics.length > 0
-      ? (gen.topics as string[]).slice(0, 8)
-      : Object.keys(byTopic).slice(0, 8)
+      ? (gen.topics as string[]).slice(0, 5)
+      : Object.keys(byTopic).slice(0, 5)
 
     const topicos = rawTopics.map((tp, i) => ({
-      label: cut(tp, 20),
-      icon: ICONS[i % ICONS.length],
+      label: cut(tp, 24),
       colorIdx: i,
       children: (byTopic[tp] ?? []).slice(0, 5).map((f) => ({
-        label: cut(f.front, 38),
+        label: cut(f.front, 42),
         detail: f.back,
       })),
     }))
