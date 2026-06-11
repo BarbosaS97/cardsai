@@ -377,14 +377,52 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     #noteTextarea:focus { border-color: #2563EB; }
 
     /* ── Mind Map ───────────────────────────────────────────── */
-    #panelMindmap { flex:1; position:relative; min-height:0; overflow:hidden; }
+    #panelMindmap {
+      flex:1; position:relative; min-height:300px; overflow:hidden; background:#fff;
+    }
+    #panelMindmap.mm-expanded {
+      position:fixed !important; inset:0 !important; z-index:300 !important;
+      background:#fff; min-height:0;
+    }
+
+    /* Expand bar — visible in static mode */
+    #mmExpandBar {
+      position:absolute; bottom:20px; left:50%; transform:translateX(-50%); z-index:10;
+    }
+    #mmExpandBtn {
+      display:inline-flex; align-items:center; gap:8px;
+      padding:10px 22px; border-radius:10px; border:none;
+      background:#2563EB; color:#fff; font-size:14px; font-weight:600; font-family:inherit;
+      cursor:pointer; white-space:nowrap;
+      box-shadow:0 4px 18px rgba(37,99,235,.38);
+      transition:background .15s, transform .1s, box-shadow .15s;
+    }
+    #mmExpandBtn:hover { background:#1D4ED8; box-shadow:0 6px 22px rgba(37,99,235,.48); transform:translateY(-1px); }
+    #mmExpandBtn:active { transform:none; }
+    @media (max-width:480px) { #mmExpandBtn { font-size:15px; padding:12px 24px; } }
+
+    /* Minimize button — visible only in expanded mode */
+    #mmMinimizeBtn {
+      display:none; position:absolute; top:14px; right:14px; z-index:15;
+      align-items:center; gap:6px; padding:8px 14px; border-radius:8px;
+      background:rgba(15,23,42,.82); color:#E2E8F0; border:1px solid rgba(148,163,184,.18);
+      font-size:13px; font-weight:500; font-family:inherit; cursor:pointer;
+      backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
+      transition:background .15s;
+    }
+    #mmMinimizeBtn:hover { background:rgba(15,23,42,.96); }
+    #panelMindmap.mm-expanded #mmMinimizeBtn { display:inline-flex; }
+    #panelMindmap.mm-expanded #mmExpandBar   { display:none; }
+
+    /* Controls bar — visible only in expanded mode */
     .mm-ctrl-bar {
-      position:absolute; bottom:18px; left:50%; transform:translateX(-50%); z-index:10;
-      display:flex; align-items:center; gap:3px; padding:7px 10px; white-space:nowrap;
+      display:none; position:absolute; bottom:18px; left:50%; transform:translateX(-50%); z-index:10;
+      align-items:center; gap:3px; padding:7px 10px; white-space:nowrap;
       background:rgba(15,23,42,.88); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
       border:1px solid rgba(148,163,184,.18); border-radius:12px;
       box-shadow:0 8px 32px rgba(0,0,0,.35),0 1px 0 rgba(255,255,255,.06) inset;
     }
+    #panelMindmap.mm-expanded .mm-ctrl-bar { display:flex; }
     [data-theme="light"] .mm-ctrl-bar {
       background:rgba(255,255,255,.92); border-color:rgba(203,213,225,.8);
       box-shadow:0 4px 20px rgba(0,0,0,.1);
@@ -404,19 +442,14 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     #mmDetailCard {
       position:absolute; bottom:72px; left:50%; transform:translateX(-50%);
       width:min(400px,calc(100vw - 32px)); z-index:20; padding:14px 16px;
-      background:rgba(15,23,42,.93); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
-      border:1px solid rgba(168,85,247,.3); border-radius:12px;
-      box-shadow:0 12px 40px rgba(0,0,0,.4);
-    }
-    [data-theme="light"] #mmDetailCard {
-      background:rgba(255,255,255,.97); border-color:rgba(139,92,246,.25);
-      box-shadow:0 8px 30px rgba(0,0,0,.12);
+      background:rgba(255,255,255,.97); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+      border:1px solid rgba(139,92,246,.25); border-radius:12px;
+      box-shadow:0 8px 28px rgba(0,0,0,.12);
     }
     #mmDetailCard.hidden { display:none !important; }
-    #mmDetailTitle { font-size:12px; font-weight:700; color:var(--text,#E2E8F0); margin:0 22px 6px 0; }
-    #mmDetailBody  { font-size:12px; line-height:1.6; color:var(--text-2,#94A3B8); margin:0; max-height:110px; overflow-y:auto; }
+    #mmDetailTitle { font-size:13px; font-weight:700; color:#1E293B; margin:0 22px 6px 0; }
+    #mmDetailBody  { font-size:12px; line-height:1.65; color:#475569; margin:0; max-height:120px; overflow-y:auto; }
     #mindmapCanvas { position:absolute; inset:0; }
-    .mm-fullscreen { position:fixed !important; inset:0 !important; z-index:250 !important; }
   </style>
   <!-- PWA -->
   <link rel="manifest" href="/manifest.json" />
@@ -668,7 +701,15 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <!-- ══ MAPA MENTAL ══════════════════════════════════════════ -->
   <div id="panelMindmap" style="display:none;flex:1;flex-direction:column;min-height:0;position:relative;overflow:hidden;">
 
-    <!-- Controls bar -->
+    <!-- Minimize button (visible only in expanded mode) -->
+    <button id="mmMinimizeBtn" onclick="MM.exitFullMode()">
+      <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+      </svg>
+      Minimizar
+    </button>
+
+    <!-- Controls bar (visible only in expanded mode) -->
     <div class="mm-ctrl-bar">
       <div style="display:flex;align-items:center;gap:2px;">
         <button class="mm-btn" onclick="MM.zoomOut()" title="Diminuir zoom" style="font-size:17px;font-weight:300;line-height:1;">−</button>
@@ -695,18 +736,25 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <button class="mm-btn" onclick="MM.exportSVG()" title="Exportar mapa como SVG">
           <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
         </button>
-        <button class="mm-btn" id="mmFsBtn" onclick="MM.toggleFullscreen()" title="Tela cheia">
-          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
-        </button>
       </div>
     </div>
 
     <!-- Node detail popup -->
     <div id="mmDetailCard" class="hidden">
       <button onclick="document.getElementById('mmDetailCard').classList.add('hidden')"
-        style="position:absolute;top:10px;right:10px;background:none;border:none;color:#64748B;cursor:pointer;font-size:18px;line-height:1;padding:0;">×</button>
+        style="position:absolute;top:10px;right:10px;background:none;border:none;color:#94A3B8;cursor:pointer;font-size:18px;line-height:1;padding:0;">×</button>
       <p id="mmDetailTitle"></p>
       <p id="mmDetailBody"></p>
+    </div>
+
+    <!-- Expand bar (visible in static mode) -->
+    <div id="mmExpandBar">
+      <button id="mmExpandBtn" onclick="MM.enterFullMode()">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/>
+        </svg>
+        Expandir funcionalidades
+      </button>
     </div>
 
     <!-- SVG canvas -->
@@ -977,9 +1025,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       fw.style.display = isMM ? 'none' : 'block';
     }
 
-    // Load mind map lazily when tab is activated (fetches from DB, falls back to client)
+    // Load mind map lazily when tab is activated (static mode by default)
     if (isMM && genData) {
-      setTimeout(() => MM.load('mindmapCanvas'), 50);
+      setTimeout(() => MM.load('mindmapCanvas', false), 50);
     }
   };
 
@@ -1128,6 +1176,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       closeNoteModal(); return;
     }
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+    // ESC exits mind map full mode
+    if (e.key === 'Escape' && document.getElementById('panelMindmap')?.classList.contains('mm-expanded')) {
+      MM.exitFullMode(); return;
+    }
 
     // Focus mode captures all navigation
     if (document.getElementById('focusOverlay').classList.contains('active')) {
@@ -1474,10 +1527,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     }
 
     /* ── Layout ── */
-    function layout(root, W, H) {
+    function layout(root, W, H, fullMode) {
       const cx=W/2, cy=H/2, n=root.children.length;
-      const R1=Math.min(W*.30,H*.36,360);
-      const R2=Math.min(220,Math.max(160,R1*.6));
+      // fullMode uses actual viewport; static mode uses large virtual canvas
+      const R1 = fullMode
+        ? Math.min(W*.30, H*.34, 420)
+        : Math.min(W*.27, H*.30, 360);
+      const R2 = Math.min(260, Math.max(190, R1*.70));
       const ns=[{ ...root, x:cx, y:cy, par:null }];
       root.children.forEach((tp, i) => {
         const a = (2*Math.PI*i/n) - Math.PI/2;
@@ -1486,7 +1542,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         ns.push(tn);
         const m=tp.children.length;
         tp.children.forEach((sb, j) => {
-          const sp = m>1 ? Math.min(1.1,(m-1)*.28) : 0;
+          // spread angle: generous spacing to prevent overlap
+          const sp = m>1 ? Math.min(1.2,(m-1)*.32) : 0;
           const sa = a + (m===1 ? 0 : -sp + sp*2*j/(m-1));
           ns.push({ ...sb, x:tx2+R2*Math.cos(sa), y:ty2+R2*Math.sin(sa), a:sa, par:tn });
         });
@@ -1500,11 +1557,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       const defs = xe('defs');
 
       const bg=xe('linearGradient',{id:'mmBg',x1:'0%',y1:'0%',x2:'100%',y2:'100%'});
-      bg.innerHTML=`<stop offset="0%" stop-color="${d?'#0F172A':'#F8FAFC'}"/><stop offset="100%" stop-color="${d?'#1E1B4B':'#EFF6FF'}"/>`;
+      bg.innerHTML='<stop offset="0%" stop-color="#FFFFFF"/><stop offset="100%" stop-color="#FFFFFF"/>';
       defs.appendChild(bg);
 
       const rg=xe('radialGradient',{id:'mmRg',cx:'50%',cy:'50%',r:'50%'});
-      rg.innerHTML=`<stop offset="0%" stop-color="${d?'rgba(139,92,246,.12)':'rgba(139,92,246,.06)'}"/><stop offset="100%" stop-color="transparent"/>`;
+      rg.innerHTML='<stop offset="0%" stop-color="rgba(139,92,246,.04)"/><stop offset="100%" stop-color="transparent"/>';
       defs.appendChild(rg);
 
       PAL.forEach(([a,b],i) => {
@@ -1526,7 +1583,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       defs.appendChild(hf);
 
       const pat=xe('pattern',{id:'mmDot',x:'0',y:'0',width:'28',height:'28',patternUnits:'userSpaceOnUse'});
-      pat.innerHTML=`<circle cx="14" cy="14" r="1" fill="${d?'rgba(148,163,184,.15)':'rgba(148,163,184,.3)'}"/>`;
+      pat.innerHTML='<circle cx="14" cy="14" r="1" fill="rgba(148,163,184,.28)"/>';
       defs.appendChild(pat);
 
       return defs;
@@ -1831,21 +1888,28 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     /* ── Public API ── */
     return {
-      render(cId, prebuiltTopicos = null) {
+      render(cId, prebuiltTopicos = null, interactive = false, dbStrokes = null) {
         S = mkS();
+        S.dbStrokes = dbStrokes; // preserve strokes through state reset
         const cnt=document.getElementById(cId);
         if (!cnt) return;
         cnt.innerHTML='';
         const panel=document.getElementById('panelMindmap');
-        const W=(panel?.clientWidth)||cnt.clientWidth||window.innerWidth||900;
-        const H=(panel?.clientHeight)||(window.innerHeight-90)||600;
+
+        // Static mode uses large virtual canvas; viewBox auto-fits to content
+        const W = interactive
+          ? Math.max((panel?.clientWidth)||window.innerWidth||900, 800)
+          : 1600;
+        const H = interactive
+          ? Math.max((panel?.clientHeight)||(window.innerHeight-90)||600, 500)
+          : 1000;
 
         const svg=xe('svg',{width:'100%',height:'100%',style:'display:block;user-select:none;'});
         svg.id='mmSvg';
         svg.appendChild(mkDefs(W,H));
-        svg.appendChild(xe('rect',{width:W,height:H,fill:'url(#mmBg)'}));
+        svg.appendChild(xe('rect',{width:W,height:H,fill:'#FFFFFF'}));
         svg.appendChild(xe('rect',{width:W,height:H,fill:'url(#mmDot)'}));
-        svg.appendChild(xe('ellipse',{cx:W/2,cy:H/2,rx:W*.42,ry:H*.42,fill:'url(#mmRg)'}));
+        svg.appendChild(xe('ellipse',{cx:W/2,cy:H/2,rx:W*.44,ry:H*.44,fill:'url(#mmRg)'}));
 
         const g=xe('g'); svg.appendChild(g); S.gEl=g;
         const cl=xe('g'); g.appendChild(cl);
@@ -1854,27 +1918,36 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
         const t = prebuiltTopicos ? treeFromDB(prebuiltTopicos) : buildTree();
         if (t&&t.children.length) {
-          const ns=layout(t,W,H);
+          const ns=layout(t,W,H,interactive);
           ns.forEach(nd=>nd.par&&drawConn(cl,nd.par,nd));
           ns.forEach(nd=>drawNode(nl,nd));
+
+          if (!interactive) {
+            // Compute viewBox from actual node positions — perfect auto-fit
+            const PX=150, PY=90;
+            const xs=ns.map(n=>n.x), ys=ns.map(n=>n.y);
+            const vx=Math.min(...xs)-PX, vy=Math.min(...ys)-PY;
+            const vw=Math.max(...xs)-vx+PX, vh=Math.max(...ys)-vy+PY;
+            svg.setAttribute('viewBox',`${vx} ${vy} ${vw} ${vh}`);
+            svg.setAttribute('preserveAspectRatio','xMidYMid meet');
+          }
         } else {
           const emp=xe('text',{x:W/2,y:H/2,'text-anchor':'middle','dominant-baseline':'middle',
-            fill:dark()?'#475569':'#94A3B8','font-size':'14','font-family':'Inter,system-ui,sans-serif'});
+            fill:'#94A3B8','font-size':'14','font-family':'Inter,system-ui,sans-serif'});
           emp.textContent='Nenhum tópico encontrado para gerar o mapa mental.';
           nl.appendChild(emp);
         }
 
         cnt.appendChild(svg);
+        S.svgEl=svg;
         loadDraw();
-        setupSVG(svg);
-        ensureWinHandlers();
+        if (interactive) { setupSVG(svg); ensureWinHandlers(); }
       },
 
-      async load(cId) {
+      async load(cId, fullMode = false) {
         const cnt=document.getElementById(cId);
         if (cnt) {
-          const d=dark();
-          cnt.innerHTML=`<div style="flex:1;display:flex;align-items:center;justify-content:center;background:${d?'#0F172A':'#F8FAFC'};"><p style="font-size:13px;color:${d?'#475569':'#94A3B8'};">Carregando mapa mental…</p></div>`;
+          cnt.innerHTML='<div style="flex:1;display:flex;align-items:center;justify-content:center;background:#fff;"><p style="font-size:13px;color:#94A3B8;">Carregando mapa mental…</p></div>';
         }
         try {
           const { data:{ session } } = await db.auth.getSession();
@@ -1886,12 +1959,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           });
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
           const { topicos, anotacoes } = await res.json();
-          // Store DB strokes so loadDraw() picks them up
-          S.dbStrokes = (anotacoes && anotacoes.length) ? anotacoes : null;
-          this.render(cId, topicos && topicos.length ? topicos : null);
+          const dbStrokes = (anotacoes && anotacoes.length) ? anotacoes : null;
+          this.render(cId, topicos && topicos.length ? topicos : null, fullMode, dbStrokes);
         } catch(e) {
           console.warn('[MM] DB load failed, using client data:', e.message);
-          this.render(cId);
+          this.render(cId, null, fullMode, null);
         }
       },
 
@@ -1965,13 +2037,18 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         img.src=url;
       },
 
-      toggleFullscreen() {
-        const p=document.getElementById('panelMindmap');
-        const fs=p.classList.toggle('mm-fullscreen');
-        const btn=document.getElementById('mmFsBtn');
-        if (btn) { btn.title=fs?'Sair da tela cheia':'Tela cheia'; btn.style.color=fs?'#C084FC':''; }
-        document.body.style.overflow=fs?'hidden':'';
-        setTimeout(()=>this.load('mindmapCanvas'),80);
+      enterFullMode() {
+        document.getElementById('panelMindmap').classList.add('mm-expanded');
+        document.body.style.overflow='hidden';
+        document.getElementById('mmDetailCard')?.classList.add('hidden');
+        setTimeout(()=>this.load('mindmapCanvas',true),60);
+      },
+
+      exitFullMode() {
+        document.getElementById('panelMindmap').classList.remove('mm-expanded');
+        document.body.style.overflow='';
+        document.getElementById('mmDetailCard')?.classList.add('hidden');
+        setTimeout(()=>this.load('mindmapCanvas',false),60);
       },
     };
   })();
