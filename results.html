@@ -307,9 +307,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       .flip-wrap { height: 170px !important; }
 
       #qCard {
-        height: calc(100vh - 285px);
-        height: calc(100dvh - 285px);
-        min-height: 280px; max-height: none;
+        height: calc(100vh - 248px);
+        height: calc(100dvh - 248px);
+        min-height: 240px; max-height: none;
       }
       #focusModeQuestion { height: min(62vh, 470px); }
 
@@ -701,7 +701,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             </span>
             <p id="fcFront" class="text-sm md:text-base font-medium text-slate-900 leading-snug max-w-md"></p>
             <p class="text-xs text-slate-300 mt-3 select-none">Clique ou deslize para ver a resposta</p>
-            <button id="fcGoogleFront" class="google-btn" title="Pesquisar no Google" style="position:absolute;top:10px;left:50%;transform:translateX(-50%);" onclick="event.stopPropagation()">
+            <!-- Google à esquerda do lápis, ambos no canto superior direito -->
+            <button id="fcGoogleFront" class="google-btn" title="Pesquisar no Google" style="position:absolute;top:10px;right:36px;" onclick="event.stopPropagation()">
               <img src="/static/images/google.png" alt="Pesquisar no Google" width="16" height="16" style="display:block;">
             </button>
             <button id="fcNoteBtn" class="note-btn" title="Adicionar anotação" style="position:absolute;top:10px;right:10px;" onclick="event.stopPropagation()">
@@ -719,7 +720,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             </span>
             <p id="fcBack" class="text-sm md:text-base font-semibold text-white leading-snug max-w-md"></p>
             <p class="text-xs text-blue-200 mt-3 select-none">Clique para voltar</p>
-            <button id="fcGoogleBack" class="google-btn google-btn-light" title="Pesquisar no Google" style="position:absolute;top:10px;left:50%;transform:translateX(-50%);" onclick="event.stopPropagation()">
+            <button id="fcGoogleBack" class="google-btn google-btn-light" title="Pesquisar no Google" style="position:absolute;top:10px;right:36px;" onclick="event.stopPropagation()">
               <img src="/static/images/google.png" alt="Pesquisar no Google" width="16" height="16" style="display:block;">
             </button>
             <button id="fcNoteBtnBack" class="note-btn note-btn-light" title="Adicionar anotação" style="position:absolute;top:10px;right:10px;" onclick="event.stopPropagation()">
@@ -1005,7 +1006,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             <span style="font-size:10px;font-weight:600;color:#3B82F6;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;">Pergunta</span>
             <p id="focusFCFront" style="font-size:15px;font-weight:600;color:#F1F5F9;line-height:1.5;"></p>
             <p style="font-size:11px;color:#475569;margin-top:12px;">Clique para ver a resposta</p>
-            <button id="focusFCGoogleFront" class="google-btn google-btn-light" title="Pesquisar no Google" style="position:absolute;top:10px;left:50%;transform:translateX(-50%);" onclick="event.stopPropagation()">
+            <button id="focusFCGoogleFront" class="google-btn google-btn-light" title="Pesquisar no Google" style="position:absolute;top:10px;right:10px;" onclick="event.stopPropagation()">
               <img src="/static/images/google.png" alt="Pesquisar no Google" width="15" height="15" style="display:block;">
             </button>
           </div>
@@ -1013,7 +1014,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             <span style="font-size:10px;font-weight:600;color:#BFDBFE;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;">Resposta</span>
             <p id="focusFCBack" style="font-size:15px;font-weight:600;color:#fff;line-height:1.5;"></p>
             <p style="font-size:11px;color:#BFDBFE;margin-top:12px;">Clique para voltar</p>
-            <button id="focusFCGoogleBack" class="google-btn google-btn-light" title="Pesquisar no Google" style="position:absolute;top:10px;left:50%;transform:translateX(-50%);" onclick="event.stopPropagation()">
+            <button id="focusFCGoogleBack" class="google-btn google-btn-light" title="Pesquisar no Google" style="position:absolute;top:10px;right:10px;" onclick="event.stopPropagation()">
               <img src="/static/images/google.png" alt="Pesquisar no Google" width="15" height="15" style="display:block;">
             </button>
           </div>
@@ -1363,15 +1364,23 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     document.getElementById('flipCard').classList.remove('flipped');
   }
 
+  let _flipLock = false, _fcNavLock = false;
+
   window.flipCard = function () {
+    if (_flipLock) return;
+    _flipLock = true;
     document.getElementById('flipCard').classList.toggle('flipped');
+    setTimeout(() => { _flipLock = false; }, 420);
   };
 
   window.goFC = function (d) {
+    if (_fcNavLock) return;
     const n = fcIdx + d;
     if (n < 0 || n >= flashcards.length) return;
+    _fcNavLock = true;
     fcIdx = n;
     renderFC();
+    setTimeout(() => { _fcNavLock = false; }, 320);
   };
 
   /* ── Keyboard shortcuts ────────────────────────────────── */
@@ -1494,14 +1503,20 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       if (n < 0 || n >= questions.length) return;
       qIdx = n; renderQ(); renderFocusFrame();
     } else {
+      if (_fcNavLock) return;
       const n = fcIdx + d;
       if (n < 0 || n >= flashcards.length) return;
+      _fcNavLock = true;
       fcIdx = n; renderFC(); renderFocusFrame();
+      setTimeout(() => { _fcNavLock = false; }, 320);
     }
   };
 
   window.focusFlipCard = function () {
+    if (_flipLock) return;
+    _flipLock = true;
     document.getElementById('focusFlip').classList.toggle('flipped');
+    setTimeout(() => { _flipLock = false; }, 420);
   };
 
   window.focusReveal = function () {
