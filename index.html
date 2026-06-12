@@ -2023,6 +2023,40 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     let timer = null;
     let paused = false;
 
+    function _fillCard(c) {
+      const subjEl = document.getElementById('heroSubject');
+      if (subjEl) {
+        subjEl.textContent = c.subject;
+        subjEl.className = 'hv-subject ' + c.colorClass;
+      }
+      document.getElementById('heroCount').textContent = c.count;
+      document.getElementById('heroMeta').textContent  = c.meta;
+      document.getElementById('heroQ').textContent     = c.question;
+      const optsEl = document.getElementById('heroOpts');
+      optsEl.innerHTML = c.options.map(function (opt, i) {
+        return '<div class="hv-opt' + (i === c.correct ? ' hv-correct' : '') + '">' +
+          '<span class="hv-opt-letter">' + LETTERS[i] + '</span>' + opt + '</div>';
+      }).join('');
+      document.getElementById('heroBar').style.width   = c.progress + '%';
+      document.getElementById('heroLabel').textContent = c.label;
+    }
+
+    function _lockCardHeight() {
+      var card = document.getElementById('heroCard');
+      if (!card) return;
+      var saved = card.style.cssText;
+      card.style.transition = 'none';
+      card.style.opacity = '0';
+      var maxH = 0;
+      CARDS.forEach(function (c) {
+        _fillCard(c);
+        maxH = Math.max(maxH, card.offsetHeight);
+      });
+      card.style.cssText = saved;
+      card.style.minHeight = maxH + 'px';
+      _fillCard(CARDS[0]);
+    }
+
     function applyCard(idx) {
       const c = CARDS[idx];
       const card = document.getElementById('heroCard');
@@ -2032,23 +2066,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       card.style.transform = 'translateY(5px)';
 
       setTimeout(function () {
-        const subjEl = document.getElementById('heroSubject');
-        if (subjEl) {
-          subjEl.textContent = c.subject;
-          subjEl.className = 'hv-subject ' + c.colorClass;
-        }
-        document.getElementById('heroCount').textContent = c.count;
-        document.getElementById('heroMeta').textContent  = c.meta;
-        document.getElementById('heroQ').textContent     = c.question;
-
-        const optsEl = document.getElementById('heroOpts');
-        optsEl.innerHTML = c.options.map(function (opt, i) {
-          return '<div class="hv-opt' + (i === c.correct ? ' hv-correct' : '') + '">' +
-            '<span class="hv-opt-letter">' + LETTERS[i] + '</span>' + opt + '</div>';
-        }).join('');
-
-        document.getElementById('heroBar').style.width     = c.progress + '%';
-        document.getElementById('heroLabel').textContent   = c.label;
+        _fillCard(c);
 
         document.querySelectorAll('.hv-dot').forEach(function (d, i) {
           d.classList.toggle('active', i === idx);
@@ -2082,6 +2100,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       wrap.addEventListener('mouseleave', function () { paused = false; });
     }
 
+    _lockCardHeight();
     restartTimer();
   })();
 
