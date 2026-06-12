@@ -1414,7 +1414,7 @@ Mínimo: 500 caracteres · Máximo: 50.000 caracteres"
   ];
 
   /* ── Subscription Modal ────────────────────────────────── */
-  window.openSubscriptionModal = function () {
+  window.openSubscriptionModal = async function () {
     const p   = profile;
     const now = new Date();
     const fmt = d => new Date(d).toLocaleDateString('pt-BR');
@@ -1422,13 +1422,25 @@ Mínimo: 500 caracteres · Máximo: 50.000 caracteres"
       `<div class="sub-info-row"><span class="sub-info-label">${label}</span><span class="sub-info-value">${value}</span></div>`;
     const badge = (cls, text) =>
       `<span class="sub-plan-badge ${cls}">${text}</span>`;
+    const pluralCredito = n => n === 1 ? 'crédito' : 'créditos';
 
-    const credits = p?.credits ?? 0;
-    const used    = p?.monthly_generations ?? 0;
+    const credits   = p?.credits ?? 0;
     const subActive = p?.subscription_status === 'active' &&
                       p?.subscription_end_date &&
                       new Date(p.subscription_end_date) > now;
     const bonusActive = p?.pro_features_until && new Date(p.pro_features_until) > now;
+
+    // Para assinantes Pro: busca contador real em monthly_usage
+    let used = p?.monthly_generations ?? 0;
+    if (subActive && p?.id) {
+      const thisMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+      const { data: usageRow } = await db.from('monthly_usage')
+        .select('generations')
+        .eq('user_id', p.id)
+        .eq('month', thisMonth)
+        .maybeSingle();
+      if (usageRow != null) used = usageRow.generations;
+    }
 
     let rows = '';
 
@@ -1436,32 +1448,37 @@ Mínimo: 500 caracteres · Máximo: 50.000 caracteres"
       rows += row('Plano atual', badge('sub-plan-pro', 'Admin / Acesso Ilimitado'));
 
     } else if (subActive) {
-      const label = p.subscription_plan === 'pro_annual' ? 'Pro Anual' : 'Pro Mensal';
-      const limit = 60;
-      const rem   = Math.max(0, limit - used);
-      rows += row('Plano atual',   badge('sub-plan-pro', label));
-      rows += row('Status',        '<span style="color:#16A34A;font-weight:600;">Ativo</span>');
-      rows += row('Vence em',      fmt(p.subscription_end_date));
-      rows += row('Gerações usadas', `${used} de ${limit} este mês`);
+      const label  = p.subscription_plan === 'pro_annual' ? 'Pro Anual' : 'Pro Mensal';
+      const limit  = 60;
+      const subRem = Math.max(0, limit - used);
+      const total  = subRem + credits;
+
+      rows += row('Plano atual', badge('sub-plan-pro', label));
+      rows += row('Status',      '<span style="color:#16A34A;font-weight:600;">Ativo</span>');
+      rows += row('Vence em',    fmt(p.subscription_end_date));
+      rows += row('Créditos Assinatura',
+        `${subRem} <span style="color:#64748B;font-size:12px;">(${used} usados este mês)</span>`);
+      if (credits > 0) {
+        rows += row('Créditos avulsos', `${credits} ${pluralCredito(credits)}`);
+        rows += row('Total de créditos', `<strong>${total}</strong> ${pluralCredito(total)}`);
+      }
       if (bonusActive)
-        rows += row('Bônus Pro (créditos) até', fmt(p.pro_features_until));
-      if (credits > 0)
-        rows += row('Créditos disponíveis', credits + (credits === 1 ? ' crédito' : ' créditos'));
+        rows += row('Bônus Pro até', fmt(p.pro_features_until));
 
     } else if (credits > 0) {
-      rows += row('Plano atual',         badge('sub-plan-credit', 'Créditos Avulsos'));
-      rows += row('Créditos disponíveis', credits + (credits === 1 ? ' crédito' : ' créditos'));
+      rows += row('Plano atual',      badge('sub-plan-credit', 'Créditos Avulsos'));
+      rows += row('Créditos avulsos', `${credits} ${pluralCredito(credits)}`);
       if (bonusActive)
         rows += row('Bônus Pro ativo até', fmt(p.pro_features_until));
 
     } else {
-      const limit = 5;
-      const rem   = Math.max(0, limit - used);
-      rows += row('Plano atual',       badge('sub-plan-free', 'Grátis'));
-      rows += row('Limite mensal',     `${limit} gerações / mês`);
-      rows += row('Gerações usadas',   `${used} de ${limit} este mês`);
+      const limit   = 5;
+      const usedFree = p?.monthly_generations ?? 0;
+      rows += row('Plano atual',     badge('sub-plan-free', 'Grátis'));
+      rows += row('Limite mensal',   `${limit} gerações / mês`);
+      rows += row('Gerações usadas', `${usedFree} de ${limit} este mês`);
       if (credits > 0)
-        rows += row('Créditos disponíveis', credits + (credits === 1 ? ' crédito' : ' créditos'));
+        rows += row('Créditos avulsos', `${credits} ${pluralCredito(credits)}`);
     }
 
     document.getElementById('subInfoRows').innerHTML = rows;
