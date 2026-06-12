@@ -1456,11 +1456,11 @@ Mínimo: 500 caracteres · Máximo: 50.000 caracteres"
       rows += row('Plano atual', badge('sub-plan-pro', label));
       rows += row('Status',      '<span style="color:#16A34A;font-weight:600;">Ativo</span>');
       rows += row('Vence em',    fmt(p.subscription_end_date));
-      rows += row('Créditos Assinatura',
-        `${subRem} <span style="color:#64748B;font-size:12px;">(${used} usados este mês)</span>`);
+      rows += row('Créditos/mês',
+        `${subRem} de 60 disponíveis <span style="color:#64748B;font-size:12px;">(${used} usados · renova todo mês)</span>`);
       if (credits > 0) {
         rows += row('Créditos avulsos', `${credits} ${pluralCredito(credits)}`);
-        rows += row('Total de créditos', `<strong>${total}</strong> ${pluralCredito(total)}`);
+        rows += row('Total disponível', `<strong>${total}</strong> ${pluralCredito(total)}`);
       }
       if (bonusActive)
         rows += row('Bônus Pro até', fmt(p.pro_features_until));

@@ -68,20 +68,36 @@ window.closePlanPromoModal = function () {
 };
 
 window.onPlanPromoChange = function () {
-  const plan = document.getElementById('planPromoSelect').value;
-  const isPro = plan === 'pro_monthly' || plan === 'pro_annual';
+  const plan      = document.getElementById('planPromoSelect').value;
+  const isPro     = plan === 'pro_monthly' || plan === 'pro_annual';
+  const isCredits = plan === 'credits';
 
-  document.getElementById('planPromoDaysRow').style.display    = isPro             ? '' : 'none';
-  document.getElementById('planPromoDateRow').style.display    = isPro             ? '' : 'none';
-  document.getElementById('planPromoCreditsRow').style.display = plan === 'credits' ? '' : 'none';
-  document.getElementById('planPromoFreeWarn').style.display   = plan === 'free'    ? '' : 'none';
+  document.getElementById('planPromoDaysRow').style.display      = isPro             ? '' : 'none';
+  document.getElementById('planPromoDateRow').style.display      = (isPro || isCredits) ? '' : 'none';
+  document.getElementById('planPromoStartDateWrap').style.display = isPro            ? '' : 'none';
+  document.getElementById('planPromoCreditsRow').style.display   = isCredits         ? '' : 'none';
+  document.getElementById('planPromoFreeWarn').style.display     = plan === 'free'   ? '' : 'none';
+
+  if (isPro) {
+    document.getElementById('planPromoDateLabel').innerHTML =
+      'Datas personalizadas <span style="font-weight:400;text-transform:none;">(opcional)</span>';
+    document.getElementById('planPromoEndDateLabel').textContent = 'Data de fim';
+    document.getElementById('planPromoDateHint').textContent =
+      'Se preenchidas, substituem os dias acima. Deixe em branco para usar hoje + dias.';
+  } else if (isCredits) {
+    document.getElementById('planPromoDateLabel').innerHTML =
+      'Bônus Pro até <span style="font-weight:400;text-transform:none;">(opcional)</span>';
+    document.getElementById('planPromoEndDateLabel').textContent = 'Data de validade do bônus';
+    document.getElementById('planPromoDateHint').textContent =
+      'Data em que o acesso Pro de bônus expira. Padrão: +30 dias a partir de hoje.';
+  }
 
   if (plan === 'pro_monthly') {
-    document.getElementById('planPromoDaysInput').value        = '30';
-    document.getElementById('planPromoDaysHint').textContent   = 'Padrão: 30 dias';
+    document.getElementById('planPromoDaysInput').value       = '30';
+    document.getElementById('planPromoDaysHint').textContent  = 'Padrão: 30 dias';
   } else if (plan === 'pro_annual') {
-    document.getElementById('planPromoDaysInput').value        = '365';
-    document.getElementById('planPromoDaysHint').textContent   = 'Padrão: 365 dias';
+    document.getElementById('planPromoDaysInput').value       = '365';
+    document.getElementById('planPromoDaysHint').textContent  = 'Padrão: 365 dias';
   }
 };
 
