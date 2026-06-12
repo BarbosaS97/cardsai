@@ -1557,10 +1557,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     if (isQ) {
       if (!questions.length) return;
       const q = questions[qIdx];
+      const freeQLimitActive = !hasProAccess(_userProfile) && questions.length > FREE_Q_LIMIT;
+      const qDisplayTotal    = freeQLimitActive ? FREE_Q_LIMIT : questions.length;
+      const qNextLimit       = freeQLimitActive ? FREE_Q_LIMIT - 1 : questions.length - 1;
       document.getElementById('focusLabel').textContent   = 'Questões';
-      document.getElementById('focusCounter').textContent = `${qIdx + 1} / ${questions.length}`;
+      document.getElementById('focusCounter').textContent = `${qIdx + 1} / ${qDisplayTotal}`;
       document.getElementById('focusPrev').disabled = qIdx === 0;
-      document.getElementById('focusNext').disabled = qIdx === questions.length - 1;
+      document.getElementById('focusNext').disabled = qIdx >= qNextLimit;
       document.getElementById('focusQTopic').textContent  = q.topic || '';
       document.getElementById('focusQText').textContent   = q.text;
       document.getElementById('focusQGoogleBtn').onclick  = () => searchOnGoogle(q.text);
@@ -1586,10 +1589,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     } else {
       if (!flashcards.length) return;
       const f = flashcards[fcIdx];
+      const freeFCLimitActive = !hasProAccess(_userProfile) && flashcards.length > FREE_FC_LIMIT;
+      const fcDisplayTotal    = freeFCLimitActive ? FREE_FC_LIMIT : flashcards.length;
+      const fcNextLimit       = freeFCLimitActive ? FREE_FC_LIMIT - 1 : flashcards.length - 1;
       document.getElementById('focusLabel').textContent   = 'Flashcards';
-      document.getElementById('focusCounter').textContent = `${fcIdx + 1} / ${flashcards.length}`;
+      document.getElementById('focusCounter').textContent = `${fcIdx + 1} / ${fcDisplayTotal}`;
       document.getElementById('focusPrev').disabled = fcIdx === 0;
-      document.getElementById('focusNext').disabled = fcIdx === flashcards.length - 1;
+      document.getElementById('focusNext').disabled = fcIdx >= fcNextLimit;
       document.getElementById('focusFCFront').textContent = f.front || '';
       document.getElementById('focusFCBack').textContent  = f.back  || '';
       document.getElementById('focusFCGoogleFront').onclick = (e) => { e.stopPropagation(); searchOnGoogle(f.front || ''); };
@@ -1601,12 +1607,22 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   window.focusNav = function (d) {
     if (activeTab === 'questions') {
       const n = qIdx + d;
-      if (n < 0 || n >= questions.length) return;
+      if (n < 0) return;
+      if (!hasProAccess(_userProfile) && n >= FREE_Q_LIMIT && questions.length > FREE_Q_LIMIT) {
+        showContentUpgradeModal('questions');
+        return;
+      }
+      if (n >= questions.length) return;
       qIdx = n; renderQ(); renderFocusFrame();
     } else {
       if (_fcNavLock) return;
       const n = fcIdx + d;
-      if (n < 0 || n >= flashcards.length) return;
+      if (n < 0) return;
+      if (!hasProAccess(_userProfile) && n >= FREE_FC_LIMIT && flashcards.length > FREE_FC_LIMIT) {
+        showContentUpgradeModal('flashcards');
+        return;
+      }
+      if (n >= flashcards.length) return;
       _fcNavLock = true;
       fcIdx = n; renderFC(); renderFocusFrame();
       setTimeout(() => { _fcNavLock = false; }, 320);
