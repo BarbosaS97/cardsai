@@ -33,11 +33,11 @@ serve(async (req) => {
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) return json({ valid: false, error: 'Não autenticado' }, 401)
 
-    // plan_type: 'credits' | 'subscription'
+    // plan_type: 'credits' | 'subscription' (optional — skips plan-type check if absent)
     const { code, plan_type } = await req.json()
 
-    if (!code || !plan_type) {
-      return json({ valid: false, error: 'Informe o código do cupom e o tipo de plano' }, 400)
+    if (!code) {
+      return json({ valid: false, error: 'Informe o código do cupom' }, 400)
     }
 
     const userClient = createClient(

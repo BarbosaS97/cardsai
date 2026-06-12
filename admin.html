@@ -570,6 +570,59 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     </div>
   </div>
 
+  <!-- Modal: promover plano do usuário -->
+  <div id="planPromoModal" class="hidden" style="position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(15,23,42,0.5);backdrop-filter:blur(4px);">
+    <div class="card" style="width:100%;max-width:460px;padding:28px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+        <h3 style="font-size:16px;font-weight:700;color:var(--text);">Promover plano</h3>
+        <button onclick="closePlanPromoModal()" style="color:var(--text-3);font-size:20px;background:none;border:none;cursor:pointer;line-height:1;">×</button>
+      </div>
+      <p id="planPromoEmail" style="font-size:13px;font-weight:500;color:var(--text-2);margin-bottom:2px;"></p>
+      <p id="planPromoCurrent" style="font-size:12px;color:var(--text-3);padding-bottom:16px;margin-bottom:16px;border-bottom:1px solid var(--border);"></p>
+
+      <div class="space-y-4">
+
+        <!-- Seletor de plano -->
+        <div>
+          <label style="display:block;font-size:11px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">Novo plano *</label>
+          <select id="planPromoSelect" class="input-field" onchange="onPlanPromoChange()">
+            <option value="pro_monthly">Pro Mensal (30 dias)</option>
+            <option value="pro_annual">Pro Anual (365 dias)</option>
+            <option value="credits">Créditos Avulsos</option>
+            <option value="free">Grátis — resetar assinatura</option>
+          </select>
+        </div>
+
+        <!-- Dias de acesso (planos Pro) -->
+        <div id="planPromoDaysRow">
+          <label style="display:block;font-size:11px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">Dias de acesso</label>
+          <input id="planPromoDaysInput" type="number" min="1" value="30" class="input-field" />
+          <p id="planPromoDaysHint" style="font-size:11px;color:var(--text-3);margin-top:4px;">Padrão: 30 dias</p>
+        </div>
+
+        <!-- Créditos (Créditos Avulsos) -->
+        <div id="planPromoCreditsRow" style="display:none;">
+          <label style="display:block;font-size:11px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">Créditos a adicionar</label>
+          <input id="planPromoCreditsInput" type="number" min="1" value="5" class="input-field" />
+          <p style="font-size:11px;color:var(--text-3);margin-top:4px;">Também concede +30 dias de acesso Pro de bônus.</p>
+        </div>
+
+        <!-- Aviso ao resetar para Grátis -->
+        <div id="planPromoFreeWarn" style="display:none;padding:10px 14px;background:var(--red-bg);border:1px solid var(--red-bd);border-radius:8px;font-size:13px;color:var(--red);">
+          &#9888;&#65039; A assinatura ativa e o bônus Pro serão removidos. Créditos avulsos existentes são mantidos.
+        </div>
+
+      </div>
+
+      <div id="planPromoMsg" class="hidden" style="font-size:13px;padding:10px 14px;border-radius:8px;margin-top:16px;"></div>
+
+      <div style="display:flex;gap:8px;margin-top:20px;">
+        <button onclick="closePlanPromoModal()" class="btn-ghost" style="flex:1;justify-content:center;">Cancelar</button>
+        <button id="btnApplyPlanPromo" onclick="applyPlanPromo()" class="btn-primary" style="flex:2;justify-content:center;">Aplicar plano</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Modal: criar / editar campanha -->
   <div id="campaignModal" class="hidden" style="position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(15,23,42,0.5);backdrop-filter:blur(4px);">
     <div class="card" style="width:100%;max-width:520px;padding:28px;max-height:90vh;overflow-y:auto;">
@@ -638,6 +691,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <script src="/js/admin-coupons.js"></script>
   <script src="/js/admin-campaigns.js"></script>
   <script src="/js/admin-email-marketing.js"></script>
+  <script src="/js/admin-plan-promo.js"></script>
   <script>
     let allUsers = [];
     let allGens = [];
@@ -715,6 +769,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px;">
               ${u.is_admin ? '<span style="font-size:11px;font-weight:600;color:var(--blue);background:var(--blue-bg);padding:2px 8px;border-radius:4px;border:1px solid var(--blue-bd);">ADMIN</span>' : ''}
               ${u.unlimited_access ? '<span style="font-size:11px;font-weight:600;color:#7C3AED;background:#F5F3FF;padding:2px 8px;border-radius:4px;border:1px solid #DDD6FE;">ILIMITADO</span>' : ''}
+              ${getPlanBadge(u)}
             </div>
           </td>
           <td><span style="font-weight:600;color:var(--text);">${u.credits >= 999990 ? '∞' : Number(u.credits)}</span></td>
@@ -724,6 +779,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             <div class="action-btns" style="display:flex;gap:6px;flex-wrap:wrap;">
               <button onclick="openCreditsModal('${u.id}', ${Number(u.credits)})" class="btn-ghost">Créditos</button>
               <button onclick="viewUserGens('${u.id}')" class="btn-ghost">Gerações</button>
+              <button onclick="openPlanPromoModal('${u.id}')" class="btn-ghost" style="color:#7C3AED;border-color:#DDD6FE;">Plano</button>
               <button onclick="toggleUnlimited('${u.id}', ${!!u.unlimited_access})" class="btn-ghost" style="${u.unlimited_access ? 'color:#7C3AED;border-color:#DDD6FE;' : ''}">${u.unlimited_access ? 'Rem. ∞' : 'Dar ∞'}</button>
               <button onclick="toggleAdmin('${u.id}', ${!!u.is_admin})" class="btn-ghost" style="${u.is_admin ? 'color:#DC2626;border-color:#FECACA;' : 'color:var(--blue);border-color:#BFDBFE;'}">${u.is_admin ? 'Rem. Admin' : 'Dar Admin'}</button>
             </div>
