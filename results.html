@@ -1190,6 +1190,85 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   const _answeredSet = new Set();
   window._notesMap = {};
 
+  let _userProfile = null;
+  const FREE_Q_LIMIT  = 20;
+  const FREE_FC_LIMIT = 30;
+
+  function hasProAccess(p) {
+    if (!p) return false;
+    if (p.is_admin || p.unlimited_access) return true;
+    const now = new Date();
+    if (p.subscription_status === 'active' && p.subscription_end_date && new Date(p.subscription_end_date) > now) return true;
+    if (p.pro_features_until && new Date(p.pro_features_until) > now) return true;
+    return false;
+  }
+
+  function showContentUpgradeModal(type) {
+    const isQ  = type === 'questions';
+    const remaining = isQ
+      ? (questions.length - FREE_Q_LIMIT)
+      : (flashcards.length - FREE_FC_LIMIT);
+    const word = isQ ? 'questões' : 'flashcards';
+    const msg  = document.createElement('div');
+    msg.id = 'contentUpgradeOverlay';
+    msg.style.cssText = [
+      'position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;',
+      'background:rgba(15,23,42,.6);backdrop-filter:blur(4px);padding:16px;',
+    ].join('');
+    msg.innerHTML = `
+      <div style="background:var(--surface,#fff);border-radius:18px;border:1px solid var(--border,#E2E8F0);
+        box-shadow:0 24px 64px rgba(0,0,0,.22);padding:32px 28px 24px;max-width:400px;width:100%;text-align:center;">
+        <div style="width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#EFF6FF,#DBEAFE);
+          border:1px solid #BFDBFE;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:26px;">🔒</div>
+        <h2 style="font-size:18px;font-weight:800;color:var(--text,#0F172A);margin-bottom:8px;line-height:1.3;">
+          Desbloqueie mais ${remaining} ${word}
+        </h2>
+        <p style="font-size:14px;color:var(--text-2,#64748B);line-height:1.55;margin-bottom:22px;">
+          O Plano Grátis exibe apenas ${isQ ? FREE_Q_LIMIT + ' questões' : FREE_FC_LIMIT + ' flashcards'}.
+          Faça upgrade para Pro e acesse todas as ${questions.length} questões e ${flashcards.length} flashcards geradas.
+        </p>
+        <a href="/pricing.html" style="display:block;padding:13px;background:linear-gradient(135deg,#2563EB,#1D4ED8);color:#fff;
+          border-radius:11px;font-size:14.5px;font-weight:700;text-decoration:none;margin-bottom:10px;
+          box-shadow:0 4px 14px rgba(37,99,235,.35);">✨ Ver Plano Pro</a>
+        <button onclick="document.getElementById('contentUpgradeOverlay').remove()"
+          style="width:100%;padding:10px;background:transparent;color:var(--text-3,#94A3B8);border:none;
+          border-radius:10px;font-size:13px;cursor:pointer;font-family:inherit;">Continuar com o Plano Grátis</button>
+      </div>`;
+    msg.addEventListener('click', e => { if (e.target === msg) msg.remove(); });
+    document.body.appendChild(msg);
+  }
+
+  function _showSketchUpgrade() {
+    const skPanel = document.getElementById('panelSketch');
+    let overlay = document.getElementById('sketchUpgradeOverlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'sketchUpgradeOverlay';
+      overlay.style.cssText = 'position:absolute;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;background:var(--surface,#fff);padding:40px 24px;';
+      overlay.innerHTML = `
+        <div style="max-width:380px;text-align:center;">
+          <div style="width:64px;height:64px;background:linear-gradient(135deg,#EFF6FF,#DBEAFE);border:1px solid #BFDBFE;
+            border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:28px;">✏️</div>
+          <h2 style="font-size:18px;font-weight:800;color:var(--text,#0F172A);margin-bottom:8px;">Sketch — Plano Pro</h2>
+          <p style="font-size:14px;color:var(--text-2,#64748B);line-height:1.6;margin-bottom:6px;">
+            O <strong>Sketch</strong> é uma área de rascunho visual onde você pode desenhar, criar diagramas e fazer anotações livres enquanto estuda — tudo salvo automaticamente.
+          </p>
+          <p style="font-size:13px;color:var(--text-3,#94A3B8);margin-bottom:22px;">Disponível exclusivamente para assinantes do Plano Pro.</p>
+          <a href="/pricing.html" style="display:inline-block;padding:12px 28px;background:linear-gradient(135deg,#2563EB,#1D4ED8);color:#fff;
+            border-radius:11px;font-size:14.5px;font-weight:700;text-decoration:none;
+            box-shadow:0 4px 14px rgba(37,99,235,.35);">✨ Ver Plano Pro</a>
+          <br>
+          <button onclick="window.switchTab('questions')"
+            style="margin-top:12px;background:none;border:none;color:var(--text-3,#94A3B8);font-size:13px;cursor:pointer;font-family:inherit;padding:6px;">
+            ← Voltar às questões
+          </button>
+        </div>`;
+      skPanel.style.position = 'relative';
+      skPanel.appendChild(overlay);
+    }
+    overlay.style.display = 'flex';
+  }
+
   /* ── Tab switching ─────────────────────────────────────── */
   const TABS = ['questions', 'flashcards', 'summary'];
 
@@ -1227,7 +1306,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       fw.style.display = isSketch ? 'none' : 'block';
     }
 
-    if (isSketch) SK.init();
+    if (isSketch) {
+      if (!hasProAccess(_userProfile)) {
+        _showSketchUpgrade();
+      } else {
+        SK.init();
+      }
+    }
   };
 
   /* ── Questions ─────────────────────────────────────────── */
@@ -1241,8 +1326,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     const q   = questions[qIdx];
     const pct = (qIdx + 1) / questions.length * 100;
 
-    document.getElementById('qLabel').textContent = `Q ${qIdx + 1} de ${questions.length}`;
-    document.getElementById('qBar').style.width   = pct + '%';
+    const isPro = hasProAccess(_userProfile);
+    const freeQLimitActive = !isPro && questions.length > FREE_Q_LIMIT;
+    const qDisplayTotal = freeQLimitActive ? FREE_Q_LIMIT : questions.length;
+    const qSuffix = freeQLimitActive ? ` de ${FREE_Q_LIMIT} 🔒` : ` de ${questions.length}`;
+    document.getElementById('qLabel').textContent = `Q ${qIdx + 1}${qSuffix}`;
+    document.getElementById('qBar').style.width   = ((qIdx + 1) / qDisplayTotal * 100) + '%';
     document.getElementById('qTopic').textContent = q.topic || '';
     document.getElementById('qText').textContent  = q.text;
     document.getElementById('qGoogleBtn').onclick = () => searchOnGoogle(q.text);
@@ -1256,7 +1345,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     document.getElementById('qAnswerText').textContent = 'Resposta: ' + correctAlt;
 
     document.getElementById('qPrev').disabled = qIdx === 0;
-    document.getElementById('qNext').disabled = qIdx === questions.length - 1;
+    const qNextLimit = (!hasProAccess(_userProfile) && questions.length > FREE_Q_LIMIT) ? FREE_Q_LIMIT - 1 : questions.length - 1;
+    document.getElementById('qNext').disabled = qIdx >= qNextLimit;
 
     // Build option buttons
     const opts = document.getElementById('qOpts');
@@ -1332,7 +1422,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
   window.goQ = function (d) {
     const n = qIdx + d;
-    if (n < 0 || n >= questions.length) return;
+    if (n < 0) return;
+    if (!hasProAccess(_userProfile) && n >= FREE_Q_LIMIT && questions.length > FREE_Q_LIMIT) {
+      showContentUpgradeModal('questions');
+      return;
+    }
+    if (n >= questions.length) return;
     qIdx = n;
     renderQ();
   };
@@ -1348,8 +1443,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     const f   = flashcards[fcIdx];
     const pct = (fcIdx + 1) / flashcards.length * 100;
 
-    document.getElementById('fcLabel').textContent      = `${fcIdx + 1} de ${flashcards.length}`;
-    document.getElementById('fcBar').style.width        = pct + '%';
+    const isProFC = hasProAccess(_userProfile);
+    const freeFCLimitActive = !isProFC && flashcards.length > FREE_FC_LIMIT;
+    const fcDisplayTotal = freeFCLimitActive ? FREE_FC_LIMIT : flashcards.length;
+    const fcSuffix = freeFCLimitActive ? ` de ${FREE_FC_LIMIT} 🔒` : ` de ${flashcards.length}`;
+    document.getElementById('fcLabel').textContent      = `${fcIdx + 1}${fcSuffix}`;
+    document.getElementById('fcBar').style.width        = ((fcIdx + 1) / fcDisplayTotal * 100) + '%';
     document.getElementById('fcTopicBadge').textContent = f.topic || '';
     document.getElementById('fcFront').textContent      = f.front || 'Sem pergunta';
     document.getElementById('fcBack').textContent       = f.back  || 'Sem resposta';
@@ -1358,7 +1457,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     if (window._refreshNoteButtons) window._refreshNoteButtons();
 
     document.getElementById('fcPrev').disabled = fcIdx === 0;
-    document.getElementById('fcNext').disabled = fcIdx === flashcards.length - 1;
+    const fcNextLimit = (!hasProAccess(_userProfile) && flashcards.length > FREE_FC_LIMIT) ? FREE_FC_LIMIT - 1 : flashcards.length - 1;
+    document.getElementById('fcNext').disabled = fcIdx >= fcNextLimit;
 
     // Always start on the front face
     document.getElementById('flipCard').classList.remove('flipped');
@@ -1376,7 +1476,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   window.goFC = function (d) {
     if (_fcNavLock) return;
     const n = fcIdx + d;
-    if (n < 0 || n >= flashcards.length) return;
+    if (n < 0) return;
+    if (!hasProAccess(_userProfile) && n >= FREE_FC_LIMIT && flashcards.length > FREE_FC_LIMIT) {
+      showContentUpgradeModal('flashcards');
+      return;
+    }
+    if (n >= flashcards.length) return;
     _fcNavLock = true;
     fcIdx = n;
     renderFC();
@@ -1596,11 +1701,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     generationId = id;
 
     try {
-      const [genRes, qRes, fRes] = await Promise.all([
+      const { data: { user: _authUser } } = await db.auth.getUser();
+      const [genRes, qRes, fRes, profileRes] = await Promise.all([
         db.from('generations').select('*').eq('id', id).single(),
         db.from('questions').select('*').eq('generation_id', id).order('order_index'),
         db.from('flashcards').select('*').eq('generation_id', id).order('order_index'),
+        _authUser ? db.from('profiles').select('*').eq('id', _authUser.id).single() : Promise.resolve({ data: null }),
       ]);
+      _userProfile = profileRes?.data || null;
 
       if (genRes.error) { window.location.href = '/dashboard.html'; return; }
 
@@ -1652,6 +1760,26 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       renderQ();
       renderFC();
       loadNotes();
+
+      // Show upgrade banners for free users
+      if (!hasProAccess(_userProfile)) {
+        const totalQ  = questions.length;
+        const totalFC = flashcards.length;
+        if (totalQ > FREE_Q_LIMIT) {
+          const qBanner = document.createElement('div');
+          qBanner.style.cssText = 'margin-bottom:12px;padding:10px 14px;background:#EFF6FF;border:1px solid #BFDBFE;border-radius:10px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;';
+          qBanner.innerHTML = `<span style="font-size:12.5px;color:#1E40AF;display:flex;align-items:center;gap:6px;">🔒 <strong>Plano Grátis:</strong>&nbsp;vendo ${FREE_Q_LIMIT} de ${totalQ} questões</span><a href="/pricing.html" style="font-size:12px;font-weight:700;color:#2563EB;white-space:nowrap;text-decoration:none;background:#fff;padding:4px 10px;border-radius:6px;border:1px solid #BFDBFE;">Desbloquear Pro →</a>`;
+          const panelQ = document.getElementById('panelQuestions');
+          if (panelQ) panelQ.insertBefore(qBanner, panelQ.firstChild);
+        }
+        if (totalFC > FREE_FC_LIMIT) {
+          const fcBanner = document.createElement('div');
+          fcBanner.style.cssText = 'margin-bottom:12px;padding:10px 14px;background:#F5F3FF;border:1px solid #DDD6FE;border-radius:10px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;';
+          fcBanner.innerHTML = `<span style="font-size:12.5px;color:#5B21B6;display:flex;align-items:center;gap:6px;">🔒 <strong>Plano Grátis:</strong>&nbsp;vendo ${FREE_FC_LIMIT} de ${totalFC} flashcards</span><a href="/pricing.html" style="font-size:12px;font-weight:700;color:#7C3AED;white-space:nowrap;text-decoration:none;background:#fff;padding:4px 10px;border-radius:6px;border:1px solid #DDD6FE;">Desbloquear Pro →</a>`;
+          const panelFC = document.getElementById('panelFlashcards');
+          if (panelFC) panelFC.insertBefore(fcBanner, panelFC.firstChild);
+        }
+      }
 
       document.getElementById('loading').classList.add('hidden');
       document.getElementById('app').classList.remove('hidden');

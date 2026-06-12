@@ -828,6 +828,48 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     .psb-free   { background: var(--surface-2); color: var(--text-3); border: 1px solid var(--border); }
     .psb-credit { background: var(--green-bg);  color: var(--green);  border: 1px solid var(--green-bd); }
     .psb-pro    { background: var(--blue-bg);   color: var(--blue);   border: 1px solid var(--blue-bd); }
+
+    /* ── Pro Feature Modal ─────────────────────────────────── */
+    .pro-lock-modal-backdrop {
+      position: fixed; inset: 0; z-index: 300;
+      background: rgba(15,23,42,.6); backdrop-filter: blur(4px);
+      display: flex; align-items: center; justify-content: center;
+      padding: 16px; animation: fadeInBackdrop .18s ease;
+    }
+    @keyframes fadeInBackdrop { from { opacity: 0; } to { opacity: 1; } }
+    .pro-lock-modal-box {
+      background: var(--surface); border-radius: 18px;
+      border: 1px solid var(--border);
+      box-shadow: 0 24px 64px rgba(0,0,0,.22);
+      padding: 32px 28px 24px; max-width: 400px; width: 100%;
+      text-align: center; position: relative;
+      animation: slideUpModal .22s ease;
+    }
+    @keyframes slideUpModal { from { transform: translateY(16px); opacity: 0; } to { transform: none; opacity: 1; } }
+    .pro-lock-modal-icon {
+      width: 60px; height: 60px; border-radius: 50%;
+      background: linear-gradient(135deg,#EFF6FF,#DBEAFE);
+      border: 1px solid #BFDBFE;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 16px; font-size: 26px;
+    }
+    .pro-lock-modal-title { font-size: 18px; font-weight: 800; color: var(--text); margin-bottom: 8px; line-height: 1.3; }
+    .pro-lock-modal-desc  { font-size: 14px; color: var(--text-2); line-height: 1.55; margin-bottom: 22px; }
+    .pro-lock-modal-cta {
+      display: block; width: 100%; padding: 13px;
+      background: linear-gradient(135deg,#2563EB,#1D4ED8); color: #fff;
+      border: none; border-radius: 11px;
+      font-size: 14.5px; font-weight: 700; cursor: pointer; margin-bottom: 10px;
+      font-family: inherit; transition: opacity .15s;
+      box-shadow: 0 4px 14px rgba(37,99,235,.35);
+    }
+    .pro-lock-modal-cta:hover { opacity: .9; }
+    .pro-lock-modal-ghost {
+      display: block; width: 100%; padding: 10px;
+      background: transparent; color: var(--text-3); border: none; border-radius: 10px;
+      font-size: 13px; cursor: pointer; font-family: inherit; transition: color .15s;
+    }
+    .pro-lock-modal-ghost:hover { color: var(--text); }
   </style>
   <link rel="manifest" href="/manifest.json" />
   <meta name="theme-color" content="#2563EB" />
@@ -1298,8 +1340,7 @@ Mínimo: 500 caracteres · Máximo: 50.000 caracteres"
 
   window.selectMode = function (mode) {
     if (LOCKED_MODES.includes(mode) && profile && !hasProAccess(profile)) {
-      showToast('Este modo é exclusivo do plano Pro. Clique em "Planos" para desbloquear.', 'info');
-      window.location.href = '/pricing.html';
+      showProFeatureModal('mode');
       return;
     }
     selectedMode = mode;
@@ -1310,8 +1351,7 @@ Mínimo: 500 caracteres · Máximo: 50.000 caracteres"
 
   window.selectDifficulty = function (diff) {
     if (LOCKED_DIFFS.includes(diff) && profile && !hasProAccess(profile)) {
-      showToast('Esta dificuldade é exclusiva do plano Pro. Clique em "Planos" para desbloquear.', 'info');
-      window.location.href = '/pricing.html';
+      showProFeatureModal('difficulty');
       return;
     }
     selectedDifficulty = diff;
@@ -1336,6 +1376,31 @@ Mínimo: 500 caracteres · Máximo: 50.000 caracteres"
     'Seu material está quase pronto!',
     'Últimos ajustes...',
   ];
+
+  /* ── Pro Feature Modal ─────────────────────────────────── */
+  function showProFeatureModal(feature) {
+    const configs = {
+      mode: {
+        icon:  '🎯',
+        title: 'Modo exclusivo do Plano Pro',
+        desc:  'Os modos OAB, Vestibular/ENEM e Faculdade estão disponíveis apenas para assinantes Pro. Faça upgrade e estude com o formato certo para o seu objetivo.',
+      },
+      difficulty: {
+        icon:  '🏆',
+        title: 'Dificuldade exclusiva do Plano Pro',
+        desc:  'As dificuldades Difícil e Expert estão disponíveis apenas para assinantes Pro. Questões mais desafiadoras para quem quer ir além.',
+      },
+    };
+    const c = configs[feature] || { icon: '🔒', title: 'Recurso exclusivo Pro', desc: 'Esta opção está disponível apenas no Plano Pro.' };
+    document.getElementById('proModalIcon').textContent  = c.icon;
+    document.getElementById('proModalTitle').textContent = c.title;
+    document.getElementById('proModalDesc').textContent  = c.desc;
+    document.getElementById('proFeatureModal').style.display = 'flex';
+  }
+
+  window.closeProModal = function () {
+    document.getElementById('proFeatureModal').style.display = 'none';
+  };
 
   /* ── Pro access check ──────────────────────────────────── */
   function hasProAccess(p) {
@@ -1384,7 +1449,7 @@ Mínimo: 500 caracteres · Máximo: 50.000 caracteres"
         badge?.classList.add('hidden');
       } else {
         btn.classList.add('locked');
-        badge?.classList.add('hidden'); // hide from diff btn (tooltip serves as lock indicator)
+        badge?.classList.remove('hidden');
       }
     });
   }
@@ -1937,6 +2002,19 @@ Mínimo: 500 caracteres · Máximo: 50.000 caracteres"
     // Auto-start on first visit after init() finishes loading all data
     // (init() is async so .then() fires after auth + generations are ready)
   </script>
+  <!-- Pro Feature Modal -->
+  <div id="proFeatureModal" style="display:none;" class="pro-lock-modal-backdrop" onclick="if(event.target===this)closeProModal()">
+    <div class="pro-lock-modal-box">
+      <div class="pro-lock-modal-icon" id="proModalIcon">🔒</div>
+      <h2 class="pro-lock-modal-title" id="proModalTitle">Recurso exclusivo do Plano Pro</h2>
+      <p class="pro-lock-modal-desc" id="proModalDesc">Esta opção está disponível apenas para assinantes Pro.</p>
+      <button class="pro-lock-modal-cta" onclick="window.location.href='/pricing.html'">
+        ✨ Ver Plano Pro
+      </button>
+      <button class="pro-lock-modal-ghost" onclick="closeProModal()">Continuar com o Plano Grátis</button>
+    </div>
+  </div>
+
   <footer style="border-top:1px solid var(--border);padding:16px 24px;text-align:center;margin-top:auto;">
     <p style="font-size:12px;color:var(--text-3);">© 2026 CardsQuestõesAI &nbsp;·&nbsp; <a href="/termos.html" style="color:var(--text-3);text-decoration:none;">Termos</a> &nbsp;·&nbsp; <a href="/privacidade.html" style="color:var(--text-3);text-decoration:none;">Privacidade</a> &nbsp;·&nbsp; <a href="mailto:contato@cardsquestoesai.com" style="color:var(--text-3);text-decoration:none;">Contato</a></p>
   </footer>
