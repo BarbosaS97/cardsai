@@ -101,6 +101,10 @@ window.initCouponModal = function (qty, priceRaw, priceStr, priceId, planKey) {
   _el('tabPix')?.classList.remove('pm-active');
   _el('sectionCard')?.classList.remove('hidden');
   _el('sectionPix')?.classList.add('hidden');
+
+  // Reset checkout button (pode ter ficado travado em "Redirecionando..." de abertura anterior)
+  const checkoutBtn = _el('btnCheckout');
+  if (checkoutBtn) { checkoutBtn.disabled = false; checkoutBtn.textContent = 'Pagar com Cartão'; }
 };
 
 window.applyCoupon = async function () {
@@ -116,13 +120,15 @@ window.applyCoupon = async function () {
     const { data: sessionData } = await db.auth.getSession();
     const token = sessionData?.session?.access_token;
 
+    const planType = (_plan === 'pro_monthly' || _plan === 'pro_annual') ? 'subscription' : 'credits';
+
     const res = await fetch(VALIDATE_COUPON_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer ' + token,
       },
-      body: JSON.stringify({ code, package_size: _pkg.qty }),
+      body: JSON.stringify({ code, plan_type: planType }),
     });
 
     const result = await res.json();
@@ -182,7 +188,7 @@ window.startCheckout = async function () {
 
     const isProPlan = _plan === 'pro_monthly' || _plan === 'pro_annual';
     const checkoutBody = isProPlan
-      ? { plan: _plan }
+      ? { plan: _plan, couponCode: _coupon?.code ?? null }
       : { plan: 'credits_5', credits: _pkg.qty, priceId: _pkg.priceId, couponCode: _coupon?.code ?? null };
 
     const res = await fetch(STRIPE_CHECKOUT_URL, {
@@ -222,7 +228,7 @@ window.startPixCheckout = async function () {
 
     const isProPlan = _plan === 'pro_monthly' || _plan === 'pro_annual';
     const pixBody = isProPlan
-      ? { plan: _plan }
+      ? { plan: _plan, couponCode: _coupon?.code ?? null }
       : { plan: 'credits_5', credits: _pkg.qty, priceRaw: _pkg.priceRaw, couponCode: _coupon?.code ?? null };
 
     const res = await fetch(PIX_CHECKOUT_URL, {

@@ -44,7 +44,7 @@ function renderCoupons(list) {
           <th>Código</th>
           <th>Desconto</th>
           <th>Usos</th>
-          <th>Pacotes</th>
+          <th>Tipo de plano</th>
           <th>Validade</th>
           <th>Status</th>
           <th>Ações</th>
@@ -65,9 +65,8 @@ function _couponRow(c) {
     ? `${c.used_count}/${c.max_uses}`
     : `${c.used_count}/∞`;
 
-  const packages = Array.isArray(c.valid_for_packages) && c.valid_for_packages.length
-    ? c.valid_for_packages.join(', ')
-    : 'Todos';
+  const planTypeLabels = { all: 'Todos', subscription: 'Assinaturas Pro', credits: 'Créditos avulsos' };
+  const planTypeLabel = planTypeLabels[c.plan_type] ?? 'Todos';
 
   const now = new Date();
   const expired = c.expires_at && new Date(c.expires_at) < now;
@@ -96,7 +95,7 @@ function _couponRow(c) {
       <td style="color:var(--text);">${uses}
         <span style="font-size:11px;color:var(--text-3);margin-left:4px;">(max ${c.max_uses_per_user}x/user)</span>
       </td>
-      <td style="color:var(--text-2);font-size:13px;">${packages}</td>
+      <td style="color:var(--text-2);font-size:13px;">${planTypeLabel}</td>
       <td style="color:var(--text-2);font-size:13px;">${validity}</td>
       <td><span class="${statusClass}">${statusLabel}</span></td>
       <td>
@@ -133,13 +132,7 @@ window.openCouponModal = function (couponId) {
   document.getElementById('cfStripeId').value      = coupon?.stripe_coupon_id ?? '';
   document.getElementById('cfExpires').value       = coupon?.expires_at
     ? new Date(coupon.expires_at).toISOString().slice(0, 10) : '';
-
-  // Pacotes: checkboxes
-  ['5','10','20','50'].forEach(v => {
-    const cb = document.getElementById('cfPkg' + v);
-    if (cb) cb.checked = !coupon?.valid_for_packages
-      || coupon.valid_for_packages.includes(v);
-  });
+  document.getElementById('cfPlanType').value      = coupon?.plan_type ?? 'all';
 
   document.getElementById('couponModalMsg').classList.add('hidden');
   modal.style.display = 'flex';
@@ -168,22 +161,18 @@ window.saveCoupon = async function () {
   const expiresRaw  = document.getElementById('cfExpires').value;
   const stripeId    = document.getElementById('cfStripeId').value.trim() || null;
   const desc        = document.getElementById('cfDesc').value.trim() || null;
-
-  const checkedPkgs = ['5','10','20','50'].filter(v =>
-    document.getElementById('cfPkg' + v)?.checked
-  );
-  const pkgs = checkedPkgs.length === 4 ? null : checkedPkgs;
+  const planType    = document.getElementById('cfPlanType').value || 'all';
 
   const payload = {
     code,
-    description:        desc,
-    discount_type:      type,
-    discount_value:     value,
-    stripe_coupon_id:   stripeId,
-    valid_for_packages: pkgs,
-    max_uses:           maxUses,
-    max_uses_per_user:  maxPerUser,
-    expires_at:         expiresRaw ? new Date(expiresRaw).toISOString() : null,
+    description:       desc,
+    discount_type:     type,
+    discount_value:    value,
+    stripe_coupon_id:  stripeId,
+    plan_type:         planType,
+    max_uses:          maxUses,
+    max_uses_per_user: maxPerUser,
+    expires_at:        expiresRaw ? new Date(expiresRaw).toISOString() : null,
   };
 
   const btn = document.getElementById('btnSaveCoupon');

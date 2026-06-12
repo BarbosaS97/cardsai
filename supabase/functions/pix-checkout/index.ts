@@ -87,29 +87,29 @@ serve(async (req) => {
       resolvedPlan    = 'credits_5'
       finalPrice      = priceRaw ? Number(priceRaw) : PRO_PLAN_PRICES.credits_5
       chargeComment   = PRO_PLAN_LABELS.credits_5
-
-      // Aplica cupom (apenas para créditos avulsos)
-      if (couponCode) {
-        const { data: coupon } = await svc
-          .from('coupons')
-          .select('id, discount_type, discount_value, is_active, expires_at, max_uses, used_count')
-          .eq('code', String(couponCode).toUpperCase().trim())
-          .single()
-
-        const isValid = coupon?.is_active
-          && !(coupon.expires_at && new Date(coupon.expires_at) < new Date())
-          && !(coupon.max_uses != null && coupon.used_count >= coupon.max_uses)
-
-        if (isValid) {
-          const discount = coupon.discount_type === 'percentage'
-            ? finalPrice * (Number(coupon.discount_value) / 100)
-            : Math.min(Number(coupon.discount_value), finalPrice)
-          finalPrice  = Math.max(0, finalPrice - discount)
-          couponDbId  = coupon.id
-        }
-      }
     } else {
       return json({ error: 'Parâmetros inválidos. Informe plan: credits_5 | pro_monthly | pro_annual' }, 400)
+    }
+
+    // Aplica cupom de desconto (válido para qualquer plano conforme plan_type do cupom)
+    if (couponCode) {
+      const { data: coupon } = await svc
+        .from('coupons')
+        .select('id, discount_type, discount_value, is_active, expires_at, max_uses, used_count')
+        .eq('code', String(couponCode).toUpperCase().trim())
+        .single()
+
+      const isValid = coupon?.is_active
+        && !(coupon.expires_at && new Date(coupon.expires_at) < new Date())
+        && !(coupon.max_uses != null && coupon.used_count >= coupon.max_uses)
+
+      if (isValid) {
+        const discount = coupon.discount_type === 'percentage'
+          ? finalPrice * (Number(coupon.discount_value) / 100)
+          : Math.min(Number(coupon.discount_value), finalPrice)
+        finalPrice = Math.max(0, finalPrice - discount)
+        couponDbId = coupon.id
+      }
     }
 
     const valueInCentavos = Math.round(finalPrice * 100)

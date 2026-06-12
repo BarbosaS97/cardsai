@@ -33,13 +33,13 @@ serve(async (req) => {
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) return json({ valid: false, error: 'Não autenticado' }, 401)
 
-    const { code, package_size } = await req.json()
+    // plan_type: 'credits' | 'subscription'
+    const { code, plan_type } = await req.json()
 
-    if (!code || !package_size) {
-      return json({ valid: false, error: 'Informe o código do cupom e o pacote' }, 400)
+    if (!code || !plan_type) {
+      return json({ valid: false, error: 'Informe o código do cupom e o tipo de plano' }, 400)
     }
 
-    // Identificar o usuário pelo token da requisição
     const userClient = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_ANON_KEY')!,
@@ -48,13 +48,11 @@ serve(async (req) => {
     const { data: { user }, error: userErr } = await userClient.auth.getUser()
     if (userErr || !user) return json({ valid: false, error: 'Não autenticado' }, 401)
 
-    // Service client para contornar RLS e ler cupons inativos / verificar usos
     const svc = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
     )
 
-    // Buscar cupom pelo código (case-insensitive via UPPER no banco)
     const { data: coupon, error: couponErr } = await svc
       .from('coupons')
       .select('*')
@@ -77,15 +75,16 @@ serve(async (req) => {
       return json({ valid: false, error: 'Cupom esgotado' })
     }
 
-    if (
-      Array.isArray(coupon.valid_for_packages) &&
-      coupon.valid_for_packages.length > 0 &&
-      !coupon.valid_for_packages.includes(String(package_size))
-    ) {
-      return json({ valid: false, error: 'Cupom não válido para este pacote' })
+    // Valida se o cupom é permitido para o tipo de plano solicitado
+    const couponPlanType: string = coupon.plan_type ?? 'all'
+    if (couponPlanType !== 'all' && couponPlanType !== plan_type) {
+      const label = couponPlanType === 'subscription'
+        ? 'assinaturas Pro'
+        : 'créditos avulsos'
+      return json({ valid: false, error: `Cupom válido apenas para ${label}` })
     }
 
-    // Verificar limite por usuário
+    // Verifica limite por usuário
     if (coupon.max_uses_per_user !== null) {
       const { count } = await svc
         .from('coupon_usages')

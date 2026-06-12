@@ -107,8 +107,8 @@ serve(async (req) => {
       },
     }
 
-    // Cupom de desconto (apenas para créditos avulsos)
-    if (couponCode && isCreditsPlan) {
+    // Cupom de desconto (válido para qualquer plano conforme plan_type do cupom)
+    if (couponCode) {
       const svc = createClient(
         Deno.env.get('SUPABASE_URL')!,
         Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,

@@ -535,24 +535,15 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           </div>
         </div>
 
-        <!-- Pacotes válidos -->
+        <!-- Tipo de plano -->
         <div>
-          <label style="display:block;font-size:11px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px;">Pacotes válidos</label>
-          <div style="display:flex;gap:10px;flex-wrap:wrap;">
-            <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text);cursor:pointer;">
-              <input id="cfPkg5"  type="checkbox" checked /> 5 gerações
-            </label>
-            <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text);cursor:pointer;">
-              <input id="cfPkg10" type="checkbox" checked /> 10 gerações
-            </label>
-            <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text);cursor:pointer;">
-              <input id="cfPkg20" type="checkbox" checked /> 20 gerações
-            </label>
-            <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text);cursor:pointer;">
-              <input id="cfPkg50" type="checkbox" checked /> 50 gerações
-            </label>
-          </div>
-          <p style="font-size:11px;color:var(--text-3);margin-top:6px;">Todos marcados = válido para qualquer pacote.</p>
+          <label style="display:block;font-size:11px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">Tipo de plano *</label>
+          <select id="cfPlanType" class="input-field">
+            <option value="all">Todos (assinaturas e créditos avulsos)</option>
+            <option value="subscription">Apenas assinaturas Pro (Mensal / Anual)</option>
+            <option value="credits">Apenas créditos avulsos</option>
+          </select>
+          <p style="font-size:11px;color:var(--text-3);margin-top:6px;">Define em quais tipos de compra este cupom pode ser utilizado.</p>
         </div>
 
       </div>

@@ -926,8 +926,8 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     const priceId = planKey === 'credits_5' ? CREDITS_5_PRICE_ID : null;
     initCouponModal(meta.credits, meta.price, 'R$ ' + meta.price.toFixed(2).replace('.', ','), priceId, planKey);
 
-    // Mostrar seção de cupom apenas para créditos avulsos
-    document.getElementById('couponSection').classList.toggle('hidden', planKey !== 'credits_5');
+    // Mostrar seção de cupom em todos os planos
+    document.getElementById('couponSection').classList.remove('hidden');
 
     document.getElementById('paymentModal').classList.remove('hidden');
     document.body.style.overflow = 'hidden';
