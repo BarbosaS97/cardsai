@@ -177,6 +177,34 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     @media (min-width: 480px) { .flip-wrap { height: 230px; } }
     @media (min-width: 768px) { .flip-wrap { height: 270px; } }
 
+    /* Texto longo rola dentro da face — a altura do card nunca muda */
+    #fcFront, #fcBack, #focusFCFront, #focusFCBack {
+      overflow-y: auto; min-height: 0; max-height: 100%;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* ── Altura estável do card de questões ─────────────── */
+    /* O card tem altura fixa (relativa à viewport) e o conteúdo rola
+       dentro de #qScroll, então a navegação abaixo nunca se move. */
+    #qCard {
+      display: flex; flex-direction: column;
+      height: calc(100vh - 305px);
+      height: calc(100dvh - 305px);
+      min-height: 320px; max-height: 600px;
+      overflow: hidden;
+    }
+    #qScroll {
+      flex: 1; min-height: 0;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+      padding-right: 2px;
+    }
+    #qScroll::-webkit-scrollbar, #focusQScroll::-webkit-scrollbar { width: 6px; }
+    #qScroll::-webkit-scrollbar-track, #focusQScroll::-webkit-scrollbar-track { background: transparent; }
+    #qScroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+
     /* ── Tab active state ───────────────────────────────── */
     .tab-active { color: #2563EB !important; border-bottom-color: #2563EB !important; }
 
@@ -228,6 +256,21 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     .focus-nav button:hover { background: #475569; color: #F1F5F9; }
     .focus-nav button:disabled { opacity: .35; cursor: not-allowed; }
 
+    /* Focus — question area with stable height (nav never moves) */
+    #focusModeQuestion {
+      flex-direction: column;
+      height: min(58vh, 470px);
+    }
+    #focusQScroll {
+      flex: 1; min-height: 0;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin; scrollbar-color: #334155 transparent;
+      padding-right: 4px;
+    }
+    #focusQScroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 99px; }
+
     /* Focus — flip card inside overlay */
     #focusFlip { perspective: 1200px; cursor: pointer; user-select: none; height: 210px; }
     #focusFlip .flip-inner {
@@ -262,6 +305,13 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       main.flex-1 { padding-left: 12px !important; padding-right: 12px !important; padding-top: 14px !important; }
 
       .flip-wrap { height: 170px !important; }
+
+      #qCard {
+        height: calc(100vh - 285px);
+        height: calc(100dvh - 285px);
+        min-height: 280px; max-height: none;
+      }
+      #focusModeQuestion { height: min(62vh, 470px); }
 
       #qPrev, #qNext, #fcPrev, #fcNext { padding: 9px 12px !important; font-size: 13px !important; }
       #qReveal { padding: 9px 16px !important; font-size: 13px !important; }
@@ -588,11 +638,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <button id="qGoogleBtn" class="google-btn" title="Pesquisar no Google" style="position:absolute;top:12px;right:12px;" onclick="void 0">
           <img src="/static/images/google.png" alt="Pesquisar no Google" width="16" height="16" style="display:block;">
         </button>
-        <p id="qTopic" class="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mb-2"></p>
-        <p id="qText" class="text-base font-medium text-slate-900 leading-relaxed mb-4"></p>
-        <div id="qOpts" class="space-y-2"></div>
-        <div id="qAnswer" class="hidden mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
-          <p id="qAnswerText" class="text-sm font-semibold text-green-800"></p>
+        <div id="qScroll">
+          <p id="qTopic" class="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mb-2"></p>
+          <p id="qText" class="text-base font-medium text-slate-900 leading-relaxed mb-4"></p>
+          <div id="qOpts" class="space-y-2"></div>
+          <div id="qAnswer" class="hidden mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+            <p id="qAnswerText" class="text-sm font-semibold text-green-800"></p>
+          </div>
         </div>
       </div>
 
@@ -924,18 +976,20 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     <!-- ── Question mode ── -->
     <div id="focusModeQuestion" style="display:none;">
-      <p id="focusQTopic" style="font-size:11px;color:#64748B;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;text-align:center;"></p>
-      <p id="focusQText"  style="font-size:17px;font-weight:600;color:#F1F5F9;line-height:1.55;text-align:center;margin-bottom:10px;"></p>
-      <div style="text-align:right;margin-bottom:12px;">
-        <button id="focusQGoogleBtn" class="google-btn google-btn-light" title="Pesquisar no Google" onclick="void 0" style="display:inline-block;">
-          <img src="/static/images/google.png" alt="Pesquisar no Google" width="15" height="15" style="display:block;">
-        </button>
+      <div id="focusQScroll">
+        <p id="focusQTopic" style="font-size:11px;color:#64748B;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;text-align:center;"></p>
+        <p id="focusQText"  style="font-size:17px;font-weight:600;color:#F1F5F9;line-height:1.55;text-align:center;margin-bottom:10px;"></p>
+        <div style="text-align:right;margin-bottom:12px;">
+          <button id="focusQGoogleBtn" class="google-btn google-btn-light" title="Pesquisar no Google" onclick="void 0" style="display:inline-block;">
+            <img src="/static/images/google.png" alt="Pesquisar no Google" width="15" height="15" style="display:block;">
+          </button>
+        </div>
+        <div id="focusQOpts" style="display:flex;flex-direction:column;gap:7px;"></div>
+        <div id="focusQAnswer" style="display:none;margin-top:12px;padding:10px 12px;background:#052E16;border:1px solid #166534;border-radius:8px;">
+          <p id="focusQAnswerText" style="font-size:13px;font-weight:600;color:#4ADE80;"></p>
+        </div>
       </div>
-      <div id="focusQOpts" style="display:flex;flex-direction:column;gap:7px;"></div>
-      <div id="focusQAnswer" style="display:none;margin-top:12px;padding:10px 12px;background:#052E16;border:1px solid #166534;border-radius:8px;">
-        <p id="focusQAnswerText" style="font-size:13px;font-weight:600;color:#4ADE80;"></p>
-      </div>
-      <div style="text-align:center;margin-top:12px;">
+      <div style="text-align:center;margin-top:12px;flex-shrink:0;">
         <button onclick="focusReveal()"
           style="background:#2563EB;color:#fff;border:none;border-radius:7px;padding:7px 16px;font-size:13px;font-weight:600;cursor:pointer;">
           Ver resposta
@@ -1215,6 +1269,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       opts.appendChild(btn);
     });
 
+    // Volta a rolagem interna ao topo na troca de questão
+    document.getElementById('qScroll').scrollTop = 0;
+
     // Restart entrance animation
     const card = document.getElementById('qCard');
     card.classList.remove('card-in');
@@ -1258,7 +1315,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       else
         b.classList.add('opt-dim');
     });
-    document.getElementById('qAnswer').classList.remove('hidden');
+    const ansBox = document.getElementById('qAnswer');
+    ansBox.classList.remove('hidden');
+    ansBox.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     document.getElementById('qReveal').textContent = 'Resposta revelada';
     trackAnswer(selectedIdx, correctIdx, alternatives);
   }
@@ -1266,6 +1325,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   window.revealAnswer = function () {
     const box    = document.getElementById('qAnswer');
     const hidden = box.classList.toggle('hidden');
+    if (!hidden) box.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     document.getElementById('qReveal').textContent = hidden ? 'Ver resposta' : 'Ocultar resposta';
   };
 
@@ -1380,7 +1440,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     const modeFC = document.getElementById('focusModeFlashcard');
     const spaceHint = document.getElementById('focusSpaceHint');
 
-    modeQ.style.display  = isQ ? 'block' : 'none';
+    modeQ.style.display  = isQ ? 'flex' : 'none';
     modeFC.style.display = isQ ? 'none'  : 'block';
     spaceHint.style.display = isQ ? 'none' : 'inline';
 
@@ -1412,6 +1472,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         b.onclick = () => focusPickOpt(idx, q.correct_answer, q.alternatives || []);
         opts.appendChild(b);
       });
+      document.getElementById('focusQScroll').scrollTop = 0;
     } else {
       if (!flashcards.length) return;
       const f = flashcards[fcIdx];
@@ -1445,7 +1506,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
   window.focusReveal = function () {
     const box = document.getElementById('focusQAnswer');
-    box.style.display = box.style.display === 'none' ? 'block' : 'none';
+    const show = box.style.display === 'none';
+    box.style.display = show ? 'block' : 'none';
+    if (show) box.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   };
 
   function focusPickOpt(selectedIdx, correct, alternatives) {
@@ -1463,7 +1526,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       else
         b.style.opacity = '.35';
     });
-    document.getElementById('focusQAnswer').style.display = 'block';
+    const focusAns = document.getElementById('focusQAnswer');
+    focusAns.style.display = 'block';
+    focusAns.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     trackAnswer(selectedIdx, correctIdx, alternatives);
   }
 
