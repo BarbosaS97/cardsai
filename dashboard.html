@@ -841,19 +841,12 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       background: var(--surface); border-radius: 18px;
       border: 1px solid var(--border);
       box-shadow: 0 24px 64px rgba(0,0,0,.22);
-      padding: 32px 28px 24px; max-width: 400px; width: 100%;
+      padding: 28px 28px 24px; max-width: 400px; width: 100%;
       text-align: center; position: relative;
       animation: slideUpModal .22s ease;
     }
     @keyframes slideUpModal { from { transform: translateY(16px); opacity: 0; } to { transform: none; opacity: 1; } }
-    .pro-lock-modal-icon {
-      width: 60px; height: 60px; border-radius: 50%;
-      background: linear-gradient(135deg,#EFF6FF,#DBEAFE);
-      border: 1px solid #BFDBFE;
-      display: flex; align-items: center; justify-content: center;
-      margin: 0 auto 16px; font-size: 26px;
-    }
-    .pro-lock-modal-title { font-size: 18px; font-weight: 800; color: var(--text); margin-bottom: 8px; line-height: 1.3; }
+    .pro-lock-modal-title { font-size: 17px; font-weight: 700; color: var(--text); margin-bottom: 8px; line-height: 1.3; }
     .pro-lock-modal-desc  { font-size: 14px; color: var(--text-2); line-height: 1.55; margin-bottom: 22px; }
     .pro-lock-modal-cta {
       display: block; width: 100%; padding: 13px;
@@ -980,7 +973,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         </button>
         <div id="userDropdown" class="user-dropdown hidden">
           <a href="/criacoes.html">Minhas criações</a>
-          <button onclick="openSubscriptionModal()">📋 Minha assinatura</button>
+          <button onclick="openSubscriptionModal()">Minha assinatura</button>
           <a href="/pricing.html">Comprar créditos</a>
           <button onclick="signOut()">Sair</button>
         </div>
@@ -1422,46 +1415,57 @@ Mínimo: 500 caracteres · Máximo: 50.000 caracteres"
 
   /* ── Subscription Modal ────────────────────────────────── */
   window.openSubscriptionModal = function () {
-    const p = profile;
+    const p   = profile;
     const now = new Date();
+    const fmt = d => new Date(d).toLocaleDateString('pt-BR');
+    const row = (label, value) =>
+      `<div class="sub-info-row"><span class="sub-info-label">${label}</span><span class="sub-info-value">${value}</span></div>`;
+    const badge = (cls, text) =>
+      `<span class="sub-plan-badge ${cls}">${text}</span>`;
 
-    const fmtDate = d => d ? new Date(d).toLocaleDateString('pt-BR') : null;
     const credits = p?.credits ?? 0;
+    const used    = p?.monthly_generations ?? 0;
+    const subActive = p?.subscription_status === 'active' &&
+                      p?.subscription_end_date &&
+                      new Date(p.subscription_end_date) > now;
+    const bonusActive = p?.pro_features_until && new Date(p.pro_features_until) > now;
 
-    // Plan badge
-    let badge = '';
-    let showEnd   = false;
-    let showBonus = false;
+    let rows = '';
 
     if (p?.is_admin || p?.unlimited_access) {
-      badge = '<span class="sub-plan-badge sub-plan-pro">⚡ Admin / Ilimitado</span>';
-    } else if (
-      p?.subscription_status === 'active' &&
-      p?.subscription_end_date &&
-      new Date(p.subscription_end_date) > now
-    ) {
+      rows += row('Plano atual', badge('sub-plan-pro', 'Admin / Acesso Ilimitado'));
+
+    } else if (subActive) {
       const label = p.subscription_plan === 'pro_annual' ? 'Pro Anual' : 'Pro Mensal';
-      badge    = `<span class="sub-plan-badge sub-plan-pro">⭐ ${label}</span>`;
-      showEnd  = true;
-      document.getElementById('subEndDate').textContent = fmtDate(p.subscription_end_date);
-    } else if (p?.pro_features_until && new Date(p.pro_features_until) > now) {
-      badge     = '<span class="sub-plan-badge sub-plan-bonus">✅ Créditos c/ bônus Pro</span>';
-      showBonus = true;
-      document.getElementById('subBonusDate').textContent = fmtDate(p.pro_features_until);
+      const limit = 60;
+      const rem   = Math.max(0, limit - used);
+      rows += row('Plano atual',   badge('sub-plan-pro', label));
+      rows += row('Status',        '<span style="color:#16A34A;font-weight:600;">Ativo</span>');
+      rows += row('Vence em',      fmt(p.subscription_end_date));
+      rows += row('Gerações usadas', `${used} de ${limit} este mês`);
+      if (bonusActive)
+        rows += row('Bônus Pro (créditos) até', fmt(p.pro_features_until));
+      if (credits > 0)
+        rows += row('Créditos disponíveis', credits + (credits === 1 ? ' crédito' : ' créditos'));
+
     } else if (credits > 0) {
-      badge = '<span class="sub-plan-badge sub-plan-credit">💳 Créditos avulsos</span>';
+      rows += row('Plano atual',         badge('sub-plan-credit', 'Créditos Avulsos'));
+      rows += row('Créditos disponíveis', credits + (credits === 1 ? ' crédito' : ' créditos'));
+      if (bonusActive)
+        rows += row('Bônus Pro ativo até', fmt(p.pro_features_until));
+
     } else {
-      badge = '<span class="sub-plan-badge sub-plan-free">Grátis</span>';
+      const limit = 5;
+      const rem   = Math.max(0, limit - used);
+      rows += row('Plano atual',       badge('sub-plan-free', 'Grátis'));
+      rows += row('Limite mensal',     `${limit} gerações / mês`);
+      rows += row('Gerações usadas',   `${used} de ${limit} este mês`);
+      if (credits > 0)
+        rows += row('Créditos disponíveis', credits + (credits === 1 ? ' crédito' : ' créditos'));
     }
 
-    document.getElementById('subPlanBadge').innerHTML  = badge;
-    document.getElementById('subEndRow').style.display   = showEnd   ? '' : 'none';
-    document.getElementById('subBonusRow').style.display = showBonus ? '' : 'none';
-    document.getElementById('subCredits').textContent    = credits === 0 ? 'Nenhum' : credits + (credits === 1 ? ' crédito' : ' créditos');
-
+    document.getElementById('subInfoRows').innerHTML = rows;
     document.getElementById('subscriptionModal').style.display = 'flex';
-
-    // close dropdown
     document.getElementById('userDropdown').classList.add('hidden');
   };
 
@@ -1472,19 +1476,10 @@ Mínimo: 500 caracteres · Máximo: 50.000 caracteres"
   /* ── Pro Feature Modal ─────────────────────────────────── */
   function showProFeatureModal(feature) {
     const configs = {
-      mode: {
-        icon:  '🎯',
-        title: 'Modo exclusivo do Plano Pro',
-        desc:  'Os modos OAB, Vestibular/ENEM e Faculdade estão disponíveis apenas para assinantes Pro. Faça upgrade e estude com o formato certo para o seu objetivo.',
-      },
-      difficulty: {
-        icon:  '🏆',
-        title: 'Dificuldade exclusiva do Plano Pro',
-        desc:  'As dificuldades Difícil e Expert estão disponíveis apenas para assinantes Pro. Questões mais desafiadoras para quem quer ir além.',
-      },
+      mode:       { title: 'Opção disponível apenas no Plano Pro', desc: 'Os modos OAB, Vestibular/ENEM e Faculdade estão disponíveis para assinantes Pro.' },
+      difficulty: { title: 'Opção disponível apenas no Plano Pro', desc: 'As dificuldades Difícil e Expert estão disponíveis para assinantes Pro.' },
     };
-    const c = configs[feature] || { icon: '🔒', title: 'Recurso exclusivo Pro', desc: 'Esta opção está disponível apenas no Plano Pro.' };
-    document.getElementById('proModalIcon').textContent  = c.icon;
+    const c = configs[feature] || { title: 'Opção disponível apenas no Plano Pro', desc: 'Este recurso está disponível apenas no Plano Pro.' };
     document.getElementById('proModalTitle').textContent = c.title;
     document.getElementById('proModalDesc').textContent  = c.desc;
     document.getElementById('proFeatureModal').style.display = 'flex';
@@ -2098,28 +2093,11 @@ Mínimo: 500 caracteres · Máximo: 50.000 caracteres"
   <div id="subscriptionModal" style="display:none;" class="sub-modal-backdrop" onclick="if(event.target===this)closeSubscriptionModal()">
     <div class="sub-modal-box">
       <div class="sub-modal-header">
-        <h2 class="sub-modal-title">📋 Minha assinatura</h2>
+        <h2 class="sub-modal-title">Minha assinatura</h2>
         <button class="sub-modal-close" onclick="closeSubscriptionModal()">×</button>
       </div>
 
-      <div id="subInfoRows">
-        <div class="sub-info-row">
-          <span class="sub-info-label">Plano atual</span>
-          <span class="sub-info-value" id="subPlanBadge">—</span>
-        </div>
-        <div class="sub-info-row" id="subEndRow">
-          <span class="sub-info-label">Validade da assinatura</span>
-          <span class="sub-info-value" id="subEndDate">—</span>
-        </div>
-        <div class="sub-info-row" id="subBonusRow">
-          <span class="sub-info-label">Bônus Pro até</span>
-          <span class="sub-info-value" id="subBonusDate">—</span>
-        </div>
-        <div class="sub-info-row">
-          <span class="sub-info-label">Créditos disponíveis</span>
-          <span class="sub-info-value" id="subCredits">—</span>
-        </div>
-      </div>
+      <div id="subInfoRows"></div>
 
       <a href="/pricing.html" style="display:block;margin-top:18px;padding:11px;text-align:center;
         background:linear-gradient(135deg,#2563EB,#1D4ED8);color:#fff;border-radius:10px;
@@ -2133,12 +2111,9 @@ Mínimo: 500 caracteres · Máximo: 50.000 caracteres"
   <!-- Pro Feature Modal -->
   <div id="proFeatureModal" style="display:none;" class="pro-lock-modal-backdrop" onclick="if(event.target===this)closeProModal()">
     <div class="pro-lock-modal-box">
-      <div class="pro-lock-modal-icon" id="proModalIcon">🔒</div>
-      <h2 class="pro-lock-modal-title" id="proModalTitle">Recurso exclusivo do Plano Pro</h2>
-      <p class="pro-lock-modal-desc" id="proModalDesc">Esta opção está disponível apenas para assinantes Pro.</p>
-      <button class="pro-lock-modal-cta" onclick="window.location.href='/pricing.html'">
-        ✨ Ver Plano Pro
-      </button>
+      <h2 class="pro-lock-modal-title" id="proModalTitle">Opção disponível apenas no Plano Pro</h2>
+      <p class="pro-lock-modal-desc" id="proModalDesc">Este recurso está disponível apenas no Plano Pro.</p>
+      <button class="pro-lock-modal-cta" onclick="window.location.href='/pricing.html'">Ver Plano Pro</button>
       <button class="pro-lock-modal-ghost" onclick="closeProModal()">Continuar com o Plano Grátis</button>
     </div>
   </div>

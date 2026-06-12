@@ -1217,19 +1217,17 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     ].join('');
     msg.innerHTML = `
       <div style="background:var(--surface,#fff);border-radius:18px;border:1px solid var(--border,#E2E8F0);
-        box-shadow:0 24px 64px rgba(0,0,0,.22);padding:32px 28px 24px;max-width:400px;width:100%;text-align:center;">
-        <div style="width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#EFF6FF,#DBEAFE);
-          border:1px solid #BFDBFE;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:26px;">🔒</div>
-        <h2 style="font-size:18px;font-weight:800;color:var(--text,#0F172A);margin-bottom:8px;line-height:1.3;">
-          Desbloqueie mais ${remaining} ${word}
+        box-shadow:0 24px 64px rgba(0,0,0,.22);padding:28px 28px 24px;max-width:400px;width:100%;text-align:center;">
+        <h2 style="font-size:17px;font-weight:700;color:var(--text,#0F172A);margin-bottom:8px;line-height:1.3;">
+          Mais ${remaining} ${word} disponíveis no Plano Pro
         </h2>
         <p style="font-size:14px;color:var(--text-2,#64748B);line-height:1.55;margin-bottom:22px;">
           O Plano Grátis exibe apenas ${isQ ? FREE_Q_LIMIT + ' questões' : FREE_FC_LIMIT + ' flashcards'}.
-          Faça upgrade para Pro e acesse todas as ${questions.length} questões e ${flashcards.length} flashcards geradas.
+          Acesse todas as ${questions.length} questões e ${flashcards.length} flashcards com o Plano Pro.
         </p>
         <a href="/pricing.html" style="display:block;padding:13px;background:linear-gradient(135deg,#2563EB,#1D4ED8);color:#fff;
           border-radius:11px;font-size:14.5px;font-weight:700;text-decoration:none;margin-bottom:10px;
-          box-shadow:0 4px 14px rgba(37,99,235,.35);">✨ Ver Plano Pro</a>
+          box-shadow:0 4px 14px rgba(37,99,235,.35);">Ver Plano Pro</a>
         <button onclick="document.getElementById('contentUpgradeOverlay').remove()"
           style="width:100%;padding:10px;background:transparent;color:var(--text-3,#94A3B8);border:none;
           border-radius:10px;font-size:13px;cursor:pointer;font-family:inherit;">Continuar com o Plano Grátis</button>
@@ -1247,20 +1245,18 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       overlay.style.cssText = 'position:absolute;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;background:var(--surface,#fff);padding:40px 24px;';
       overlay.innerHTML = `
         <div style="max-width:380px;text-align:center;">
-          <div style="width:64px;height:64px;background:linear-gradient(135deg,#EFF6FF,#DBEAFE);border:1px solid #BFDBFE;
-            border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:28px;">✏️</div>
-          <h2 style="font-size:18px;font-weight:800;color:var(--text,#0F172A);margin-bottom:8px;">Sketch — Plano Pro</h2>
+          <h2 style="font-size:17px;font-weight:700;color:var(--text,#0F172A);margin-bottom:10px;">Sketch — disponível no Plano Pro</h2>
           <p style="font-size:14px;color:var(--text-2,#64748B);line-height:1.6;margin-bottom:6px;">
-            O <strong>Sketch</strong> é uma área de rascunho visual onde você pode desenhar, criar diagramas e fazer anotações livres enquanto estuda — tudo salvo automaticamente.
+            O Sketch é uma área de rascunho visual onde você pode desenhar, criar diagramas e fazer anotações livres enquanto estuda. O conteúdo é salvo automaticamente.
           </p>
-          <p style="font-size:13px;color:var(--text-3,#94A3B8);margin-bottom:22px;">Disponível exclusivamente para assinantes do Plano Pro.</p>
+          <p style="font-size:13px;color:var(--text-3,#94A3B8);margin-bottom:22px;">Disponível apenas para assinantes do Plano Pro.</p>
           <a href="/pricing.html" style="display:inline-block;padding:12px 28px;background:linear-gradient(135deg,#2563EB,#1D4ED8);color:#fff;
             border-radius:11px;font-size:14.5px;font-weight:700;text-decoration:none;
-            box-shadow:0 4px 14px rgba(37,99,235,.35);">✨ Ver Plano Pro</a>
+            box-shadow:0 4px 14px rgba(37,99,235,.35);">Ver Plano Pro</a>
           <br>
           <button onclick="window.switchTab('questions')"
             style="margin-top:12px;background:none;border:none;color:var(--text-3,#94A3B8);font-size:13px;cursor:pointer;font-family:inherit;padding:6px;">
-            ← Voltar às questões
+            Voltar às questões
           </button>
         </div>`;
       skPanel.style.position = 'relative';
@@ -1329,7 +1325,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     const isPro = hasProAccess(_userProfile);
     const freeQLimitActive = !isPro && questions.length > FREE_Q_LIMIT;
     const qDisplayTotal = freeQLimitActive ? FREE_Q_LIMIT : questions.length;
-    const qSuffix = freeQLimitActive ? ` de ${FREE_Q_LIMIT} 🔒` : ` de ${questions.length}`;
+    const qSuffix = freeQLimitActive ? ` de ${FREE_Q_LIMIT}` : ` de ${questions.length}`;
     document.getElementById('qLabel').textContent = `Q ${qIdx + 1}${qSuffix}`;
     document.getElementById('qBar').style.width   = ((qIdx + 1) / qDisplayTotal * 100) + '%';
     document.getElementById('qTopic').textContent = q.topic || '';
@@ -1446,7 +1442,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     const isProFC = hasProAccess(_userProfile);
     const freeFCLimitActive = !isProFC && flashcards.length > FREE_FC_LIMIT;
     const fcDisplayTotal = freeFCLimitActive ? FREE_FC_LIMIT : flashcards.length;
-    const fcSuffix = freeFCLimitActive ? ` de ${FREE_FC_LIMIT} 🔒` : ` de ${flashcards.length}`;
+    const fcSuffix = freeFCLimitActive ? ` de ${FREE_FC_LIMIT}` : ` de ${flashcards.length}`;
     document.getElementById('fcLabel').textContent      = `${fcIdx + 1}${fcSuffix}`;
     document.getElementById('fcBar').style.width        = ((fcIdx + 1) / fcDisplayTotal * 100) + '%';
     document.getElementById('fcTopicBadge').textContent = f.topic || '';
@@ -1768,14 +1764,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         if (totalQ > FREE_Q_LIMIT) {
           const qBanner = document.createElement('div');
           qBanner.style.cssText = 'margin-bottom:12px;padding:10px 14px;background:#EFF6FF;border:1px solid #BFDBFE;border-radius:10px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;';
-          qBanner.innerHTML = `<span style="font-size:12.5px;color:#1E40AF;display:flex;align-items:center;gap:6px;">🔒 <strong>Plano Grátis:</strong>&nbsp;vendo ${FREE_Q_LIMIT} de ${totalQ} questões</span><a href="/pricing.html" style="font-size:12px;font-weight:700;color:#2563EB;white-space:nowrap;text-decoration:none;background:#fff;padding:4px 10px;border-radius:6px;border:1px solid #BFDBFE;">Desbloquear Pro →</a>`;
+          qBanner.innerHTML = `<span style="font-size:12.5px;color:#1E40AF;"><strong>Plano Grátis:</strong> vendo ${FREE_Q_LIMIT} de ${totalQ} questões</span><a href="/pricing.html" style="font-size:12px;font-weight:700;color:#2563EB;white-space:nowrap;text-decoration:none;background:#fff;padding:4px 10px;border-radius:6px;border:1px solid #BFDBFE;">Desbloquear Pro →</a>`;
           const panelQ = document.getElementById('panelQuestions');
           if (panelQ) panelQ.insertBefore(qBanner, panelQ.firstChild);
         }
         if (totalFC > FREE_FC_LIMIT) {
           const fcBanner = document.createElement('div');
           fcBanner.style.cssText = 'margin-bottom:12px;padding:10px 14px;background:#F5F3FF;border:1px solid #DDD6FE;border-radius:10px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;';
-          fcBanner.innerHTML = `<span style="font-size:12.5px;color:#5B21B6;display:flex;align-items:center;gap:6px;">🔒 <strong>Plano Grátis:</strong>&nbsp;vendo ${FREE_FC_LIMIT} de ${totalFC} flashcards</span><a href="/pricing.html" style="font-size:12px;font-weight:700;color:#7C3AED;white-space:nowrap;text-decoration:none;background:#fff;padding:4px 10px;border-radius:6px;border:1px solid #DDD6FE;">Desbloquear Pro →</a>`;
+          fcBanner.innerHTML = `<span style="font-size:12.5px;color:#5B21B6;"><strong>Plano Grátis:</strong> vendo ${FREE_FC_LIMIT} de ${totalFC} flashcards</span><a href="/pricing.html" style="font-size:12px;font-weight:700;color:#7C3AED;white-space:nowrap;text-decoration:none;background:#fff;padding:4px 10px;border-radius:6px;border:1px solid #DDD6FE;">Desbloquear Pro →</a>`;
           const panelFC = document.getElementById('panelFlashcards');
           if (panelFC) panelFC.insertBefore(fcBanner, panelFC.firstChild);
         }

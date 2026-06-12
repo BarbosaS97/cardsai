@@ -2,6 +2,11 @@
 -- Adiciona suporte a datas de início e fim personalizadas na promoção de planos.
 -- Substitui a versão anterior (m7). Execute no Supabase SQL Editor.
 --
+-- IMPORTANTE: o DROP abaixo remove a assinatura antiga (4 parâmetros) que conflita
+-- com a nova (6 parâmetros). Sem isso o PostgreSQL recusa o CREATE OR REPLACE.
+
+DROP FUNCTION IF EXISTS public.admin_set_plan(UUID, TEXT, INTEGER, INTEGER);
+--
 -- Parâmetros novos:
 --   p_start_date : timestamptz — início da assinatura (default: NOW())
 --   p_end_date   : timestamptz — fim da assinatura    (default: start + p_days)
