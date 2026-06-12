@@ -870,6 +870,48 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       font-size: 13px; cursor: pointer; font-family: inherit; transition: color .15s;
     }
     .pro-lock-modal-ghost:hover { color: var(--text); }
+
+    /* ── Subscription Modal ────────────────────────────────── */
+    .sub-modal-backdrop {
+      position: fixed; inset: 0; z-index: 300;
+      background: rgba(15,23,42,.55); backdrop-filter: blur(4px);
+      display: flex; align-items: center; justify-content: center;
+      padding: 16px;
+    }
+    .sub-modal-box {
+      background: var(--surface); border-radius: 16px;
+      border: 1px solid var(--border);
+      box-shadow: 0 20px 60px rgba(0,0,0,.18);
+      padding: 24px; max-width: 380px; width: 100%;
+    }
+    .sub-modal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 18px;
+    }
+    .sub-modal-title { font-size: 16px; font-weight: 700; color: var(--text); }
+    .sub-modal-close {
+      background: none; border: none; cursor: pointer;
+      color: var(--text-3); font-size: 20px; line-height: 1; padding: 2px;
+    }
+    .sub-modal-close:hover { color: var(--text); }
+    .sub-info-row {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      gap: 12px; padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+    .sub-info-row:last-of-type { border-bottom: none; }
+    .sub-info-label { color: var(--text-3); font-weight: 500; flex-shrink: 0; }
+    .sub-info-value { color: var(--text); font-weight: 600; text-align: right; }
+    .sub-plan-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 3px 10px; border-radius: 99px;
+      font-size: 12px; font-weight: 700;
+    }
+    .sub-plan-free   { background: var(--surface-2); color: var(--text-3); border: 1px solid var(--border); }
+    .sub-plan-pro    { background: #EFF6FF; color: #1D4ED8; border: 1px solid #BFDBFE; }
+    .sub-plan-bonus  { background: #F0FDF4; color: #15803D; border: 1px solid #BBF7D0; }
+    .sub-plan-credit { background: #F0FDF4; color: #15803D; border: 1px solid #BBF7D0; }
   </style>
   <link rel="manifest" href="/manifest.json" />
   <meta name="theme-color" content="#2563EB" />
@@ -938,6 +980,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         </button>
         <div id="userDropdown" class="user-dropdown hidden">
           <a href="/criacoes.html">Minhas criações</a>
+          <button onclick="openSubscriptionModal()">📋 Minha assinatura</button>
           <a href="/pricing.html">Comprar créditos</a>
           <button onclick="signOut()">Sair</button>
         </div>
@@ -1376,6 +1419,55 @@ Mínimo: 500 caracteres · Máximo: 50.000 caracteres"
     'Seu material está quase pronto!',
     'Últimos ajustes...',
   ];
+
+  /* ── Subscription Modal ────────────────────────────────── */
+  window.openSubscriptionModal = function () {
+    const p = profile;
+    const now = new Date();
+
+    const fmtDate = d => d ? new Date(d).toLocaleDateString('pt-BR') : null;
+    const credits = p?.credits ?? 0;
+
+    // Plan badge
+    let badge = '';
+    let showEnd   = false;
+    let showBonus = false;
+
+    if (p?.is_admin || p?.unlimited_access) {
+      badge = '<span class="sub-plan-badge sub-plan-pro">⚡ Admin / Ilimitado</span>';
+    } else if (
+      p?.subscription_status === 'active' &&
+      p?.subscription_end_date &&
+      new Date(p.subscription_end_date) > now
+    ) {
+      const label = p.subscription_plan === 'pro_annual' ? 'Pro Anual' : 'Pro Mensal';
+      badge    = `<span class="sub-plan-badge sub-plan-pro">⭐ ${label}</span>`;
+      showEnd  = true;
+      document.getElementById('subEndDate').textContent = fmtDate(p.subscription_end_date);
+    } else if (p?.pro_features_until && new Date(p.pro_features_until) > now) {
+      badge     = '<span class="sub-plan-badge sub-plan-bonus">✅ Créditos c/ bônus Pro</span>';
+      showBonus = true;
+      document.getElementById('subBonusDate').textContent = fmtDate(p.pro_features_until);
+    } else if (credits > 0) {
+      badge = '<span class="sub-plan-badge sub-plan-credit">💳 Créditos avulsos</span>';
+    } else {
+      badge = '<span class="sub-plan-badge sub-plan-free">Grátis</span>';
+    }
+
+    document.getElementById('subPlanBadge').innerHTML  = badge;
+    document.getElementById('subEndRow').style.display   = showEnd   ? '' : 'none';
+    document.getElementById('subBonusRow').style.display = showBonus ? '' : 'none';
+    document.getElementById('subCredits').textContent    = credits === 0 ? 'Nenhum' : credits + (credits === 1 ? ' crédito' : ' créditos');
+
+    document.getElementById('subscriptionModal').style.display = 'flex';
+
+    // close dropdown
+    document.getElementById('userDropdown').classList.add('hidden');
+  };
+
+  window.closeSubscriptionModal = function () {
+    document.getElementById('subscriptionModal').style.display = 'none';
+  };
 
   /* ── Pro Feature Modal ─────────────────────────────────── */
   function showProFeatureModal(feature) {
@@ -2002,6 +2094,42 @@ Mínimo: 500 caracteres · Máximo: 50.000 caracteres"
     // Auto-start on first visit after init() finishes loading all data
     // (init() is async so .then() fires after auth + generations are ready)
   </script>
+  <!-- Subscription Modal -->
+  <div id="subscriptionModal" style="display:none;" class="sub-modal-backdrop" onclick="if(event.target===this)closeSubscriptionModal()">
+    <div class="sub-modal-box">
+      <div class="sub-modal-header">
+        <h2 class="sub-modal-title">📋 Minha assinatura</h2>
+        <button class="sub-modal-close" onclick="closeSubscriptionModal()">×</button>
+      </div>
+
+      <div id="subInfoRows">
+        <div class="sub-info-row">
+          <span class="sub-info-label">Plano atual</span>
+          <span class="sub-info-value" id="subPlanBadge">—</span>
+        </div>
+        <div class="sub-info-row" id="subEndRow">
+          <span class="sub-info-label">Validade da assinatura</span>
+          <span class="sub-info-value" id="subEndDate">—</span>
+        </div>
+        <div class="sub-info-row" id="subBonusRow">
+          <span class="sub-info-label">Bônus Pro até</span>
+          <span class="sub-info-value" id="subBonusDate">—</span>
+        </div>
+        <div class="sub-info-row">
+          <span class="sub-info-label">Créditos disponíveis</span>
+          <span class="sub-info-value" id="subCredits">—</span>
+        </div>
+      </div>
+
+      <a href="/pricing.html" style="display:block;margin-top:18px;padding:11px;text-align:center;
+        background:linear-gradient(135deg,#2563EB,#1D4ED8);color:#fff;border-radius:10px;
+        font-size:14px;font-weight:700;text-decoration:none;
+        box-shadow:0 4px 14px rgba(37,99,235,.25);">
+        Ver planos
+      </a>
+    </div>
+  </div>
+
   <!-- Pro Feature Modal -->
   <div id="proFeatureModal" style="display:none;" class="pro-lock-modal-backdrop" onclick="if(event.target===this)closeProModal()">
     <div class="pro-lock-modal-box">

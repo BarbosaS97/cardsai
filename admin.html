@@ -600,6 +600,22 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           <p id="planPromoDaysHint" style="font-size:11px;color:var(--text-3);margin-top:4px;">Padrão: 30 dias</p>
         </div>
 
+        <!-- Datas personalizadas (planos Pro) -->
+        <div id="planPromoDateRow" style="display:none;">
+          <label style="display:block;font-size:11px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">Datas personalizadas <span style="font-weight:400;text-transform:none;">(opcional)</span></label>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <div>
+              <label style="display:block;font-size:11px;color:var(--text-3);margin-bottom:4px;">Data de início</label>
+              <input id="planPromoStartDate" type="date" class="input-field" />
+            </div>
+            <div>
+              <label style="display:block;font-size:11px;color:var(--text-3);margin-bottom:4px;">Data de fim</label>
+              <input id="planPromoEndDate" type="date" class="input-field" />
+            </div>
+          </div>
+          <p style="font-size:11px;color:var(--text-3);margin-top:5px;">Se preenchidas, substituem os dias acima. Deixe em branco para usar hoje + dias.</p>
+        </div>
+
         <!-- Créditos (Créditos Avulsos) -->
         <div id="planPromoCreditsRow" style="display:none;">
           <label style="display:block;font-size:11px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">Créditos a adicionar</label>

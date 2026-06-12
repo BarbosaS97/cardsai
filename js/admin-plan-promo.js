@@ -54,6 +54,8 @@ window.openPlanPromoModal = function (userId) {
 
   document.getElementById('planPromoSelect').value = 'pro_monthly';
   document.getElementById('planPromoCreditsInput').value = '5';
+  document.getElementById('planPromoStartDate').value = '';
+  document.getElementById('planPromoEndDate').value   = '';
   document.getElementById('planPromoMsg').classList.add('hidden');
 
   onPlanPromoChange();
@@ -69,7 +71,8 @@ window.onPlanPromoChange = function () {
   const plan = document.getElementById('planPromoSelect').value;
   const isPro = plan === 'pro_monthly' || plan === 'pro_annual';
 
-  document.getElementById('planPromoDaysRow').style.display    = isPro           ? '' : 'none';
+  document.getElementById('planPromoDaysRow').style.display    = isPro             ? '' : 'none';
+  document.getElementById('planPromoDateRow').style.display    = isPro             ? '' : 'none';
   document.getElementById('planPromoCreditsRow').style.display = plan === 'credits' ? '' : 'none';
   document.getElementById('planPromoFreeWarn').style.display   = plan === 'free'    ? '' : 'none';
 
@@ -85,20 +88,26 @@ window.onPlanPromoChange = function () {
 window.applyPlanPromo = async function () {
   if (!_planPromoUserId) return;
 
-  const plan    = document.getElementById('planPromoSelect').value;
-  const credits = parseInt(document.getElementById('planPromoCreditsInput').value, 10) || 5;
-  const daysRaw = document.getElementById('planPromoDaysInput').value;
-  const days    = daysRaw ? (parseInt(daysRaw, 10) || null) : null;
+  const plan      = document.getElementById('planPromoSelect').value;
+  const credits   = parseInt(document.getElementById('planPromoCreditsInput').value, 10) || 5;
+  const daysRaw   = document.getElementById('planPromoDaysInput').value;
+  const days      = daysRaw ? (parseInt(daysRaw, 10) || null) : null;
+  const startRaw  = document.getElementById('planPromoStartDate')?.value || '';
+  const endRaw    = document.getElementById('planPromoEndDate')?.value   || '';
+  const startDate = startRaw ? new Date(startRaw).toISOString() : null;
+  const endDate   = endRaw   ? new Date(endRaw + 'T23:59:59').toISOString() : null;
 
   const btn = document.getElementById('btnApplyPlanPromo');
   setLoading(btn, true, 'Aplicando…');
   document.getElementById('planPromoMsg').classList.add('hidden');
 
   const { error } = await db.rpc('admin_set_plan', {
-    p_user_id: _planPromoUserId,
-    p_plan:    plan,
-    p_credits: credits,
-    p_days:    days,
+    p_user_id:    _planPromoUserId,
+    p_plan:       plan,
+    p_credits:    credits,
+    p_days:       days,
+    p_start_date: startDate,
+    p_end_date:   endDate,
   });
 
   setLoading(btn, false);
