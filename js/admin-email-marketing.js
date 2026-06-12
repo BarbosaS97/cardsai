@@ -2,12 +2,22 @@
 
 let _emailSends = [];
 let _emailLoaded = false;
+let _pixBuyerIds = new Set();
 
 // ─── Load & Render ────────────────────────────────────────────────────────────
 
 window.loadEmailMarketing = async function () {
-  await loadEmailHistory();
+  await Promise.all([loadEmailHistory(), _loadPixBuyers()]);
+  updateEmailRecipientCount();
 };
+
+async function _loadPixBuyers() {
+  const { data } = await db
+    .from('pix_charges')
+    .select('user_id')
+    .eq('status', 'completed');
+  _pixBuyerIds = new Set((data || []).map(r => r.user_id).filter(Boolean));
+}
 
 window.loadEmailHistory = async function () {
   const wrap = document.getElementById('emailHistoryWrap');
@@ -147,6 +157,81 @@ window.closeEmailPreviewModal = function () {
   modal.style.display = 'none';
 };
 
+// ─── Filters ──────────────────────────────────────────────────────────────────
+
+window.onEmailFilterChange = function () {
+  updateEmailRecipientCount();
+};
+
+function _getFilteredIds() {
+  const f = {
+    withPurchase: !!document.getElementById('filterWithPurchase')?.checked,
+    noPurchase:   !!document.getElementById('filterNoPurchase')?.checked,
+    active:       !!document.getElementById('filterActive')?.checked,
+    inactive:     !!document.getElementById('filterInactive')?.checked,
+    reg7d:        !!document.getElementById('filterReg7d')?.checked,
+    reg30d:       !!document.getElementById('filterReg30d')?.checked,
+    reg90d:       !!document.getElementById('filterReg90d')?.checked,
+  };
+
+  if (!Object.values(f).some(Boolean)) return null; // null = todos
+
+  const now = Date.now();
+  const ms7d  =  7 * 86400000;
+  const ms30d = 30 * 86400000;
+  const ms90d = 90 * 86400000;
+
+  const recentGenUserIds = new Set(
+    allGens
+      .filter(g => now - new Date(g.created_at).getTime() <= ms30d)
+      .map(g => g.user_id)
+  );
+
+  return allUsers
+    .filter(u => {
+      const age         = now - new Date(u.created_at).getTime();
+      const hasPurchase = _pixBuyerIds.has(u.id);
+      const isActive    = recentGenUserIds.has(u.id);
+
+      if (f.withPurchase && hasPurchase)               return true;
+      if (f.noPurchase   && !hasPurchase)              return true;
+      if (f.active       && isActive)                  return true;
+      if (f.inactive     && !isActive && age > ms30d)  return true;
+      if (f.reg7d        && age <= ms7d)               return true;
+      if (f.reg30d       && age <= ms30d)              return true;
+      if (f.reg90d       && age <= ms90d)              return true;
+      return false;
+    })
+    .map(u => u.id);
+}
+
+function updateEmailRecipientCount() {
+  const filteredIds  = _getFilteredIds();
+  const previewEl    = document.getElementById('emailRecipientPreview');
+  const badgeEl      = document.getElementById('emailFilterBadge');
+  const btnSend      = document.getElementById('btnSendMass');
+
+  const consentedSet = new Set(
+    allUsers.filter(u => u.marketing_consent === true).map(u => u.id)
+  );
+
+  let count;
+  if (filteredIds === null) {
+    count = consentedSet.size;
+    if (badgeEl) badgeEl.textContent = 'Todos';
+    if (btnSend) btnSend.textContent = 'Enviar para todos →';
+  } else {
+    count = filteredIds.filter(id => consentedSet.has(id)).length;
+    if (badgeEl) badgeEl.textContent = `${count} usuário(s)`;
+    if (btnSend) btnSend.textContent = `Enviar para ${count} usuário(s) →`;
+  }
+
+  if (previewEl) {
+    previewEl.innerHTML =
+      `Você está prestes a enviar para <strong>${count}</strong> usuário(s) com e-mail marketing ativo`;
+  }
+}
+
 // ─── Compose actions ──────────────────────────────────────────────────────────
 
 window.previewEmailDraft = function () {
@@ -202,9 +287,20 @@ window.sendMassEmail = async function () {
     return;
   }
 
-  const totalUsers = allUsers.length;
+  const filteredIds  = _getFilteredIds();
+  const consentedSet = new Set(
+    allUsers.filter(u => u.marketing_consent === true).map(u => u.id)
+  );
+  const count = filteredIds === null
+    ? consentedSet.size
+    : filteredIds.filter(id => consentedSet.has(id)).length;
+
+  const targetLabel = filteredIds === null
+    ? 'todos os usuários com e-mail marketing ativo'
+    : `${count} usuário(s) filtrado(s)`;
+
   if (!confirm(
-    `Você está prestes a enviar este e-mail para ${totalUsers} usuário(s) cadastrado(s).\n\n` +
+    `Você está prestes a enviar este e-mail para ${targetLabel}.\n\n` +
     `Assunto: "${title}"\n\n` +
     `Deseja continuar? Esta ação não pode ser desfeita.`
   )) return;
@@ -214,17 +310,21 @@ window.sendMassEmail = async function () {
 
   try {
     const { data: { session } } = await db.auth.getSession();
+    const payload = { title, html_body: htmlBody, is_test: false };
+    if (filteredIds !== null) payload.recipient_user_ids = filteredIds;
+
     const res = await fetch(SEND_MASS_EMAIL_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${session?.access_token}`,
       },
-      body: JSON.stringify({ title, html_body: htmlBody, is_test: false }),
+      body: JSON.stringify(payload),
     });
 
     const result = await res.json();
     setLoading(btn, false);
+    updateEmailRecipientCount();
 
     if (!res.ok || result.error) {
       showToast('Erro: ' + (result.error || 'Falha no envio'));
@@ -241,6 +341,7 @@ window.sendMassEmail = async function () {
     await loadEmailHistory();
   } catch (e) {
     setLoading(btn, false);
+    updateEmailRecipientCount();
     showToast('Erro inesperado: ' + (e.message || e));
   }
 };

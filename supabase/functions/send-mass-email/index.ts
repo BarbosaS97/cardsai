@@ -136,9 +136,12 @@ serve(async (req: Request) => {
     if (!profile?.is_admin) return json({ error: 'Acesso negado' }, 403)
 
     const reqBody = await req.json()
-    const title: string    = (reqBody.title     ?? '').trim()
-    const htmlBody: string = (reqBody.html_body  ?? '').trim()
-    const isTest: boolean  = !!reqBody.is_test
+    const title: string              = (reqBody.title     ?? '').trim()
+    const htmlBody: string           = (reqBody.html_body  ?? '').trim()
+    const isTest: boolean            = !!reqBody.is_test
+    const recipientUserIds: string[] | null = Array.isArray(reqBody.recipient_user_ids)
+      ? reqBody.recipient_user_ids.filter((id: unknown) => typeof id === 'string')
+      : null
 
     if (!title || !htmlBody) {
       return json({ error: 'title e html_body são obrigatórios' }, 400)
@@ -155,11 +158,17 @@ serve(async (req: Request) => {
       recipientEmails = [adminEmail]
     } else {
       // Only send to users who consented to marketing emails
-      const { data: profiles, error: profilesErr } = await svc
+      let query = svc
         .from('profiles')
         .select('email')
         .not('email', 'is', null)
         .eq('marketing_consent', true)
+
+      if (recipientUserIds !== null && recipientUserIds.length > 0) {
+        query = query.in('id', recipientUserIds)
+      }
+
+      const { data: profiles, error: profilesErr } = await query
 
       if (profilesErr) throw profilesErr
 

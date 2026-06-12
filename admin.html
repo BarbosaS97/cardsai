@@ -337,6 +337,56 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <!-- Email Marketing tab -->
     <div id="tab-email-marketing-content" class="hidden">
 
+      <!-- Filtros de destinatários -->
+      <div class="card" style="padding:20px;margin-bottom:16px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+          <h2 style="font-size:15px;font-weight:600;color:var(--text);margin:0;">Destinatários</h2>
+          <span id="emailFilterBadge" style="font-size:12px;font-weight:600;color:var(--text-3);background:var(--bg);border:1px solid var(--border);padding:3px 12px;border-radius:20px;">Todos</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div style="display:flex;gap:20px;flex-wrap:wrap;">
+            <label style="display:flex;align-items:center;gap:7px;cursor:pointer;user-select:none;">
+              <input type="checkbox" id="filterWithPurchase" onchange="onEmailFilterChange()" style="width:14px;height:14px;cursor:pointer;" />
+              <span style="font-size:13px;color:var(--text);">Com compras <span style="color:var(--text-3);font-size:11px;">(compraram via PIX)</span></span>
+            </label>
+            <label style="display:flex;align-items:center;gap:7px;cursor:pointer;user-select:none;">
+              <input type="checkbox" id="filterNoPurchase" onchange="onEmailFilterChange()" style="width:14px;height:14px;cursor:pointer;" />
+              <span style="font-size:13px;color:var(--text);">Sem compras <span style="color:var(--text-3);font-size:11px;">(nunca compraram)</span></span>
+            </label>
+          </div>
+          <div style="display:flex;gap:20px;flex-wrap:wrap;">
+            <label style="display:flex;align-items:center;gap:7px;cursor:pointer;user-select:none;">
+              <input type="checkbox" id="filterActive" onchange="onEmailFilterChange()" style="width:14px;height:14px;cursor:pointer;" />
+              <span style="font-size:13px;color:var(--text);">Ativos <span style="color:var(--text-3);font-size:11px;">(geraram conteúdo nos últimos 30 dias)</span></span>
+            </label>
+            <label style="display:flex;align-items:center;gap:7px;cursor:pointer;user-select:none;">
+              <input type="checkbox" id="filterInactive" onchange="onEmailFilterChange()" style="width:14px;height:14px;cursor:pointer;" />
+              <span style="font-size:13px;color:var(--text);">Inativos <span style="color:var(--text-3);font-size:11px;">(sem geração há mais de 30 dias)</span></span>
+            </label>
+          </div>
+          <div style="border-top:1px solid var(--border);padding-top:10px;margin-top:2px;">
+            <p style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:0.05em;margin:0 0 8px;">Período de cadastro</p>
+            <div style="display:flex;gap:16px;flex-wrap:wrap;">
+              <label style="display:flex;align-items:center;gap:7px;cursor:pointer;user-select:none;">
+                <input type="checkbox" id="filterReg7d" onchange="onEmailFilterChange()" style="width:14px;height:14px;cursor:pointer;" />
+                <span style="font-size:13px;color:var(--text);">Últimos 7 dias</span>
+              </label>
+              <label style="display:flex;align-items:center;gap:7px;cursor:pointer;user-select:none;">
+                <input type="checkbox" id="filterReg30d" onchange="onEmailFilterChange()" style="width:14px;height:14px;cursor:pointer;" />
+                <span style="font-size:13px;color:var(--text);">Últimos 30 dias</span>
+              </label>
+              <label style="display:flex;align-items:center;gap:7px;cursor:pointer;user-select:none;">
+                <input type="checkbox" id="filterReg90d" onchange="onEmailFilterChange()" style="width:14px;height:14px;cursor:pointer;" />
+                <span style="font-size:13px;color:var(--text);">Últimos 90 dias</span>
+              </label>
+            </div>
+          </div>
+        </div>
+        <div id="emailRecipientPreview" style="margin-top:14px;padding:10px 14px;background:var(--blue-bg);border:1px solid var(--blue-bd);border-radius:8px;font-size:13px;color:var(--text);">
+          Carregando contagem…
+        </div>
+      </div>
+
       <!-- Compose -->
       <div id="emailComposeSection" style="margin-bottom:24px;">
         <div class="card" style="padding:24px;">
@@ -355,7 +405,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;align-items:center;">
             <button onclick="previewEmailDraft()" class="btn-ghost">Prévia</button>
             <button id="btnTestEmail" onclick="sendTestEmail()" class="btn-ghost" style="color:var(--blue);border-color:var(--blue-bd);">Enviar teste (só para mim)</button>
-            <button id="btnSendMass" onclick="sendMassEmail()" class="btn-primary" style="margin-left:auto;">Enviar para todos os usuários →</button>
+            <button id="btnSendMass" onclick="sendMassEmail()" class="btn-primary" style="margin-left:auto;">Enviar para todos →</button>
           </div>
         </div>
       </div>
