@@ -18,6 +18,20 @@ function getCorsHeaders(req: Request): Record<string, string> {
   }
 }
 
+// Preços fixos dos planos Pro (em R$)
+const PRO_PLAN_PRICES: Record<string, number> = {
+  pro_monthly: 59.90,
+  pro_annual:  598.80,
+  credits_5:   14.90,
+}
+
+// Descrições dos planos para o comentário da cobrança
+const PRO_PLAN_LABELS: Record<string, string> = {
+  pro_monthly: 'Pro Mensal (30 dias) — CardsQuestõesAI',
+  pro_annual:  'Pro Anual (365 dias) — CardsQuestõesAI',
+  credits_5:   '5 créditos avulsos — CardsQuestõesAI',
+}
+
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req)
 
@@ -44,43 +58,61 @@ serve(async (req) => {
     const { data: { user }, error: userErr } = await userClient.auth.getUser()
     if (userErr || !user) return json({ error: 'Não autenticado' }, 401)
 
-    const { credits, priceRaw, couponCode } = await req.json()
-
-    if (!credits || !priceRaw) {
-      return json({ error: 'credits e priceRaw são obrigatórios' }, 400)
-    }
+    const body = await req.json()
+    // plan: 'credits_5' | 'pro_monthly' | 'pro_annual'
+    // Para retrocompat: aceita também { credits, priceRaw } sem plan
+    const { plan, credits, priceRaw, couponCode } = body
 
     const svc = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
     )
 
-    let finalPrice = Number(priceRaw)
+    let finalPrice: number
+    let resolvedPlan: string
+    let resolvedCredits: number
     let couponDbId: string | null = null
+    let chargeComment: string
 
-    if (couponCode) {
-      const { data: coupon } = await svc
-        .from('coupons')
-        .select('id, discount_type, discount_value, is_active, expires_at, max_uses, used_count')
-        .eq('code', String(couponCode).toUpperCase().trim())
-        .single()
+    const isProPlan = plan === 'pro_monthly' || plan === 'pro_annual'
+    const isCreditsPlan = plan === 'credits_5' || (!isProPlan && credits && priceRaw)
 
-      const isValid = coupon?.is_active
-        && !(coupon.expires_at && new Date(coupon.expires_at) < new Date())
-        && !(coupon.max_uses != null && coupon.used_count >= coupon.max_uses)
+    if (isProPlan) {
+      finalPrice      = PRO_PLAN_PRICES[plan]
+      resolvedPlan    = plan
+      resolvedCredits = 0
+      chargeComment   = PRO_PLAN_LABELS[plan]
+    } else if (isCreditsPlan) {
+      resolvedCredits = credits ? Number(credits) : 5
+      resolvedPlan    = 'credits_5'
+      finalPrice      = priceRaw ? Number(priceRaw) : PRO_PLAN_PRICES.credits_5
+      chargeComment   = PRO_PLAN_LABELS.credits_5
 
-      if (isValid) {
-        const discount = coupon.discount_type === 'percentage'
-          ? finalPrice * (Number(coupon.discount_value) / 100)
-          : Math.min(Number(coupon.discount_value), finalPrice)
-        finalPrice = Math.max(0, finalPrice - discount)
-        couponDbId = coupon.id
+      // Aplica cupom (apenas para créditos avulsos)
+      if (couponCode) {
+        const { data: coupon } = await svc
+          .from('coupons')
+          .select('id, discount_type, discount_value, is_active, expires_at, max_uses, used_count')
+          .eq('code', String(couponCode).toUpperCase().trim())
+          .single()
+
+        const isValid = coupon?.is_active
+          && !(coupon.expires_at && new Date(coupon.expires_at) < new Date())
+          && !(coupon.max_uses != null && coupon.used_count >= coupon.max_uses)
+
+        if (isValid) {
+          const discount = coupon.discount_type === 'percentage'
+            ? finalPrice * (Number(coupon.discount_value) / 100)
+            : Math.min(Number(coupon.discount_value), finalPrice)
+          finalPrice  = Math.max(0, finalPrice - discount)
+          couponDbId  = coupon.id
+        }
       }
+    } else {
+      return json({ error: 'Parâmetros inválidos. Informe plan: credits_5 | pro_monthly | pro_annual' }, 400)
     }
 
-    // OpenPix requires value in centavos
     const valueInCentavos = Math.round(finalPrice * 100)
-
     if (valueInCentavos < 1) {
       return json({ error: 'Valor mínimo para PIX é R$ 0,01' }, 400)
     }
@@ -95,8 +127,8 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         correlationID,
-        value: valueInCentavos,
-        comment: `${credits} gerações - CardsQuestõesAI`,
+        value:     valueInCentavos,
+        comment:   chargeComment,
         expiresIn: 3600,
       }),
     })
@@ -108,7 +140,7 @@ serve(async (req) => {
     }
 
     const pixData = await pixRes.json()
-    const charge = pixData.charge
+    const charge  = pixData.charge
 
     if (!charge?.brCode) {
       console.error('OpenPix invalid response:', JSON.stringify(pixData))
@@ -120,13 +152,14 @@ serve(async (req) => {
       : null
 
     const { error: insertErr } = await svc.from('pix_charges').insert({
-      user_id: user.id,
+      user_id:        user.id,
       correlation_id: correlationID,
-      credits: Number(credits),
-      amount: valueInCentavos,
-      coupon_id: couponDbId,
-      status: 'pending',
-      expires_at: expiresAt,
+      credits:        resolvedCredits,
+      amount:         valueInCentavos,
+      coupon_id:      couponDbId,
+      plan:           resolvedPlan,
+      status:         'pending',
+      expires_at:     expiresAt,
     })
 
     if (insertErr) {
@@ -136,9 +169,9 @@ serve(async (req) => {
 
     return json({
       correlationID,
-      brCode: charge.brCode,
+      brCode:      charge.brCode,
       qrCodeImage: charge.qrCodeImage ?? null,
-      value: finalPrice,
+      value:       finalPrice,
       expiresDate: charge.expiresDate ?? null,
     })
   } catch (error) {

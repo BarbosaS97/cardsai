@@ -1,5 +1,6 @@
 // ─── State ───────────────────────────────────────────────────────────────────
 let _pkg = { qty: 0, priceRaw: 0, priceStr: '', priceId: '' };
+let _plan = '';   // 'credits_5' | 'pro_monthly' | 'pro_annual'
 let _coupon = null;
 let _paymentMethod = 'card';
 let _pixCorrelationId = null;
@@ -80,8 +81,9 @@ function _resetPixUI() {
 
 // ─── API pública ─────────────────────────────────────────────────────────────
 
-window.initCouponModal = function (qty, priceRaw, priceStr, priceId) {
+window.initCouponModal = function (qty, priceRaw, priceStr, priceId, planKey) {
   _pkg    = { qty, priceRaw, priceStr, priceId };
+  _plan   = planKey || (qty > 0 ? 'credits_5' : '');
   _coupon = null;
   _paymentMethod = 'card';
 
@@ -178,17 +180,18 @@ window.startCheckout = async function () {
     const { data: sessionData } = await db.auth.getSession();
     const token = sessionData?.session?.access_token;
 
+    const isProPlan = _plan === 'pro_monthly' || _plan === 'pro_annual';
+    const checkoutBody = isProPlan
+      ? { plan: _plan }
+      : { plan: 'credits_5', credits: _pkg.qty, priceId: _pkg.priceId, couponCode: _coupon?.code ?? null };
+
     const res = await fetch(STRIPE_CHECKOUT_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer ' + token,
       },
-      body: JSON.stringify({
-        credits: _pkg.qty,
-        priceId: _pkg.priceId,
-        couponCode: _coupon?.code ?? null,
-      }),
+      body: JSON.stringify(checkoutBody),
     });
 
     const data = await res.json();
@@ -217,17 +220,18 @@ window.startPixCheckout = async function () {
     const { data: sessionData } = await db.auth.getSession();
     const token = sessionData?.session?.access_token;
 
+    const isProPlan = _plan === 'pro_monthly' || _plan === 'pro_annual';
+    const pixBody = isProPlan
+      ? { plan: _plan }
+      : { plan: 'credits_5', credits: _pkg.qty, priceRaw: _pkg.priceRaw, couponCode: _coupon?.code ?? null };
+
     const res = await fetch(PIX_CHECKOUT_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer ' + token,
       },
-      body: JSON.stringify({
-        credits: _pkg.qty,
-        priceRaw: _pkg.priceRaw,
-        couponCode: _coupon?.code ?? null,
-      }),
+      body: JSON.stringify(pixBody),
     });
 
     const data = await res.json();
@@ -297,8 +301,14 @@ async function _pollPixStatus() {
       _pixCorrelationId = null;
       _el('pixQRSection')?.classList.add('hidden');
       _el('pixSuccess')?.classList.remove('hidden');
+      const descEl = _el('pixSuccessDesc');
+      if (descEl) {
+        descEl.textContent = (_plan === 'pro_monthly' || _plan === 'pro_annual')
+          ? 'Seu plano Pro foi ativado com sucesso!'
+          : 'Seus créditos foram adicionados + 30 dias Pro de bônus!';
+      }
       window.dataLayer = window.dataLayer || [];
-      window.dataLayer.push({ event: 'purchase', payment_method: 'pix', credits: _pkg.qty });
+      window.dataLayer.push({ event: 'purchase', payment_method: 'pix', plan: _plan, credits: _pkg.qty });
     } else if (data.status === 'expired') {
       clearInterval(_pixPollTimer);
       _pixPollTimer = null;

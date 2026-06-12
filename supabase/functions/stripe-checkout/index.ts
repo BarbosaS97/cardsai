@@ -23,6 +23,15 @@ function getCorsHeaders(req: Request): Record<string, string> {
   }
 }
 
+// Price IDs dos planos Pro — configurar como secrets no Supabase:
+//   supabase secrets set PRO_MONTHLY_PRICE_ID=price_xxx
+//   supabase secrets set PRO_ANNUAL_PRICE_ID=price_xxx
+function getProPriceId(plan: string): string | null {
+  if (plan === 'pro_monthly') return Deno.env.get('PRO_MONTHLY_PRICE_ID') ?? null
+  if (plan === 'pro_annual')  return Deno.env.get('PRO_ANNUAL_PRICE_ID')  ?? null
+  return null
+}
+
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req)
 
@@ -49,21 +58,57 @@ serve(async (req) => {
     const { data: { user }, error: userErr } = await userClient.auth.getUser()
     if (userErr || !user) return json({ error: 'Não autenticado' }, 401)
 
-    const { credits, priceId, couponCode } = await req.json()
+    const body = await req.json()
+    // plan: 'credits_5' | 'pro_monthly' | 'pro_annual'
+    // Para créditos também aceita legacy: { credits, priceId }
+    const { plan, credits, priceId, couponCode } = body
 
-    if (!priceId || !credits) {
-      return json({ error: 'priceId e credits são obrigatórios' }, 400)
+    const isProPlan = plan === 'pro_monthly' || plan === 'pro_annual'
+    const isCreditsPlan = plan === 'credits_5' || (!isProPlan && credits && priceId)
+
+    if (!isProPlan && !isCreditsPlan) {
+      return json({ error: 'Plano inválido. Use plan: credits_5 | pro_monthly | pro_annual' }, 400)
+    }
+
+    let resolvedPriceId: string
+    let resolvedCredits: number
+    let resolvedPlan: string
+
+    if (isProPlan) {
+      const ppId = getProPriceId(plan)
+      if (!ppId) {
+        return json({
+          error: `Price ID do plano "${plan}" não configurado. Configure PRO_MONTHLY_PRICE_ID ou PRO_ANNUAL_PRICE_ID nos secrets do Supabase.`,
+        }, 500)
+      }
+      resolvedPriceId = ppId
+      resolvedCredits = 0
+      resolvedPlan = plan
+    } else {
+      // credits_5 ou legacy credits
+      if (!priceId || !credits) {
+        return json({ error: 'priceId e credits são obrigatórios para compra de créditos' }, 400)
+      }
+      resolvedPriceId = priceId
+      resolvedCredits = Number(credits)
+      resolvedPlan = 'credits_5'
     }
 
     const sessionParams: Record<string, unknown> = {
-      line_items: [{ price: priceId, quantity: 1 }],
+      line_items: [{ price: resolvedPriceId, quantity: 1 }],
       mode: 'payment',
-      success_url: 'https://cardsquestoes.com.br/pricing.html?success=true',
+      success_url: 'https://cardsquestoes.com.br/pricing.html?success=true&plan=' + resolvedPlan,
       cancel_url: 'https://cardsquestoes.com.br/pricing.html?canceled=true',
-      metadata: { user_id: user.id, credits: String(credits), coupon_id: '' },
+      metadata: {
+        user_id: user.id,
+        plan: resolvedPlan,
+        credits: String(resolvedCredits),
+        coupon_id: '',
+      },
     }
 
-    if (couponCode) {
+    // Cupom de desconto (apenas para créditos avulsos)
+    if (couponCode && isCreditsPlan) {
       const svc = createClient(
         Deno.env.get('SUPABASE_URL')!,
         Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
@@ -83,21 +128,15 @@ serve(async (req) => {
         let stripeCouponId: string = coupon.stripe_coupon_id
 
         if (!stripeCouponId) {
-          // Create Stripe coupon dynamically since admin didn't pre-link one
           const params: Stripe.CouponCreateParams = { duration: 'once' }
-
           if (coupon.discount_type === 'percentage') {
             params.percent_off = Number(coupon.discount_value)
           } else {
-            // amount_off must be in centavos (BRL smallest unit)
             params.amount_off = Math.round(Number(coupon.discount_value) * 100)
             params.currency = 'brl'
           }
-
           const created = await stripe.coupons.create(params)
           stripeCouponId = created.id
-
-          // Cache for future uses
           await svc.from('coupons').update({ stripe_coupon_id: stripeCouponId }).eq('id', coupon.id)
         }
 

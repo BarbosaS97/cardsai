@@ -804,6 +804,30 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     @media (max-width: 380px) {
       #creditsText { display: none; }
     }
+
+    /* ── Feature lock overlay ────────────────────────────────── */
+    .mode-card.locked,
+    .diff-btn.locked { cursor: pointer; }
+    .mode-card.locked:hover { border-color: var(--text-3); background: var(--surface-2); transform: none; box-shadow: none; }
+    .diff-btn.locked:hover  { border-color: var(--text-3); background: var(--surface-2); }
+
+    .lock-badge {
+      position: absolute; top: 5px; right: 5px;
+      width: 16px; height: 16px; border-radius: 4px;
+      background: var(--surface-2); border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-3); z-index: 2;
+    }
+    .diff-btn .lock-badge { top: 4px; right: 4px; width: 14px; height: 14px; border-radius: 3px; }
+
+    /* Plan status pill inside credits row */
+    .plan-status-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 2px 8px; border-radius: 99px; font-size: 10.5px; font-weight: 700;
+    }
+    .psb-free   { background: var(--surface-2); color: var(--text-3); border: 1px solid var(--border); }
+    .psb-credit { background: var(--green-bg);  color: var(--green);  border: 1px solid var(--green-bd); }
+    .psb-pro    { background: var(--blue-bg);   color: var(--blue);   border: 1px solid var(--blue-bd); }
   </style>
   <link rel="manifest" href="/manifest.json" />
   <meta name="theme-color" content="#2563EB" />
@@ -1059,6 +1083,7 @@ Mínimo: 500 caracteres · Máximo: 50.000 caracteres"
               </button>
               <button class="mode-card" id="modeCard-oab" onclick="selectMode('oab')">
                 <span class="mode-check"><svg width="8" height="8" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span>
+                <span class="lock-badge hidden" id="lockBadge-oab"><svg width="8" height="8" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path stroke-linecap="round" d="M7 11V7a5 5 0 0110 0v4"/></svg></span>
                 <div class="mode-card-icon">
                   <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"/></svg>
                 </div>
@@ -1067,6 +1092,7 @@ Mínimo: 500 caracteres · Máximo: 50.000 caracteres"
               </button>
               <button class="mode-card" id="modeCard-vestibular" onclick="selectMode('vestibular')">
                 <span class="mode-check"><svg width="8" height="8" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span>
+                <span class="lock-badge hidden" id="lockBadge-vestibular"><svg width="8" height="8" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path stroke-linecap="round" d="M7 11V7a5 5 0 0110 0v4"/></svg></span>
                 <div class="mode-card-icon">
                   <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 14l9-5-9-5-9 5 9 5zm0 0v6m-4-2a4 4 0 004 4 4 4 0 004-4"/></svg>
                 </div>
@@ -1075,6 +1101,7 @@ Mínimo: 500 caracteres · Máximo: 50.000 caracteres"
               </button>
               <button class="mode-card" id="modeCard-faculdade" onclick="selectMode('faculdade')">
                 <span class="mode-check"><svg width="8" height="8" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span>
+                <span class="lock-badge hidden" id="lockBadge-faculdade"><svg width="8" height="8" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path stroke-linecap="round" d="M7 11V7a5 5 0 0110 0v4"/></svg></span>
                 <div class="mode-card-icon">
                   <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
                 </div>
@@ -1094,10 +1121,12 @@ Mínimo: 500 caracteres · Máximo: 50.000 caracteres"
                 <span class="diff-label">Médio</span>
               </button>
               <button class="diff-btn" id="diffBtn-dificil" data-diff="dificil" data-tip="Análise e pegadinhas" onclick="selectDifficulty('dificil')">
+                <span class="lock-badge hidden" id="lockBadge-dificil"><svg width="7" height="7" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path stroke-linecap="round" d="M7 11V7a5 5 0 0110 0v4"/></svg></span>
                 <span class="diff-dot" style="background:#EA580C;"></span>
                 <span class="diff-label">Difícil</span>
               </button>
               <button class="diff-btn" id="diffBtn-expert" data-diff="expert" data-tip="Domínio completo exigido" onclick="selectDifficulty('expert')">
+                <span class="lock-badge hidden" id="lockBadge-expert"><svg width="7" height="7" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path stroke-linecap="round" d="M7 11V7a5 5 0 0110 0v4"/></svg></span>
                 <span class="diff-dot" style="background:#7C3AED;"></span>
                 <span class="diff-label">Expert</span>
               </button>
@@ -1112,9 +1141,9 @@ Mínimo: 500 caracteres · Máximo: 50.000 caracteres"
               <div class="credits-row">
                 <div class="credits-row-left">
                   <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" d="M12 6v12M8 10h5.5a2.5 2.5 0 010 5H8"/></svg>
-                  Você tem <strong class="credits-row-count" id="creditsRowCount">—</strong> créditos disponíveis
+                  <span id="creditsRowLabel">Você tem <strong class="credits-row-count" id="creditsRowCount">—</strong> créditos disponíveis</span>
                 </div>
-                <span class="credits-row-cost" style="display:inline-flex;align-items:center;gap:4px;">
+                <span class="credits-row-cost" id="creditsRowCost" style="display:inline-flex;align-items:center;gap:4px;">
                   <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><path stroke-linecap="round" d="M1 10h22"/></svg>
                   1 crédito por geração
                 </span>
@@ -1268,6 +1297,11 @@ Mínimo: 500 caracteres · Máximo: 50.000 caracteres"
   }
 
   window.selectMode = function (mode) {
+    if (LOCKED_MODES.includes(mode) && profile && !hasProAccess(profile)) {
+      showToast('Este modo é exclusivo do plano Pro. Clique em "Planos" para desbloquear.', 'info');
+      window.location.href = '/pricing.html';
+      return;
+    }
     selectedMode = mode;
     document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('selected'));
     document.getElementById('modeCard-' + mode).classList.add('selected');
@@ -1275,6 +1309,11 @@ Mínimo: 500 caracteres · Máximo: 50.000 caracteres"
   };
 
   window.selectDifficulty = function (diff) {
+    if (LOCKED_DIFFS.includes(diff) && profile && !hasProAccess(profile)) {
+      showToast('Esta dificuldade é exclusiva do plano Pro. Clique em "Planos" para desbloquear.', 'info');
+      window.location.href = '/pricing.html';
+      return;
+    }
     selectedDifficulty = diff;
     document.querySelectorAll('.diff-btn').forEach(c => c.classList.remove('selected'));
     document.getElementById('diffBtn-' + diff).classList.add('selected');
@@ -1298,6 +1337,58 @@ Mínimo: 500 caracteres · Máximo: 50.000 caracteres"
     'Últimos ajustes...',
   ];
 
+  /* ── Pro access check ──────────────────────────────────── */
+  function hasProAccess(p) {
+    if (!p) return false;
+    if (p.is_admin || p.unlimited_access) return true;
+    const now = new Date();
+    if (p.subscription_status === 'active' && p.subscription_end_date && new Date(p.subscription_end_date) > now) return true;
+    if (p.pro_features_until && new Date(p.pro_features_until) > now) return true;
+    return false;
+  }
+
+  function isSubscriptionActive(p) {
+    if (!p) return false;
+    if (p.is_admin || p.unlimited_access) return true;
+    const now = new Date();
+    return p.subscription_status === 'active' && p.subscription_end_date && new Date(p.subscription_end_date) > now;
+  }
+
+  /* ── Feature flags ──────────────────────────────────────── */
+  const LOCKED_MODES = ['oab', 'vestibular', 'faculdade'];
+  const LOCKED_DIFFS = ['dificil', 'expert'];
+
+  function applyFeatureFlags(p) {
+    const isPro = hasProAccess(p);
+    const lockSVG = `<svg width="8" height="8" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path stroke-linecap="round" d="M7 11V7a5 5 0 0110 0v4"/></svg>`;
+
+    LOCKED_MODES.forEach(mode => {
+      const card = document.getElementById('modeCard-' + mode);
+      const badge = document.getElementById('lockBadge-' + mode);
+      if (!card) return;
+      if (isPro) {
+        card.classList.remove('locked');
+        badge?.classList.add('hidden');
+      } else {
+        card.classList.add('locked');
+        badge?.classList.remove('hidden');
+      }
+    });
+
+    LOCKED_DIFFS.forEach(diff => {
+      const btn = document.getElementById('diffBtn-' + diff);
+      const badge = document.getElementById('lockBadge-' + diff);
+      if (!btn) return;
+      if (isPro) {
+        btn.classList.remove('locked');
+        badge?.classList.add('hidden');
+      } else {
+        btn.classList.add('locked');
+        badge?.classList.add('hidden'); // hide from diff btn (tooltip serves as lock indicator)
+      }
+    });
+  }
+
   /* ── Init ───────────────────────────────────────────────── */
   async function init() {
     const session = await requireAuth();
@@ -1306,7 +1397,9 @@ Mínimo: 500 caracteres · Máximo: 50.000 caracteres"
     profile = await getProfile();
     if (!profile) return;
 
-    updateCreditsPill(profile.credits);
+    updateCreditsPill(profile);
+    applyFeatureFlags(profile);
+
     const initial = (profile.email || profile.full_name || '?').charAt(0).toUpperCase();
     const avatarEl = document.getElementById('userAvatarInitial');
     if (avatarEl) avatarEl.textContent = initial;
@@ -1321,15 +1414,46 @@ Mínimo: 500 caracteres · Máximo: 50.000 caracteres"
     await loadGenerations();
   }
 
-  function updateCreditsPill(credits) {
+  function updateCreditsPill(p) {
     const pill = document.getElementById('creditsPill');
     const text = document.getElementById('creditsText');
-    const label = formatCredits(credits);
-    text.textContent = label + (credits === 1 ? ' crédito' : ' créditos');
-    pill.className = 'credits-pill ' +
-      (credits === 0 ? 'credits-zero' : credits <= 2 ? 'credits-low' : 'credits-ok');
-    const rowCount = document.getElementById('creditsRowCount');
-    if (rowCount) rowCount.textContent = label;
+    const rowLabel = document.getElementById('creditsRowLabel');
+    const rowCost  = document.getElementById('creditsRowCost');
+    const credits  = p.credits ?? 0;
+    const used     = p.monthly_generations ?? 0;
+    const now      = new Date();
+
+    if (p.is_admin || p.unlimited_access) {
+      text.textContent = 'Admin';
+      pill.className = 'credits-pill credits-ok';
+      if (rowLabel) rowLabel.innerHTML = 'Acesso <strong>ilimitado</strong>';
+      if (rowCost)  rowCost.style.display = 'none';
+      return;
+    }
+
+    const subActive = isSubscriptionActive(p);
+
+    if (subActive) {
+      const limit = 60;
+      const rem   = Math.max(0, limit - used);
+      text.textContent = `Pro · ${rem}/${limit}`;
+      pill.className = 'credits-pill ' + (rem === 0 ? 'credits-zero' : rem <= 5 ? 'credits-low' : 'credits-ok');
+      if (rowLabel) rowLabel.innerHTML = `<strong>${used}/${limit}</strong> gerações usadas este mês (Pro)`;
+      if (rowCost) { rowCost.style.display = 'none'; }
+    } else if (credits > 0) {
+      const label = formatCredits(credits);
+      text.textContent = label + (credits === 1 ? ' crédito' : ' créditos');
+      pill.className = 'credits-pill ' + (credits === 0 ? 'credits-zero' : credits <= 2 ? 'credits-low' : 'credits-ok');
+      if (rowLabel) rowLabel.innerHTML = `Você tem <strong class="credits-row-count">${label}</strong> crédito${credits !== 1 ? 's' : ''} disponível${credits !== 1 ? 'is' : ''}`;
+      if (rowCost) { rowCost.style.display = ''; }
+    } else {
+      const limit = 5;
+      const rem   = Math.max(0, limit - used);
+      text.textContent = `${rem}/${limit} grátis`;
+      pill.className = 'credits-pill ' + (rem === 0 ? 'credits-zero' : rem <= 1 ? 'credits-low' : 'credits-ok');
+      if (rowLabel) rowLabel.innerHTML = `<strong>${used}/${limit}</strong> gerações gratuitas usadas este mês`;
+      if (rowCost) { rowCost.style.display = 'none'; }
+    }
   }
 
   /* ── Drop zone ──────────────────────────────────────────── */
@@ -1403,30 +1527,53 @@ Mínimo: 500 caracteres · Máximo: 50.000 caracteres"
     updateGenerateBtn();
   };
 
+  function canUserGenerate() {
+    if (!profile) return false;
+    if (profile.is_admin || profile.unlimited_access) return true;
+    const now  = new Date();
+    const used = profile.monthly_generations ?? 0;
+    if (isSubscriptionActive(profile)) return used < 60;
+    if ((profile.credits ?? 0) > 0)   return true;
+    return used < 5;
+  }
+
+  function generationLimitMsg() {
+    if (!profile) return '';
+    const used = profile.monthly_generations ?? 0;
+    if (isSubscriptionActive(profile) && used >= 60) {
+      return 'Você atingiu o limite de 60 gerações Pro este mês. Reinicia dia 1°.';
+    }
+    if (!(profile.credits > 0) && !isSubscriptionActive(profile) && used >= 5) {
+      return 'Você atingiu o limite gratuito de 5 gerações este mês. <a href="/pricing.html" style="color:inherit;font-weight:600;text-decoration:underline;">Faça upgrade</a> para continuar.';
+    }
+    return '';
+  }
+
   function updateGenerateBtn() {
-    const hasCredits = profile?.is_admin || profile?.credits > 0;
+    const canGen = canUserGenerate();
     let canGenerate = false;
     let hint = '';
     const hintEl = document.getElementById('validationHint');
 
     const WARN_SVG = `<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0;margin-top:1px;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>`;
+    const limitMsg = generationLimitMsg();
 
     if (inputMode === 'pdf') {
-      canGenerate = !!selectedFile && hasCredits;
-      if (!hasCredits) hint = WARN_SVG + '<span>Você não tem créditos suficientes. <a href="/pricing.html" style="color:inherit;font-weight:600;text-decoration:underline;">Adquira mais</a> para continuar.</span>';
+      canGenerate = !!selectedFile && canGen;
+      if (!canGen) hint = WARN_SVG + `<span>${limitMsg || 'Você não tem gerações disponíveis. <a href="/pricing.html" style="color:inherit;font-weight:600;text-decoration:underline;">Ver planos</a>.'}</span>`;
     } else if (inputMode === 'text') {
       const len = document.getElementById('plainText').value.trim().length;
-      canGenerate = len >= 500 && len <= 50000 && hasCredits;
-      if (len > 0 && len < 500)     hint = WARN_SVG + `<span>Texto muito curto: ${len.toLocaleString('pt-BR')} / 500 caracteres mínimos</span>`;
-      else if (len > 50000)         hint = WARN_SVG + `<span>Texto muito longo: ${len.toLocaleString('pt-BR')} / 50.000 máximos</span>`;
-      else if (len >= 500 && !hasCredits) hint = WARN_SVG + '<span>Você não tem créditos suficientes. <a href="/pricing.html" style="color:inherit;font-weight:600;text-decoration:underline;">Adquira mais</a> para continuar.</span>';
+      canGenerate = len >= 500 && len <= 50000 && canGen;
+      if (len > 0 && len < 500)       hint = WARN_SVG + `<span>Texto muito curto: ${len.toLocaleString('pt-BR')} / 500 caracteres mínimos</span>`;
+      else if (len > 50000)           hint = WARN_SVG + `<span>Texto muito longo: ${len.toLocaleString('pt-BR')} / 50.000 máximos</span>`;
+      else if (len >= 500 && !canGen) hint = WARN_SVG + `<span>${limitMsg || 'Você não tem gerações disponíveis. <a href="/pricing.html" style="color:inherit;font-weight:600;text-decoration:underline;">Ver planos</a>.'}</span>`;
     } else {
       const materia = document.getElementById('subjectMateria').value.trim();
       const assunto = document.getElementById('subjectAssunto').value.trim();
-      canGenerate = materia.length >= 2 && assunto.length >= 2 && hasCredits;
+      canGenerate = materia.length >= 2 && assunto.length >= 2 && canGen;
       const touched = materia.length > 0 || assunto.length > 0;
       if (touched && (!materia || !assunto)) hint = WARN_SVG + '<span>Preencha tanto a Matéria quanto o Assunto para continuar</span>';
-      else if (materia && assunto && !hasCredits) hint = WARN_SVG + '<span>Você não tem créditos suficientes. <a href="/pricing.html" style="color:inherit;font-weight:600;text-decoration:underline;">Adquira mais</a> para continuar.</span>';
+      else if (materia && assunto && !canGen) hint = WARN_SVG + `<span>${limitMsg || 'Você não tem gerações disponíveis. <a href="/pricing.html" style="color:inherit;font-weight:600;text-decoration:underline;">Ver planos</a>.'}</span>`;
     }
 
     document.getElementById('generateBtn').disabled = !canGenerate;

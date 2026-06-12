@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR" data-theme="light">
 <head>
 <!-- Google Tag Manager -->
@@ -11,8 +11,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   <script>(function(){var t=localStorage.getItem('cardsai-theme');if(t)document.documentElement.setAttribute('data-theme',t);})()</script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Créditos — CardsQuestõesAI</title>
-  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <title>Planos — CardsQuestõesAI</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -22,24 +21,22 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       --grad-brand: linear-gradient(135deg, #2563EB 0%, #6366F1 100%);
       --ring: 0 0 0 3px rgba(37,99,235,.14);
       --radius-sm: 8px; --radius: 12px; --radius-lg: 16px;
-      --shadow-lg: 0 12px 32px -8px rgba(15,23,42,.14);
     }
     [data-theme="dark"] {
       --grad-brand: linear-gradient(135deg, #3B82F6 0%, #818CF8 100%);
       --ring: 0 0 0 3px rgba(59,130,246,.22);
-      --shadow-lg: 0 12px 32px -8px rgba(0,0,0,.55);
     }
-
-    /* ── Design tokens (alinhados ao sistema) ── */
     :root {
       --bg: #F8FAFC; --surface: #FFFFFF; --surface-2: #F1F5F9; --border: #E2E8F0;
       --text: #0F172A; --text-2: #475569; --text-3: #94A3B8;
       --blue: #2563EB; --blue-bg: #EFF6FF; --blue-bd: #BFDBFE;
       --green: #15803D; --green-bg: #F0FDF4; --green-bd: #BBF7D0;
       --amber: #92400E; --amber-bg: #FFFBEB; --amber-bd: #FDE68A;
+      --violet: #6D28D9; --violet-bg: #F5F3FF; --violet-bd: #DDD6FE;
       --shadow: 0 1px 2px rgba(15,23,42,.04), 0 1px 3px rgba(15,23,42,.05);
       --shadow-md: 0 4px 16px rgba(15,23,42,.09);
       --shadow-blue: 0 6px 24px rgba(37,99,235,.18);
+      --shadow-violet: 0 6px 24px rgba(109,40,217,.18);
     }
     [data-theme="dark"] {
       --bg: #0B0F19; --surface: #151B2B; --surface-2: #0F1422; --border: #232B3D;
@@ -47,29 +44,27 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       --blue: #3B82F6; --blue-bg: #1E3A5F; --blue-bd: #1D4ED8;
       --green: #4ADE80; --green-bg: #052E16; --green-bd: #166534;
       --amber: #FCD34D; --amber-bg: #1C1400; --amber-bd: #78350F;
+      --violet: #A78BFA; --violet-bg: #2E1065; --violet-bd: #5B21B6;
       --shadow: 0 1px 2px rgba(0,0,0,.3);
       --shadow-md: 0 4px 16px rgba(0,0,0,.4);
       --shadow-blue: 0 6px 24px rgba(59,130,246,.22);
+      --shadow-violet: 0 6px 24px rgba(139,92,246,.22);
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { overflow-x: hidden; }
     body {
-      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      font-family: 'Inter', system-ui, sans-serif;
       font-size: 14px; line-height: 1.5;
       color: var(--text); background: var(--bg);
       -webkit-font-smoothing: antialiased;
       transition: background .2s, color .2s;
-      min-height: 100vh; min-height: 100dvh;
-      overflow-x: hidden; display: flex; flex-direction: column;
+      min-height: 100vh; overflow-x: hidden; display: flex; flex-direction: column;
     }
     body::before {
-      content: '';
-      position: fixed; inset: 0; z-index: -1;
+      content: ''; position: fixed; inset: 0; z-index: -1;
       background-image: radial-gradient(circle, var(--border) 1px, transparent 1px);
-      background-size: 28px 28px;
-      opacity: .45;
-      pointer-events: none;
+      background-size: 28px 28px; opacity: .45; pointer-events: none;
     }
     a { color: inherit; text-decoration: none; }
     button { font-family: inherit; cursor: pointer; }
@@ -79,13 +74,11 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       position: sticky; top: 0; z-index: 50;
       background: rgba(248,250,252,.85);
       backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
-      border-bottom: 1px solid var(--border);
-      height: 56px;
-      transition: background .2s;
+      border-bottom: 1px solid var(--border); height: 56px; transition: background .2s;
     }
     [data-theme="dark"] header { background: rgba(11,15,25,.85); }
     .header-inner {
-      max-width: 860px; margin: 0 auto; padding: 0 24px;
+      max-width: 900px; margin: 0 auto; padding: 0 24px;
       display: flex; align-items: center; justify-content: space-between;
       height: 100%; gap: 12px;
     }
@@ -94,180 +87,170 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     .header-right { display: flex; align-items: center; gap: 8px; }
     .btn-icon {
       background: transparent; border: 1px solid var(--border);
-      border-radius: 8px; padding: 6px;
-      color: var(--text-2);
+      border-radius: 8px; padding: 6px; color: var(--text-2);
       display: inline-flex; align-items: center; justify-content: center;
-      transition: background .15s, color .15s, border-color .15s;
-      cursor: pointer;
+      transition: background .15s, color .15s; cursor: pointer;
     }
     .btn-icon:hover { border-color: var(--text-3); color: var(--text); background: var(--surface-2); }
     .back-link {
       display: inline-flex; align-items: center; gap: 5px;
       font-size: 13px; font-weight: 500; color: var(--text-2);
-      border: 1px solid var(--border); border-radius: 6px;
-      padding: 6px 12px;
+      border: 1px solid var(--border); border-radius: 6px; padding: 6px 12px;
       transition: color .15s, border-color .15s;
     }
     .back-link:hover { color: var(--text); border-color: var(--text-3); }
 
     /* ── Layout ── */
-    .wrap { max-width: 860px; margin: 0 auto; padding: 0 24px; }
+    .wrap { max-width: 900px; margin: 0 auto; padding: 0 24px; }
     main { padding: 48px 0 80px; flex: 1; }
 
-    /* ── Section label ── */
-    .section-label {
-      font-size: 11px; font-weight: 600; color: var(--text-2);
-      text-transform: uppercase; letter-spacing: .06em;
-      margin-bottom: 12px;
+    /* ── Hero ── */
+    .hero { text-align: center; margin-bottom: 40px; }
+    .hero h1 {
+      font-size: 28px; font-weight: 800; letter-spacing: -.6px; color: var(--text); margin-bottom: 8px;
     }
-    .section-label:not(:first-child) { margin-top: 40px; }
+    .hero p { font-size: 14px; color: var(--text-2); max-width: 480px; margin: 0 auto; }
 
-    /* ── Seção 1: Saldo atual ── */
-    .balance-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 28px 32px;
-      display: flex; align-items: center;
-      justify-content: space-between; gap: 24px;
+    /* ── Plano atual ── */
+    .current-plan-bar {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 14px 20px; margin-bottom: 32px;
+      font-size: 13px; color: var(--text-2);
     }
-    .balance-left { display: flex; flex-direction: column; gap: 2px; }
-    .balance-value {
-      font-size: 48px; font-weight: 800;
-      letter-spacing: -2px; color: var(--text);
-      line-height: 1;
+    .current-plan-bar strong { color: var(--text); }
+    .plan-tag {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 3px 10px; border-radius: 99px; font-size: 11px; font-weight: 700;
     }
-    .balance-value.unlimited { color: var(--blue); }
-    .balance-desc { font-size: 13px; color: var(--text-3); margin-top: 6px; }
-    .balance-right {
-      display: flex; flex-direction: column; gap: 8px;
-      align-items: flex-end; flex-shrink: 0;
-    }
-    .balance-pill {
-      display: inline-flex; align-items: center; gap: 6px;
-      font-size: 12px; color: var(--text-2); font-weight: 500;
-      background: var(--surface-2); border: 1px solid var(--border);
-      border-radius: 8px; padding: 7px 12px; white-space: nowrap;
-    }
-    .balance-pill svg { color: var(--blue); flex-shrink: 0; }
+    .plan-tag-free     { background: var(--surface-2); color: var(--text-3); border: 1px solid var(--border); }
+    .plan-tag-credits  { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-bd); }
+    .plan-tag-pro      { background: var(--violet-bg); color: var(--violet); border: 1px solid var(--violet-bd); }
 
-    /* ── Seção: O que você recebe ── */
-    .yield-grid {
+    /* ── Plans grid ── */
+    .plans-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-    }
-    .yield-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 18px 16px;
-    }
-    .yield-icon {
-      width: 34px; height: 34px;
-      background: var(--blue-bg); border: 1px solid var(--blue-bd);
-      border-radius: 8px;
-      display: flex; align-items: center; justify-content: center;
-      color: var(--blue); margin-bottom: 12px;
-    }
-    .yield-value {
-      font-size: 24px; font-weight: 800;
-      color: var(--text); letter-spacing: -.5px; line-height: 1;
-    }
-    .yield-label { font-size: 12px; color: var(--text-3); margin-top: 4px; }
-
-    /* ── Seção 2: Pacotes ── */
-    .packages-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: repeat(4, 1fr);
       gap: 12px;
+      align-items: start;
     }
-    @media (min-width: 640px) {
-      .packages-grid { grid-template-columns: repeat(4, 1fr); }
+    @media (max-width: 800px) {
+      .plans-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 440px) {
+      .plans-grid { grid-template-columns: 1fr; }
     }
 
-    .pkg-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 24px 16px 20px;
-      display: flex; flex-direction: column;
-      align-items: center; text-align: center;
-      position: relative;
-      transition: box-shadow .2s, border-color .2s, transform .18s;
+    /* ── Plan card ── */
+    .plan-card {
+      background: var(--surface); border: 1.5px solid var(--border);
+      border-radius: 16px; padding: 24px 20px 20px;
+      display: flex; flex-direction: column; gap: 0;
+      position: relative; transition: box-shadow .2s, border-color .2s, transform .15s;
     }
-    .pkg-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
-    .pkg-featured {
-      border: 2px solid var(--blue);
+    .plan-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+
+    .plan-card-free     { border-color: var(--border); }
+    .plan-card-credits  { border-color: var(--green-bd); }
+    .plan-card-monthly  {
+      border-color: var(--blue-bd);
       box-shadow: var(--shadow-blue);
     }
-    .pkg-featured:hover {
-      box-shadow: 0 8px 28px rgba(37,99,235,.26);
-      transform: translateY(-3px);
+    .plan-card-annual   {
+      border: 2px solid transparent;
+      background: linear-gradient(var(--surface), var(--surface)) padding-box,
+        var(--grad-brand) border-box;
+      box-shadow: var(--shadow-violet);
     }
-    .badge-popular {
-      position: absolute; top: -11px; left: 50%;
-      transform: translateX(-50%);
-      background: var(--amber-bg); color: var(--amber);
-      border: 1px solid var(--amber-bd);
-      font-size: 10px; font-weight: 700;
-      padding: 3px 10px; border-radius: 99px;
-      letter-spacing: .05em; white-space: nowrap;
-    }
-    .pkg-qty {
-      font-size: 42px; font-weight: 800;
-      line-height: 1; color: var(--text);
-      letter-spacing: -1px;
-    }
-    .pkg-featured .pkg-qty { color: var(--blue); }
-    .pkg-unit {
-      font-size: 11px; font-weight: 500;
-      color: var(--text-3); margin-top: 2px; margin-bottom: 16px;
-    }
-    .pkg-price {
-      font-size: 20px; font-weight: 700;
-      color: var(--text); letter-spacing: -.3px;
-    }
-    .pkg-per { font-size: 11px; color: var(--text-3); margin-top: 3px; }
-    .pkg-savings {
-      display: inline-block;
-      font-size: 10px; font-weight: 700; color: var(--green);
-      background: var(--green-bg); border: 1px solid var(--green-bd);
-      padding: 2px 8px; border-radius: 99px;
-      margin-top: 8px;
-    }
-    .pkg-spacer { display: block; height: 24px; }
-    .btn-buy {
-      width: 100%; padding: 10px 0;
-      border-radius: 8px; border: 1px solid var(--border);
-      background: transparent; color: var(--text-2);
-      font-size: 13px; font-weight: 600;
-      transition: background .15s, color .15s, border-color .15s;
-      margin-top: auto;
-    }
-    .btn-buy:hover { background: var(--surface-2); border-color: var(--text-3); color: var(--text); }
-    .btn-buy-primary {
-      background: var(--blue); color: #fff; border-color: var(--blue);
-    }
-    .btn-buy-primary:hover { opacity: .88; background: var(--blue); color: #fff; }
+    .plan-card-annual:hover { box-shadow: 0 8px 32px rgba(109,40,217,.28); }
 
-    /* ── Trust row ── */
-    .trust-row {
-      display: flex; flex-wrap: wrap; justify-content: center;
-      gap: 6px 24px;
-      padding: 18px 0;
-      border-top: 1px solid var(--border);
-      border-bottom: 1px solid var(--border);
-      margin-top: 16px;
+    /* Badge */
+    .plan-badge {
+      position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+      padding: 3px 12px; border-radius: 99px; font-size: 10px; font-weight: 800;
+      letter-spacing: .06em; white-space: nowrap;
     }
-    .trust-item {
-      display: flex; align-items: center; gap: 6px;
-      font-size: 12px; color: var(--text-3);
+    .badge-popular { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-bd); }
+    .badge-best    { background: var(--violet-bg); color: var(--violet); border: 1px solid var(--violet-bd); }
+
+    /* Plan header */
+    .plan-name { font-size: 13px; font-weight: 700; color: var(--text-2); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 10px; }
+    .plan-price-row { display: flex; align-items: baseline; gap: 4px; margin-bottom: 4px; }
+    .plan-price { font-size: 30px; font-weight: 800; letter-spacing: -1px; color: var(--text); }
+    .plan-price-period { font-size: 12px; color: var(--text-3); }
+    .plan-price-desc { font-size: 12px; color: var(--text-3); margin-bottom: 16px; min-height: 18px; }
+
+    /* Features list */
+    .plan-features { list-style: none; margin-bottom: 20px; display: flex; flex-direction: column; gap: 7px; }
+    .plan-features li {
+      display: flex; align-items: flex-start; gap: 8px;
+      font-size: 12.5px; color: var(--text-2); line-height: 1.45;
     }
-    .trust-item svg { color: var(--blue); flex-shrink: 0; }
+    .feat-icon {
+      width: 16px; height: 16px; flex-shrink: 0; margin-top: 1px;
+    }
+    .feat-check { color: var(--green); }
+    .feat-lock  { color: var(--text-3); }
+    .feat-star  { color: var(--violet); }
+    .feat-line  { text-decoration: line-through; color: var(--text-3); }
+
+    /* Buttons */
+    .plan-btn {
+      display: flex; flex-direction: column; gap: 8px; margin-top: auto;
+    }
+    .btn-plan {
+      width: 100%; padding: 10px 0; border-radius: 9px;
+      font-size: 13px; font-weight: 600; text-align: center;
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      transition: opacity .15s, background .15s, box-shadow .15s; cursor: pointer; border: none;
+    }
+    .btn-plan-ghost {
+      background: transparent; color: var(--text-3);
+      border: 1px solid var(--border); cursor: default;
+    }
+    .btn-plan-green {
+      background: var(--green); color: #fff;
+    }
+    .btn-plan-green:hover { opacity: .88; }
+    .btn-plan-blue {
+      background: var(--blue); color: #fff;
+      box-shadow: 0 2px 8px rgba(37,99,235,.28);
+    }
+    .btn-plan-blue:hover { opacity: .88; }
+    .btn-plan-violet {
+      background: linear-gradient(135deg, #6D28D9, #4F46E5);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(109,40,217,.28);
+    }
+    .btn-plan-violet:hover { opacity: .88; }
+    .btn-plan-outline {
+      background: transparent; color: var(--text-2);
+      border: 1px solid var(--border);
+    }
+    .btn-plan-outline:hover { background: var(--surface-2); color: var(--text); border-color: var(--text-3); }
+    .btn-plan-pix-label {
+      font-size: 11px; color: var(--text-3); text-align: center; margin-top: -2px;
+    }
+
+    /* Divider between buttons */
+    .btn-divider {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 11px; color: var(--text-3);
+    }
+    .btn-divider::before, .btn-divider::after {
+      content: ''; flex: 1; height: 1px; background: var(--border);
+    }
+
+    /* ── Savings callout ── */
+    .savings-callout {
+      background: var(--violet-bg); border: 1px solid var(--violet-bd);
+      border-radius: 10px; padding: 12px 14px; margin-bottom: 32px;
+      font-size: 12.5px; color: var(--violet); display: flex; align-items: center; gap: 8px;
+    }
+    .savings-callout svg { flex-shrink: 0; }
 
     /* ── FAQ ── */
-    .faq { max-width: 580px; margin: 0 auto; }
+    .faq { max-width: 600px; margin: 0 auto; }
     .faq-item {
       background: var(--surface); border: 1px solid var(--border);
       border-radius: 10px; padding: 16px 18px; margin-bottom: 8px;
@@ -275,36 +258,42 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     .faq-q { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 5px; }
     .faq-a { font-size: 13px; color: var(--text-2); }
 
+    /* ── Section label ── */
+    .section-label {
+      font-size: 11px; font-weight: 600; color: var(--text-2);
+      text-transform: uppercase; letter-spacing: .06em; margin-bottom: 14px;
+    }
+    .section-label:not(:first-child) { margin-top: 40px; }
+
+    /* ── Trust row ── */
+    .trust-row {
+      display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 24px;
+      padding: 18px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); margin-top: 16px;
+    }
+    .trust-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-3); }
+    .trust-item svg { color: var(--blue); flex-shrink: 0; }
+
     /* ── Modal ── */
     .modal-backdrop {
       position: fixed; inset: 0; z-index: 50;
-      display: flex; align-items: center; justify-content: center;
-      padding: 24px;
-      background: rgba(15,23,42,.55);
-      backdrop-filter: blur(4px);
+      display: flex; align-items: center; justify-content: center; padding: 24px;
+      background: rgba(15,23,42,.55); backdrop-filter: blur(4px);
     }
     .modal-box {
       background: var(--surface); border: 1px solid var(--border);
-      border-radius: 16px; padding: 28px;
-      width: 100%; max-width: 420px;
+      border-radius: 16px; padding: 28px; width: 100%; max-width: 420px;
       box-shadow: 0 20px 60px rgba(0,0,0,.2);
     }
     .modal-header {
-      display: flex; align-items: flex-start;
-      justify-content: space-between; gap: 12px;
-      margin-bottom: 20px;
+      display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 20px;
     }
     .modal-title { font-size: 17px; font-weight: 700; color: var(--text); }
     .modal-subtitle { font-size: 13px; color: var(--text-2); margin-top: 3px; }
     .modal-close {
-      background: none; border: none; font-size: 20px;
-      color: var(--text-3); line-height: 1;
-      transition: color .15s; cursor: pointer; padding: 2px;
-      flex-shrink: 0;
+      background: none; border: none; font-size: 20px; color: var(--text-3); line-height: 1;
+      transition: color .15s; cursor: pointer; padding: 2px; flex-shrink: 0;
     }
     .modal-close:hover { color: var(--text); }
-
-    /* Resumo do pacote */
     .modal-summary {
       background: var(--surface-2); border: 1px solid var(--border);
       border-radius: 10px; padding: 14px 16px; margin-bottom: 22px;
@@ -314,268 +303,113 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       font-size: 13px; color: var(--text-2); padding: 3px 0;
     }
     .modal-summary-row strong { color: var(--text); font-weight: 600; }
-    .modal-summary-divider {
-      border: none; border-top: 1px solid var(--border);
-      margin: 8px 0;
-    }
+    .modal-summary-divider { border: none; border-top: 1px solid var(--border); margin: 8px 0; }
     .modal-summary-total {
       display: flex; align-items: center; justify-content: space-between;
       font-size: 14px; font-weight: 600; color: var(--text); padding: 3px 0;
     }
     .modal-summary-total span { color: var(--blue); font-size: 18px; font-weight: 800; }
 
-    /* Steps */
-    .modal-steps { margin-bottom: 22px; }
-    .modal-step {
-      display: flex; align-items: flex-start; gap: 12px;
-      padding: 9px 0; border-bottom: 1px solid var(--border);
+    /* Coupon */
+    .coupon-section { margin-bottom: 22px; }
+    .coupon-label { display: block; font-size: 11px; font-weight: 600; color: var(--text-2); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 8px; }
+    .coupon-row { display: flex; gap: 8px; }
+    .coupon-input {
+      flex: 1; padding: 9px 12px; border: 1px solid var(--border); border-radius: 8px;
+      font-size: 13px; color: var(--text); background: var(--surface); outline: none;
+      text-transform: uppercase; font-family: inherit; transition: border-color .15s;
     }
-    .modal-step:last-child { border-bottom: none; }
-    .step-num {
-      width: 22px; height: 22px; border-radius: 50%;
-      background: var(--blue); color: #fff;
-      font-size: 11px; font-weight: 700;
-      display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0; margin-top: 2px;
+    .coupon-input:focus { border-color: var(--blue); }
+    .coupon-apply-btn {
+      padding: 9px 16px; border-radius: 8px; border: 1px solid var(--border);
+      background: var(--surface-2); color: var(--text); font-size: 13px; font-weight: 600;
+      cursor: pointer; flex-shrink: 0; transition: background .15s;
     }
-    .step-title { font-size: 13px; font-weight: 600; color: var(--text); }
-    .step-desc { font-size: 12px; color: var(--text-2); margin-top: 1px; }
+    .coupon-apply-btn:hover { background: var(--blue); color: #fff; border-color: var(--blue); }
 
-    .modal-actions { display: flex; gap: 10px; }
-    .btn-modal-ghost {
-      flex: 1; padding: 11px 0;
-      border-radius: 9px; border: 1px solid var(--border);
-      background: transparent; color: var(--text-2);
-      font-size: 13px; font-weight: 600;
-      transition: background .15s, color .15s; cursor: pointer;
-    }
-    .btn-modal-ghost:hover { background: var(--surface-2); color: var(--text); }
-    .btn-modal-primary {
-      flex: 2; padding: 11px 0;
-      border-radius: 9px; border: none;
-      background: var(--blue); color: #fff;
-      font-size: 13px; font-weight: 600;
-      transition: opacity .15s; cursor: pointer;
-      text-align: center;
-      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-      text-decoration: none;
-    }
-    .btn-modal-primary:hover { opacity: .88; }
-
-    /* ── Payment method tabs ── */
-    .payment-tabs {
-      display: flex; gap: 8px; margin-bottom: 16px;
-    }
+    /* Payment tabs */
+    .payment-label { font-size: 11px; font-weight: 600; color: var(--text-2); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 10px; }
+    .payment-tabs { display: flex; gap: 8px; margin-bottom: 16px; }
     .payment-tab {
-      flex: 1; padding: 10px 8px;
-      border-radius: 9px; border: 1px solid var(--border);
-      background: transparent; color: var(--text-2);
-      font-size: 13px; font-weight: 600; cursor: pointer;
-      display: flex; align-items: center; justify-content: center; gap: 6px;
+      flex: 1; padding: 10px 8px; border-radius: 9px; border: 1px solid var(--border);
+      background: transparent; color: var(--text-2); font-size: 13px; font-weight: 600;
+      cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;
       transition: all .15s;
     }
     .payment-tab:hover { background: var(--surface-2); color: var(--text); }
-    .payment-tab.pm-active {
-      background: var(--blue-bg); color: var(--blue);
-      border-color: var(--blue-bd);
-    }
+    .payment-tab.pm-active { background: var(--blue-bg); color: var(--blue); border-color: var(--blue-bd); }
 
-    /* ── PIX QR section ── */
-    .pix-qr-box {
-      text-align: center; padding: 16px 0 8px;
-    }
-    .pix-qr-box img, .pix-qr-box canvas {
-      width: 180px; height: 180px;
-      border-radius: 10px; border: 1px solid var(--border);
-    }
-    .pix-qr-placeholder {
-      width: 180px; height: 180px;
-      border-radius: 10px; border: 1px solid var(--border);
-      background: var(--surface-2);
-      display: inline-flex; align-items: center; justify-content: center;
-      color: var(--text-3); font-size: 12px;
-    }
+    /* PIX section */
+    .pix-qr-box { text-align: center; padding: 16px 0 8px; }
+    .pix-qr-box canvas, .pix-qr-box img { width: 180px; height: 180px; border-radius: 10px; border: 1px solid var(--border); }
     .pix-code {
       font-size: 11px; color: var(--text-3); word-break: break-all;
       background: var(--surface-2); border: 1px solid var(--border);
       border-radius: 7px; padding: 9px 12px; margin: 10px 0;
-      max-height: 52px; overflow: hidden;
-      font-family: monospace; line-height: 1.4; cursor: pointer;
+      max-height: 52px; overflow: hidden; font-family: monospace; cursor: pointer;
     }
-    .pix-expiry {
-      font-size: 12px; color: var(--text-3); text-align: center; margin-bottom: 12px;
-    }
-    .pix-success-box {
-      text-align: center; padding: 20px 0;
-    }
+    .pix-expiry { font-size: 12px; color: var(--text-3); text-align: center; margin-bottom: 12px; }
+    .pix-success-box { text-align: center; padding: 20px 0; }
     .pix-success-icon {
       width: 48px; height: 48px; border-radius: 50%;
       background: var(--green-bg); border: 1px solid var(--green-bd);
       display: inline-flex; align-items: center; justify-content: center;
       color: var(--green); margin-bottom: 12px;
     }
-    .pix-success-title {
-      font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 4px;
+    .pix-success-title { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+    .pix-success-desc  { font-size: 13px; color: var(--text-2); margin-bottom: 18px; }
+
+    /* Modal actions */
+    .modal-actions { display: flex; gap: 10px; }
+    .btn-modal-ghost {
+      flex: 1; padding: 11px 0; border-radius: 9px; border: 1px solid var(--border);
+      background: transparent; color: var(--text-2); font-size: 13px; font-weight: 600;
+      transition: background .15s, color .15s; cursor: pointer;
     }
-    .pix-success-desc {
-      font-size: 13px; color: var(--text-2); margin-bottom: 18px;
+    .btn-modal-ghost:hover { background: var(--surface-2); color: var(--text); }
+    .btn-modal-primary {
+      flex: 2; padding: 11px 0; border-radius: 9px; border: none;
+      background: var(--blue); color: #fff; font-size: 13px; font-weight: 600;
+      transition: opacity .15s; cursor: pointer; text-align: center;
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
     }
+    .btn-modal-primary:hover { opacity: .88; }
 
     /* ── Footer ── */
-    footer {
-      border-top: 1px solid var(--border);
-      padding: 20px 24px; text-align: center; margin-top: auto;
-    }
+    footer { border-top: 1px solid var(--border); padding: 20px 24px; text-align: center; margin-top: auto; }
     footer p { font-size: 12px; color: var(--text-3); }
     footer a { color: var(--text-3); }
     footer a:hover { color: var(--text-2); }
 
-    /* ── Utility ── */
     .hidden { display: none !important; }
 
-    /* ── Responsive ── */
     @media (max-width: 640px) {
       .header-inner { padding: 0 16px; }
       .wrap { padding: 0 16px; }
       main { padding: 32px 0 60px; }
-
-      .balance-card { flex-direction: column; align-items: flex-start; gap: 18px; padding: 20px; }
-      .balance-value { font-size: 38px; }
-      .balance-right { width: 100%; align-items: flex-start; flex-direction: row; flex-wrap: wrap; }
-
-      .yield-grid { grid-template-columns: 1fr 1fr; }
-      .yield-grid .yield-card:last-child { grid-column: 1 / -1; }
-
+      .hero h1 { font-size: 22px; }
       .modal-backdrop { padding: 0; align-items: flex-end; }
       .modal-box { border-radius: 18px 18px 0 0; max-width: 100%; padding: 24px 18px 32px; }
       .modal-actions { flex-direction: column; }
       .btn-modal-primary, .btn-modal-ghost { flex: unset; width: 100%; padding: 13px; }
     }
 
-    @media (max-width: 400px) {
-      .packages-grid { grid-template-columns: 1fr; }
-      .yield-grid { grid-template-columns: 1fr; }
-      .yield-grid .yield-card:last-child { grid-column: unset; }
-    }
-
-    /* ── Campaign topbar ── */
-    .campaign-topbar {
-      width: 100%;
-      background: #0D0D1A;
-      color: #fff;
-      padding: 13px 56px 13px 28px;
-      position: relative;
-      overflow: hidden;
-    }
-    .campaign-topbar::after {
-      content: '';
-      position: absolute;
-      bottom: 0; left: 0; right: 0;
-      height: 2px;
-      background: linear-gradient(90deg, #4F46E5, #7C3AED, #60A5FA, #7C3AED, #4F46E5);
-      background-size: 300% 100%;
-      animation: campaignShimmer 3s linear infinite;
-    }
-    @keyframes campaignShimmer {
-      0%   { background-position: 0%   0; }
-      100% { background-position: 300% 0; }
-    }
-    .campaign-topbar-inner {
-      max-width: 920px;
-      margin: 0 auto;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      position: relative;
-    }
-    .campaign-topbar-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
-      color: #fff;
-      font-size: 10px;
-      font-weight: 800;
-      letter-spacing: .07em;
-      text-transform: uppercase;
-      padding: 3px 9px 3px 7px;
-      border-radius: 4px;
-      flex-shrink: 0;
-      white-space: nowrap;
-    }
-    .campaign-topbar-body {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      flex-wrap: wrap;
-      justify-content: center;
-      font-size: 14px;
-      line-height: 1.4;
-    }
-    .campaign-topbar-name  { font-weight: 700; letter-spacing: -.01em; }
+    /* Campaign topbar */
+    .campaign-topbar { width: 100%; background: #0D0D1A; color: #fff; padding: 13px 56px 13px 28px; position: relative; overflow: hidden; }
+    .campaign-topbar::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, #4F46E5, #7C3AED, #60A5FA, #7C3AED, #4F46E5); background-size: 300% 100%; animation: campaignShimmer 3s linear infinite; }
+    @keyframes campaignShimmer { 0% { background-position: 0% 0; } 100% { background-position: 300% 0; } }
+    .campaign-topbar-inner { max-width: 920px; margin: 0 auto; display: flex; align-items: center; justify-content: center; gap: 10px; position: relative; }
+    .campaign-topbar-badge { display: inline-flex; align-items: center; gap: 4px; background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%); color: #fff; font-size: 10px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; padding: 3px 9px 3px 7px; border-radius: 4px; flex-shrink: 0; white-space: nowrap; }
+    .campaign-topbar-body { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: center; font-size: 14px; line-height: 1.4; }
+    .campaign-topbar-name  { font-weight: 700; }
     .campaign-topbar-sep   { opacity: .38; }
     .campaign-topbar-desc  { opacity: .8; }
-    .campaign-topbar-coupon {
-      display: none;
-      align-items: center;
-      gap: 6px;
-      font-size: 12px;
-      opacity: .85;
-      flex-shrink: 0;
-      white-space: nowrap;
-    }
-    .campaign-topbar-coupon-code {
-      font-family: ui-monospace, monospace;
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: .05em;
-      background: rgba(255,255,255,.14);
-      border: 1px solid rgba(255,255,255,.28);
-      color: #fff;
-      padding: 2px 8px;
-      border-radius: 4px;
-    }
-    .campaign-topbar-cta {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      background: rgba(255,255,255,.1);
-      border: 1px solid rgba(255,255,255,.22);
-      color: #fff;
-      padding: 4px 14px;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: 700;
-      text-decoration: none;
-      transition: background .15s, border-color .15s;
-      white-space: nowrap;
-      flex-shrink: 0;
-    }
-    .campaign-topbar-cta:hover { background: rgba(255,255,255,.2); border-color: rgba(255,255,255,.38); }
-    .campaign-topbar-close {
-      position: absolute;
-      right: 0;
-      top: 50%;
-      transform: translateY(-50%);
-      background: none;
-      border: none;
-      color: rgba(255,255,255,.45);
-      cursor: pointer;
-      padding: 4px;
-      display: flex;
-      align-items: center;
-      line-height: 0;
-      transition: color .15s;
-    }
+    .campaign-topbar-coupon { display: none; align-items: center; gap: 6px; font-size: 12px; opacity: .85; flex-shrink: 0; white-space: nowrap; }
+    .campaign-topbar-coupon-code { font-family: ui-monospace, monospace; font-size: 12px; font-weight: 700; background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.28); color: #fff; padding: 2px 8px; border-radius: 4px; }
+    .campaign-topbar-cta { display: inline-flex; align-items: center; gap: 5px; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.22); color: #fff; padding: 4px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; text-decoration: none; transition: background .15s; white-space: nowrap; flex-shrink: 0; }
+    .campaign-topbar-cta:hover { background: rgba(255,255,255,.2); }
+    .campaign-topbar-close { position: absolute; right: 0; top: 50%; transform: translateY(-50%); background: none; border: none; color: rgba(255,255,255,.45); cursor: pointer; padding: 4px; display: flex; line-height: 0; transition: color .15s; }
     .campaign-topbar-close:hover { color: #fff; }
-    @media (max-width: 640px) {
-      .campaign-topbar { padding: 10px 40px 10px 14px; }
-      .campaign-topbar-inner { flex-wrap: wrap; gap: 6px 8px; }
-      .campaign-topbar-badge { display: none; }
-      .campaign-topbar-body { flex: 0 0 100%; font-size: 13px; gap: 4px; justify-content: center; }
-      .campaign-topbar-coupon { font-size: 11px; }
-    }
   </style>
   <link rel="manifest" href="/manifest.json" />
   <meta name="theme-color" content="#2563EB" />
@@ -587,12 +421,8 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   <link rel="icon" type="image/png" sizes="32x32" href="/static/images/favicon.png" />
 </head>
 <body>
-<!-- Google Tag Manager (noscript) -->
-<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-TRSQ4N54"
-height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-<!-- End Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-TRSQ4N54" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
-<!-- ── Header ── -->
 <header>
   <div class="header-inner">
     <a href="/dashboard.html" class="logo">
@@ -602,8 +432,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <div class="header-right">
       <button id="darkToggle" class="btn-icon" onclick="toggleDark()" title="Alternar tema">
         <svg id="iconSun" class="hidden" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <circle cx="12" cy="12" r="5"/>
-          <path stroke-linecap="round" d="M12 2v2m0 16v2M4.22 4.22l1.42 1.42m12.72 12.72 1.42 1.42M2 12h2m16 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+          <circle cx="12" cy="12" r="5"/><path stroke-linecap="round" d="M12 2v2m0 16v2M4.22 4.22l1.42 1.42m12.72 12.72 1.42 1.42M2 12h2m16 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
         </svg>
         <svg id="iconMoon" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
@@ -619,13 +448,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   </div>
 </header>
 
-<!-- ── Campaign topbar (exibido via JS se houver campanha ativa) ── -->
+<!-- Campaign topbar -->
 <div id="campaign-bar" class="campaign-topbar" style="display:none;">
   <div class="campaign-topbar-inner">
     <span class="campaign-topbar-badge">
-      <svg width="9" height="9" fill="currentColor" viewBox="0 0 24 24">
-        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-      </svg>
+      <svg width="9" height="9" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
       Oferta
     </span>
     <div class="campaign-topbar-body">
@@ -634,150 +461,258 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <span id="campaign-bar-desc" class="campaign-topbar-desc"></span>
     </div>
     <span id="campaign-bar-coupon" class="campaign-topbar-coupon">
-      use o cupom
-      <code id="campaign-bar-coupon-code" class="campaign-topbar-coupon-code"></code>
+      use o cupom <code id="campaign-bar-coupon-code" class="campaign-topbar-coupon-code"></code>
     </span>
     <a href="#" id="campaign-bar-link" class="campaign-topbar-cta">
       Aproveitar
-      <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M12 5l7 7-7 7"/>
-      </svg>
+      <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M12 5l7 7-7 7"/></svg>
     </a>
   </div>
   <button class="campaign-topbar-close" onclick="this.parentElement.style.display='none'" aria-label="Fechar">
-    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
-    </svg>
+    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
   </button>
 </div>
 
-<!-- ── Main ── -->
 <main>
   <div class="wrap">
 
-    <!-- Seção 1: Saldo atual -->
-    <p class="section-label" style="margin-top:0;">Seu saldo</p>
-    <div class="balance-card">
-      <div class="balance-left">
-        <div id="balanceVal" class="balance-value">—</div>
-        <div class="balance-desc">créditos disponíveis · 1 crédito = 1 geração completa</div>
-      </div>
-      <div class="balance-right">
-        <div class="balance-pill">
-          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
-          </svg>
-          Sem expiração
-        </div>
-      </div>
+    <!-- Hero -->
+    <div class="hero">
+      <h1>Escolha seu plano</h1>
+      <p>Gere questões e flashcards com IA a partir de qualquer conteúdo. Comece grátis, evolua quando precisar.</p>
     </div>
 
-    <!-- O que você recebe por crédito -->
-    <p class="section-label">O que você recebe por crédito</p>
-    <div class="yield-grid">
-      <div class="yield-card">
-        <div class="yield-icon">
-          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
-          </svg>
-        </div>
-        <div class="yield-value">50</div>
-        <div class="yield-label">questões de múltipla escolha com gabarito</div>
-      </div>
-      <div class="yield-card">
-        <div class="yield-icon">
-          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-            <rect x="2" y="3" width="20" height="14" rx="2"/>
-            <path stroke-linecap="round" d="M8 21h8m-4-4v4"/>
-          </svg>
-        </div>
-        <div class="yield-value">100</div>
-        <div class="yield-label">flashcards frente e verso prontos para revisar</div>
-      </div>
-      <div class="yield-card">
-        <div class="yield-icon">
-          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
-          </svg>
-        </div>
-        <div class="yield-value">150</div>
-        <div class="yield-label">páginas máximo aceitas por PDF enviado</div>
-      </div>
+    <!-- Plano atual -->
+    <div class="current-plan-bar" id="currentPlanBar" style="display:none;">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0;color:var(--blue);">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+      </svg>
+      <span id="currentPlanText">Carregando…</span>
     </div>
 
-    <!-- Seção 2: Pacotes -->
-    <p class="section-label">Escolha um pacote</p>
-    <div class="packages-grid">
+    <!-- Plans grid -->
+    <div class="plans-grid">
 
-      <!-- 5 gerações -->
-      <div class="pkg-card">
-        <div class="pkg-qty">5</div>
-        <div class="pkg-unit">gerações</div>
-        <div class="pkg-price">R$ 14,90</div>
-        <div class="pkg-per">R$ 2,98 por geração</div>
-        <span class="pkg-spacer"></span>
-        <button class="btn-buy" onclick="openModal(5,'R$ 14,90','R$ 2,98',null,'price_1TgQkBIdpN6XOWwT9s2kbkQa')">Comprar</button>
+      <!-- 1. Grátis -->
+      <div class="plan-card plan-card-free">
+        <div class="plan-name">Grátis</div>
+        <div class="plan-price-row">
+          <span class="plan-price">R$ 0</span>
+        </div>
+        <div class="plan-price-desc">Para sempre gratuito</div>
+        <ul class="plan-features">
+          <li>
+            <svg class="feat-icon feat-check" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            <span><strong>5 gerações/mês</strong> (reset dia 1°)</span>
+          </li>
+          <li>
+            <svg class="feat-icon feat-check" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            <span>20 questões + 30 flashcards visíveis</span>
+          </li>
+          <li>
+            <svg class="feat-icon feat-check" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            <span>Modo Concurso Público</span>
+          </li>
+          <li>
+            <svg class="feat-icon feat-check" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            <span>Dificuldade Fácil e Médio</span>
+          </li>
+          <li>
+            <svg class="feat-icon feat-lock" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path stroke-linecap="round" d="M7 11V7a5 5 0 0110 0v4"/></svg>
+            <span class="feat-line">OAB, Vestibular, Faculdade</span>
+          </li>
+          <li>
+            <svg class="feat-icon feat-lock" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path stroke-linecap="round" d="M7 11V7a5 5 0 0110 0v4"/></svg>
+            <span class="feat-line">Sketch, estatísticas completas</span>
+          </li>
+        </ul>
+        <div class="plan-btn">
+          <button class="btn-plan btn-plan-ghost" disabled>Plano atual</button>
+        </div>
       </div>
 
-      <!-- 10 gerações — destaque -->
-      <div class="pkg-card pkg-featured">
-        <span class="badge-popular">Mais vendido</span>
-        <div class="pkg-qty">10</div>
-        <div class="pkg-unit">gerações</div>
-        <div class="pkg-price">R$ 24,90</div>
-        <div class="pkg-per">R$ 2,49 por geração</div>
-        <span class="pkg-savings">Economize 16%</span>
-        <button class="btn-buy btn-buy-primary" onclick="openModal(10,'R$ 24,90','R$ 2,49','16%','price_1TgQkBIdpN6XOWwTTWoqbHri')">Comprar</button>
+      <!-- 2. 5 Créditos avulsos -->
+      <div class="plan-card plan-card-credits">
+        <div class="plan-name">Créditos Avulsos</div>
+        <div class="plan-price-row">
+          <span class="plan-price" style="color:var(--green);">R$ 14,90</span>
+        </div>
+        <div class="plan-price-desc">5 créditos · nunca expiram</div>
+        <ul class="plan-features">
+          <li>
+            <svg class="feat-icon feat-check" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            <span><strong>5 gerações</strong> (sem expiração)</span>
+          </li>
+          <li>
+            <svg class="feat-icon feat-check" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            <span>50 questões + 100 flashcards</span>
+          </li>
+          <li>
+            <svg class="feat-icon feat-star" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 3l3.057 6.197L15 10.5l-5 4.87 1.18 6.88L5 19.01l-6.18 3.245L0 15.37l-5-4.87 6.943-1.303L5 3z"/></svg>
+            <span><strong>+30 dias</strong> acesso Pro de bônus</span>
+          </li>
+          <li>
+            <svg class="feat-icon feat-check" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            <span>Todos os modos e dificuldades</span>
+          </li>
+          <li>
+            <svg class="feat-icon feat-check" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            <span>Sketch e estatísticas completas</span>
+          </li>
+          <li>
+            <svg class="feat-icon feat-check" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            <span>R$ 2,98 por geração</span>
+          </li>
+        </ul>
+        <div class="plan-btn">
+          <button class="btn-plan btn-plan-green" onclick="openPlanModal('credits_5')">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+            Comprar agora
+          </button>
+        </div>
       </div>
 
-      <!-- 20 gerações -->
-      <div class="pkg-card">
-        <div class="pkg-qty">20</div>
-        <div class="pkg-unit">gerações</div>
-        <div class="pkg-price">R$ 39,90</div>
-        <div class="pkg-per">R$ 2,00 por geração</div>
-        <span class="pkg-savings">Economize 33%</span>
-        <button class="btn-buy" onclick="openModal(20,'R$ 39,90','R$ 2,00','33%','price_1TgQkBIdpN6XOWwTaHhFmuo0')">Comprar</button>
+      <!-- 3. Pro Mensal -->
+      <div class="plan-card plan-card-monthly">
+        <span class="plan-badge badge-popular">Mais popular</span>
+        <div class="plan-name">Pro Mensal</div>
+        <div class="plan-price-row">
+          <span class="plan-price" style="color:var(--blue);">R$ 59,90</span>
+        </div>
+        <div class="plan-price-desc">30 dias de acesso · ~R$ 1,00/geração</div>
+        <ul class="plan-features">
+          <li>
+            <svg class="feat-icon feat-check" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            <span><strong>60 gerações/mês</strong></span>
+          </li>
+          <li>
+            <svg class="feat-icon feat-check" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            <span>50 questões + 100 flashcards</span>
+          </li>
+          <li>
+            <svg class="feat-icon feat-check" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            <span>Todos os modos de prova</span>
+          </li>
+          <li>
+            <svg class="feat-icon feat-check" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            <span>Todas as dificuldades</span>
+          </li>
+          <li>
+            <svg class="feat-icon feat-check" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            <span>Sketch completo</span>
+          </li>
+          <li>
+            <svg class="feat-icon feat-check" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            <span>Estatísticas detalhadas</span>
+          </li>
+        </ul>
+        <div class="plan-btn">
+          <button class="btn-plan btn-plan-blue" onclick="openPlanModal('pro_monthly')">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            Assinar Pro Mensal
+          </button>
+        </div>
       </div>
 
-      <!-- 50 gerações -->
-      <div class="pkg-card">
-        <div class="pkg-qty">50</div>
-        <div class="pkg-unit">gerações</div>
-        <div class="pkg-price">R$ 79,90</div>
-        <div class="pkg-per">R$ 1,60 por geração</div>
-        <span class="pkg-savings">Economize 46%</span>
-        <button class="btn-buy" onclick="openModal(50,'R$ 79,90','R$ 1,60','46%','price_1TgQkBIdpN6XOWwTkLrqZFnd')">Comprar</button>
+      <!-- 4. Pro Anual -->
+      <div class="plan-card plan-card-annual">
+        <span class="plan-badge badge-best">Melhor valor</span>
+        <div class="plan-name" style="color:var(--violet);">Pro Anual</div>
+        <div class="plan-price-row">
+          <span class="plan-price" style="color:var(--violet);">R$ 598,80</span>
+        </div>
+        <div class="plan-price-desc">365 dias · ~R$ 0,83/geração</div>
+        <ul class="plan-features">
+          <li>
+            <svg class="feat-icon feat-star" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            <span><strong>60 gerações/mês</strong></span>
+          </li>
+          <li>
+            <svg class="feat-icon feat-star" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            <span>50 questões + 100 flashcards</span>
+          </li>
+          <li>
+            <svg class="feat-icon feat-star" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            <span>Tudo do Pro Mensal</span>
+          </li>
+          <li>
+            <svg class="feat-icon feat-star" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            <span><strong>Economia de R$ 120</strong> vs mensal</span>
+          </li>
+          <li>
+            <svg class="feat-icon feat-star" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            <span>365 dias de acesso contínuo</span>
+          </li>
+          <li>
+            <svg class="feat-icon feat-star" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            <span>Pagamento único, sem renovação</span>
+          </li>
+        </ul>
+        <div class="plan-btn">
+          <button class="btn-plan btn-plan-violet" onclick="openPlanModal('pro_annual')">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            Assinar Pro Anual
+          </button>
+        </div>
       </div>
 
-    </div>
+    </div><!-- /plans-grid -->
 
-    <!-- Trust -->
+    <!-- Trust row -->
     <div class="trust-row">
       <div class="trust-item">
-        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-        </svg>
-        Sem assinatura
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Pagamento seguro
       </div>
       <div class="trust-item">
-        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
-        </svg>
-        Créditos sem expiração
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+        Créditos avulsos sem expiração
+      </div>
+      <div class="trust-item">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><path stroke-linecap="round" d="M1 10h22"/></svg>
+        PIX e Cartão aceitos
+      </div>
+      <div class="trust-item">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><path stroke-linecap="round" d="M22 10H2"/></svg>
+        Sem assinatura recorrente
+      </div>
+    </div>
+
+    <!-- FAQ -->
+    <p class="section-label" style="margin-top:40px;text-align:center;">Dúvidas frequentes</p>
+    <div class="faq">
+      <div class="faq-item">
+        <p class="faq-q">O que são créditos avulsos?</p>
+        <p class="faq-a">Créditos avulsos são comprados uma única vez e nunca expiram. Cada crédito = 1 geração completa (50 questões + 100 flashcards). Ao comprar, você também ganha 30 dias de acesso a todas as funcionalidades Pro.</p>
+      </div>
+      <div class="faq-item">
+        <p class="faq-q">Como funciona o plano Pro?</p>
+        <p class="faq-a">Você paga uma única vez e tem acesso por 30 dias (Mensal) ou 365 dias (Anual). Dentro do período, pode gerar até 60 materiais por mês com todas as funcionalidades liberadas. Não é uma assinatura recorrente — você decide quando renovar.</p>
+      </div>
+      <div class="faq-item">
+        <p class="faq-q">Posso usar o plano Grátis sem cartão?</p>
+        <p class="faq-a">Sim. O plano Grátis não exige nenhum dado de pagamento. Você tem 5 gerações por mês, que resetam no dia 1° de cada mês.</p>
+      </div>
+      <div class="faq-item">
+        <p class="faq-q">O que acontece com meus créditos antigos?</p>
+        <p class="faq-a">Seus créditos antigos continuam válidos e nunca expiram. Eles serão consumidos normalmente quando você gerar materiais, mesmo sem um plano Pro ativo.</p>
+      </div>
+      <div class="faq-item">
+        <p class="faq-q">Assinarei automaticamente todo mês?</p>
+        <p class="faq-a">Não. Todos os planos são pagamentos únicos. Não há renovação automática — você decide se quer continuar quando o período expirar.</p>
       </div>
     </div>
 
   </div>
 </main>
 
-<!-- ── Modal de compra ── -->
+<!-- ── Modal de pagamento ── -->
 <div id="paymentModal" class="modal-backdrop hidden">
   <div class="modal-box">
     <div class="modal-header">
       <div>
-        <p class="modal-title" id="modalTitle">Pacote de — gerações</p>
-        <p class="modal-subtitle" id="modalSubtitle">—</p>
+        <p class="modal-title" id="modalTitle">Plano</p>
+        <p class="modal-subtitle" id="modalSubtitle"></p>
       </div>
       <button class="modal-close" onclick="closeModal()">&#x2715;</button>
     </div>
@@ -785,16 +720,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <!-- Resumo -->
     <div class="modal-summary">
       <div class="modal-summary-row">
-        <span>Gerações incluídas</span>
-        <strong id="mQty">—</strong>
+        <span id="mDesc1Label">Incluído</span>
+        <strong id="mDesc1">—</strong>
       </div>
       <div class="modal-summary-row">
-        <span>Questões geradas</span>
-        <strong id="mQuestions">—</strong>
-      </div>
-      <div class="modal-summary-row">
-        <span>Flashcards gerados</span>
-        <strong id="mFlashcards">—</strong>
+        <span id="mDesc2Label">Acesso</span>
+        <strong id="mDesc2">—</strong>
       </div>
       <hr class="modal-summary-divider" />
       <div class="modal-summary-row">
@@ -811,42 +742,30 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       </div>
     </div>
 
-    <!-- Cupom -->
-    <div style="margin-bottom:20px;">
-      <label style="display:block;font-size:11px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Cupom de desconto</label>
-      <div style="display:flex;gap:8px;">
-        <input id="couponInput" type="text" placeholder="Ex: AMIGO10"
-          style="flex:1;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);background:var(--surface);outline:none;text-transform:uppercase;font-family:inherit;transition:border-color .15s;"
-          onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--border)'"
+    <!-- Cupom (apenas créditos avulsos) -->
+    <div id="couponSection" class="coupon-section hidden">
+      <label class="coupon-label">Cupom de desconto</label>
+      <div class="coupon-row">
+        <input id="couponInput" type="text" class="coupon-input" placeholder="Ex: AMIGO10"
           onkeydown="if(event.key==='Enter')applyCoupon()" />
-        <button id="btnApplyCoupon" onclick="applyCoupon()"
-          style="padding:9px 16px;border-radius:8px;border:1px solid var(--border);background:var(--surface-2);color:var(--text);font-size:13px;font-weight:600;cursor:pointer;flex-shrink:0;transition:background .15s;"
-          onmouseover="this.style.background='var(--blue)';this.style.color='#fff';this.style.borderColor='var(--blue)'"
-          onmouseout="this.style.background='var(--surface-2)';this.style.color='var(--text)';this.style.borderColor='var(--border)'">
-          Aplicar
-        </button>
+        <button id="btnApplyCoupon" class="coupon-apply-btn" onclick="applyCoupon()">Aplicar</button>
       </div>
       <div id="couponApplied" class="hidden" style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px;padding:8px 12px;background:var(--green-bg);border:1px solid var(--green-bd);border-radius:8px;font-size:12px;color:var(--green);">
         <span id="couponAppliedText"></span>
-        <button onclick="removeCoupon()" style="background:none;border:none;color:var(--green);cursor:pointer;font-size:16px;line-height:1;padding:0;" title="Remover cupom">×</button>
+        <button onclick="removeCoupon()" style="background:none;border:none;color:var(--green);cursor:pointer;font-size:16px;line-height:1;padding:0;" title="Remover">×</button>
       </div>
-      <div id="couponError" class="hidden" style="margin-top:8px;padding:8px 12px;background:var(--red-bg,#FEF2F2);border:1px solid var(--red-bd,#FECACA);border-radius:8px;font-size:12px;color:var(--red,#DC2626);"></div>
+      <div id="couponError" class="hidden" style="margin-top:8px;padding:8px 12px;background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;font-size:12px;color:#DC2626;"></div>
     </div>
 
-    <!-- Forma de pagamento -->
-    <p style="font-size:11px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px;">Forma de pagamento</p>
+    <!-- Tabs de pagamento -->
+    <p class="payment-label">Forma de pagamento</p>
     <div class="payment-tabs">
       <button id="tabCard" class="payment-tab pm-active" onclick="selectPaymentMethod('card')">
-        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-          <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
-          <line x1="1" y1="10" x2="23" y2="10"/>
-        </svg>
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
         Cartão de Crédito
       </button>
       <button id="tabPix" class="payment-tab" onclick="selectPaymentMethod('pix')">
-        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-        </svg>
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
         PIX
       </button>
     </div>
@@ -855,65 +774,43 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <div id="sectionCard" class="modal-actions">
       <button class="btn-modal-ghost" onclick="closeModal()">Cancelar</button>
       <button id="btnCheckout" onclick="startCheckout()" class="btn-modal-primary">
-        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-          <path stroke-linecap="round" stroke-linejoin="round" d="M7 11V7a5 5 0 0 1 10 0v4"/>
-        </svg>
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path stroke-linecap="round" d="M7 11V7a5 5 0 0110 0v4"/></svg>
         Pagar com Cartão
       </button>
     </div>
 
     <!-- Seção PIX -->
     <div id="sectionPix" class="hidden">
-
-      <!-- Antes de gerar QR -->
       <div id="pixBeforeQR" class="modal-actions">
         <button class="btn-modal-ghost" onclick="closeModal()">Cancelar</button>
         <button id="btnPixGenerate" onclick="startPixCheckout()" class="btn-modal-primary">
-          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
-            <rect x="3" y="14" width="7" height="7"/>
-            <path stroke-linecap="round" d="M14 14h3v3m0 4h4m-4 0v-4m-3 0h3"/>
-          </svg>
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path stroke-linecap="round" d="M14 14h3v3m0 4h4m-4 0v-4m-3 0h3"/></svg>
           Gerar QR Code PIX
         </button>
       </div>
-
-      <!-- QR Code -->
       <div id="pixQRSection" class="hidden">
-        <div class="pix-qr-box">
-          <div id="pixQRCanvas"></div>
-        </div>
+        <div class="pix-qr-box"><div id="pixQRCanvas"></div></div>
         <div class="pix-code" id="pixBrCode" onclick="copyPixCode()" title="Clique para copiar"></div>
         <div class="pix-expiry" id="pixExpiry"></div>
         <button onclick="copyPixCode()" class="btn-modal-primary" style="width:100%;margin-bottom:10px;">
-          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-            <path stroke-linecap="round" stroke-linejoin="round" d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-          </svg>
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path stroke-linecap="round" d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
           Copiar código PIX
         </button>
-        <p style="font-size:12px;color:var(--text-3);text-align:center;margin-bottom:10px;">
-          Aguardando confirmação do pagamento…
-        </p>
-        <button onclick="closeModal()" class="btn-modal-ghost" style="width:100%;">Fechar (verificar depois)</button>
+        <p style="font-size:12px;color:var(--text-3);text-align:center;margin-bottom:10px;">Aguardando confirmação do pagamento…</p>
+        <button onclick="closeModal()" class="btn-modal-ghost" style="width:100%;">Fechar</button>
       </div>
-
-      <!-- Sucesso PIX -->
       <div id="pixSuccess" class="hidden">
         <div class="pix-success-box">
           <div class="pix-success-icon">
-            <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
-            </svg>
+            <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
           </div>
           <p class="pix-success-title">Pagamento confirmado!</p>
-          <p class="pix-success-desc">Seus créditos foram adicionados à conta.</p>
-          <button onclick="closeModal();location.reload();" class="btn-modal-primary" style="width:100%;">Ver meus créditos</button>
+          <p class="pix-success-desc" id="pixSuccessDesc">Seu plano foi ativado.</p>
+          <button onclick="closeModal();location.reload();" class="btn-modal-primary" style="width:100%;">Ver meu plano</button>
         </div>
       </div>
-
     </div>
+
   </div>
 </div>
 
@@ -922,7 +819,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="/js/config.js"></script>
+<script src="/js/config.js"></script>
 <script src="/js/auth.js"></script>
 <script src="/js/credits.js"></script>
 <script>
@@ -941,53 +838,110 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
   window.toggleDark = function () {
     const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-    applyDark(!isDark);
-    localStorage.setItem('cardsai-theme', isDark ? 'light' : 'dark');
+    applyDark(!isDark); localStorage.setItem('cardsai-theme', isDark ? 'light' : 'dark');
   };
+
+  // Price ID para créditos avulsos
+  const CREDITS_5_PRICE_ID = 'price_1TgQkBIdpN6XOWwT9s2kbkQa';
+
+  /* ── hasProAccess ── */
+  function hasProAccess(profile) {
+    if (!profile) return false;
+    if (profile.is_admin || profile.unlimited_access) return true;
+    const now = new Date();
+    if (profile.subscription_status === 'active' && profile.subscription_end_date) {
+      if (new Date(profile.subscription_end_date) > now) return true;
+    }
+    if (profile.pro_features_until && new Date(profile.pro_features_until) > now) return true;
+    return false;
+  }
 
   /* ── Init ── */
   async function init() {
     const params = new URLSearchParams(window.location.search);
     if (params.get('success') === 'true') {
-      showToast('Pagamento confirmado! Seus créditos foram adicionados.', 'success');
+      const plan = params.get('plan') || '';
+      const msg = plan.startsWith('pro_') ? 'Plano Pro ativado com sucesso!' : 'Pagamento confirmado! Créditos adicionados.';
+      showToast(msg, 'success');
       window.dataLayer = window.dataLayer || [];
-      window.dataLayer.push({ event: 'purchase', payment_method: 'card' });
+      window.dataLayer.push({ event: 'purchase', payment_method: 'card', plan });
       history.replaceState({}, '', window.location.pathname);
     } else if (params.get('canceled') === 'true') {
-      showToast('Pagamento cancelado. Nenhum crédito foi alterado.', 'info');
+      showToast('Pagamento cancelado.', 'info');
       history.replaceState({}, '', window.location.pathname);
+    }
+
+    // Cupom na URL
+    const couponFromUrl = params.get('coupon');
+    if (couponFromUrl) {
+      const inp = document.getElementById('couponInput');
+      if (inp) inp.value = couponFromUrl.toUpperCase();
     }
 
     const session = await requireAuth();
     if (!session) return;
     const profile = await getProfile();
     if (!profile) return;
-    const el = document.getElementById('balanceVal');
-    if (profile.unlimited_access || profile.credits >= 999990) {
-      el.textContent = '∞';
-      el.classList.add('unlimited');
+
+    renderCurrentPlan(profile);
+  }
+
+  function renderCurrentPlan(profile) {
+    const bar = document.getElementById('currentPlanBar');
+    const txt = document.getElementById('currentPlanText');
+    bar.style.display = 'flex';
+
+    const isPro = hasProAccess(profile);
+    const hasCredits = profile.credits > 0;
+    const now = new Date();
+
+    if (profile.is_admin || profile.unlimited_access) {
+      txt.innerHTML = 'Seu plano: <span class="plan-tag plan-tag-pro">Admin / Ilimitado</span>';
+    } else if (isPro && profile.subscription_end_date && new Date(profile.subscription_end_date) > now) {
+      const planLabel = profile.subscription_plan === 'pro_annual' ? 'Pro Anual' : 'Pro Mensal';
+      const endDate = new Date(profile.subscription_end_date).toLocaleDateString('pt-BR');
+      txt.innerHTML = `Seu plano: <span class="plan-tag plan-tag-pro">${planLabel} ativo</span> &nbsp;·&nbsp; Expira em <strong>${endDate}</strong>`;
+    } else if (isPro && profile.pro_features_until && new Date(profile.pro_features_until) > now) {
+      const endDate = new Date(profile.pro_features_until).toLocaleDateString('pt-BR');
+      txt.innerHTML = `Seu plano: <span class="plan-tag plan-tag-credits">Bônus Pro ativo</span> &nbsp;·&nbsp; Acesso Pro até <strong>${endDate}</strong> · <strong>${profile.credits} crédito${profile.credits !== 1 ? 's' : ''}</strong> disponível${profile.credits !== 1 ? 'is' : ''}`;
+    } else if (hasCredits) {
+      txt.innerHTML = `Seu plano: <span class="plan-tag plan-tag-credits">Créditos avulsos</span> &nbsp;·&nbsp; <strong>${profile.credits} crédito${profile.credits !== 1 ? 's' : ''}</strong> disponível${profile.credits !== 1 ? 'is' : ''}`;
     } else {
-      el.textContent = profile.credits;
+      const used  = profile.monthly_generations ?? 0;
+      const limit = 5;
+      txt.innerHTML = `Seu plano: <span class="plan-tag plan-tag-free">Grátis</span> &nbsp;·&nbsp; <strong>${used}/${limit}</strong> gerações usadas este mês`;
     }
   }
 
   /* ── Modal ── */
-  window.openModal = function (qty, price, perGen, savings, priceId) {
-    document.getElementById('modalTitle').textContent = 'Pacote de ' + qty + ' gerações';
-    document.getElementById('modalSubtitle').textContent =
-      price + ' · ' + perGen + '/geração' + (savings ? ' · ' + savings + ' de desconto' : '');
-    document.getElementById('mQty').textContent = qty + ' gerações';
-    document.getElementById('mQuestions').textContent = (qty * 50).toLocaleString('pt-BR') + ' questões';
-    document.getElementById('mFlashcards').textContent = (qty * 100).toLocaleString('pt-BR') + ' flashcards';
+  const PLAN_META = {
+    credits_5:   { title: '5 Créditos Avulsos',    subtitle: 'R$ 14,90 · sem expiração',  desc1: '5 gerações avulsas', desc2: '+30 dias Pro de bônus', price: 14.90, credits: 5 },
+    pro_monthly: { title: 'Pro Mensal',             subtitle: 'R$ 59,90 · 30 dias',        desc1: '60 gerações/mês',   desc2: '30 dias de acesso Pro', price: 59.90, credits: 0 },
+    pro_annual:  { title: 'Pro Anual',              subtitle: 'R$ 598,80 · 365 dias',      desc1: '60 gerações/mês',   desc2: '365 dias de acesso Pro', price: 598.80, credits: 0 },
+  };
 
-    const priceRaw = parseFloat(price.replace('R$', '').trim().replace(',', '.'));
-    initCouponModal(qty, priceRaw, price, priceId);
+  window.openPlanModal = function (planKey) {
+    const meta = PLAN_META[planKey];
+    if (!meta) return;
 
-    const btn = document.getElementById('btnCheckout');
-    if (btn) { btn.disabled = false; btn.textContent = 'Pagar com Cartão'; }
+    document.getElementById('modalTitle').textContent    = meta.title;
+    document.getElementById('modalSubtitle').textContent = meta.subtitle;
+    document.getElementById('mDesc1').textContent        = meta.desc1;
+    document.getElementById('mDesc2').textContent        = meta.desc2;
+
+    const priceId = planKey === 'credits_5' ? CREDITS_5_PRICE_ID : null;
+    initCouponModal(meta.credits, meta.price, 'R$ ' + meta.price.toFixed(2).replace('.', ','), priceId, planKey);
+
+    // Mostrar seção de cupom apenas para créditos avulsos
+    document.getElementById('couponSection').classList.toggle('hidden', planKey !== 'credits_5');
 
     document.getElementById('paymentModal').classList.remove('hidden');
     document.body.style.overflow = 'hidden';
+  };
+
+  // Compat: openModal legacy (créditos com priceId explícito)
+  window.openModal = function (qty, price, perGen, savings, priceId) {
+    window.openPlanModal('credits_5');
   };
 
   window.closeModal = function () {
@@ -999,37 +953,24 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   document.getElementById('paymentModal').addEventListener('click', function (e) {
     if (e.target === this) closeModal();
   });
-
-  document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape') closeModal();
-  });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeModal(); });
 
   async function loadCampaignBar(position) {
     try {
-      const { data } = await db
-        .from('campaigns')
-        .select('nome, descricao, codigo_cupom, link_destino')
-        .eq('ativo', true)
-        .in('posicao', [position, 'both'])
-        .order('created_at', { ascending: false })
-        .limit(1);
-
+      const { data } = await db.from('campaigns').select('nome, descricao, codigo_cupom, link_destino')
+        .eq('ativo', true).in('posicao', [position, 'both']).order('created_at', { ascending: false }).limit(1);
       if (!data || data.length === 0) return;
       const c = data[0];
-
       document.getElementById('campaign-bar-name').textContent = c.nome;
       document.getElementById('campaign-bar-desc').textContent = c.descricao;
-
       if (c.codigo_cupom) {
         document.getElementById('campaign-bar-coupon-code').textContent = c.codigo_cupom;
         document.getElementById('campaign-bar-coupon').style.display = 'inline-flex';
       }
-
       const link = document.getElementById('campaign-bar-link');
       let href = c.link_destino || '/pricing.html';
       if (c.codigo_cupom) href += (href.includes('?') ? '&' : '?') + 'coupon=' + encodeURIComponent(c.codigo_cupom);
       link.href = href;
-
       document.getElementById('campaign-bar').style.display = 'block';
     } catch (_) {}
   }
