@@ -130,15 +130,41 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     /* ── Plans grid ── */
     .plans-grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(3, 1fr);
       gap: 12px;
       align-items: start;
     }
-    @media (max-width: 800px) {
+    @media (max-width: 700px) {
       .plans-grid { grid-template-columns: repeat(2, 1fr); }
     }
     @media (max-width: 440px) {
       .plans-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ── Pro toggle ── */
+    .pro-toggle {
+      display: flex; align-items: center; justify-content: center;
+      background: var(--surface-2); border: 1px solid var(--border);
+      border-radius: 8px; padding: 3px; gap: 2px;
+      margin: 10px 0 14px;
+    }
+    .pro-toggle-btn {
+      flex: 1; padding: 5px 10px; border-radius: 6px; border: none;
+      font-size: 12px; font-weight: 600; color: var(--text-3);
+      background: transparent; cursor: pointer; transition: all .15s;
+      font-family: inherit;
+    }
+    .pro-toggle-btn.active {
+      background: var(--surface); color: var(--text);
+      box-shadow: 0 1px 3px rgba(0,0,0,.1);
+    }
+    .pro-savings-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: var(--green-bg); color: var(--green);
+      border: 1px solid var(--green-bd);
+      border-radius: 6px; padding: 4px 10px;
+      font-size: 11px; font-weight: 700;
+      margin-bottom: 10px;
     }
 
     /* ── Plan card ── */
@@ -572,14 +598,24 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         </div>
       </div>
 
-      <!-- 3. Pro Mensal -->
-      <div class="plan-card plan-card-monthly">
-        <span class="plan-badge badge-popular">Mais popular</span>
-        <div class="plan-name">Pro Mensal</div>
-        <div class="plan-price-row">
-          <span class="plan-price" style="color:var(--blue);">R$ 59,90</span>
+      <!-- 3. Pro (toggle Mensal / Anual) -->
+      <div class="plan-card plan-card-monthly" id="proCard">
+        <span class="plan-badge badge-popular" id="proBadge">Mais popular</span>
+        <div class="plan-name" id="proNameLabel" style="color:var(--blue);margin-top:18px;">Pro</div>
+
+        <div class="pro-toggle">
+          <button class="pro-toggle-btn active" id="btnProMensal" onclick="setProPeriod('monthly')">Mensal</button>
+          <button class="pro-toggle-btn" id="btnProAnual" onclick="setProPeriod('annual')">Anual</button>
         </div>
-        <div class="plan-price-desc">30 dias de acesso · ~R$ 1,00/geração</div>
+
+        <div class="plan-price-row">
+          <span class="plan-price" id="proPrice" style="color:var(--blue);">R$ 59,90</span>
+        </div>
+        <div class="plan-price-desc" id="proPriceDesc">30 dias de acesso · ~R$ 1,00/geração</div>
+        <div id="proSavings" class="pro-savings-badge hidden">
+          <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+          Economize R$ 120
+        </div>
         <ul class="plan-features">
           <li>
             <svg class="feat-icon feat-check" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
@@ -607,51 +643,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
           </li>
         </ul>
         <div class="plan-btn">
-          <button class="btn-plan btn-plan-blue" onclick="openPlanModal('pro_monthly')">
+          <button class="btn-plan btn-plan-blue" id="proBtnAction" onclick="openProModal()">
             <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-            Assinar Pro Mensal
-          </button>
-        </div>
-      </div>
-
-      <!-- 4. Pro Anual -->
-      <div class="plan-card plan-card-annual">
-        <span class="plan-badge badge-best">Melhor valor</span>
-        <div class="plan-name" style="color:var(--violet);">Pro Anual</div>
-        <div class="plan-price-row">
-          <span class="plan-price" style="color:var(--violet);">R$ 598,80</span>
-        </div>
-        <div class="plan-price-desc">365 dias · ~R$ 0,83/geração</div>
-        <ul class="plan-features">
-          <li>
-            <svg class="feat-icon feat-star" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-            <span><strong>60 gerações/mês</strong></span>
-          </li>
-          <li>
-            <svg class="feat-icon feat-star" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-            <span>50 questões + 100 flashcards</span>
-          </li>
-          <li>
-            <svg class="feat-icon feat-star" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-            <span>Tudo do Pro Mensal</span>
-          </li>
-          <li>
-            <svg class="feat-icon feat-star" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-            <span><strong>Economia de R$ 120</strong> vs mensal</span>
-          </li>
-          <li>
-            <svg class="feat-icon feat-star" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-            <span>365 dias de acesso contínuo</span>
-          </li>
-          <li>
-            <svg class="feat-icon feat-star" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-            <span>Pagamento único, sem renovação</span>
-          </li>
-        </ul>
-        <div class="plan-btn">
-          <button class="btn-plan btn-plan-violet" onclick="openPlanModal('pro_annual')">
-            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-            Assinar Pro Anual
+            <span id="proBtnText">Assinar Pro Mensal</span>
           </button>
         </div>
       </div>
@@ -974,6 +968,54 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       document.getElementById('campaign-bar').style.display = 'block';
     } catch (_) {}
   }
+
+  /* ── Pro toggle ── */
+  let proMode = 'monthly';
+
+  window.setProPeriod = function (mode) {
+    proMode = mode;
+    const isAnnual = mode === 'annual';
+
+    document.getElementById('btnProMensal').classList.toggle('active', !isAnnual);
+    document.getElementById('btnProAnual').classList.toggle('active', isAnnual);
+
+    const proCard    = document.getElementById('proCard');
+    const proBadge   = document.getElementById('proBadge');
+    const proPrice   = document.getElementById('proPrice');
+    const priceDesc  = document.getElementById('proPriceDesc');
+    const proSavings = document.getElementById('proSavings');
+    const proBtn     = document.getElementById('proBtnAction');
+    const proBtnText = document.getElementById('proBtnText');
+    const proName    = document.getElementById('proNameLabel');
+
+    if (isAnnual) {
+      proCard.className      = 'plan-card plan-card-annual';
+      proBadge.textContent   = 'Melhor valor';
+      proBadge.className     = 'plan-badge badge-best';
+      proPrice.textContent   = 'R$ 598,80';
+      proPrice.style.color   = 'var(--violet)';
+      priceDesc.textContent  = '365 dias · ~R$ 0,83/geração';
+      proSavings.classList.remove('hidden');
+      proBtn.className       = 'btn-plan btn-plan-violet';
+      proBtnText.textContent = 'Assinar Pro Anual';
+      proName.style.color    = 'var(--violet)';
+    } else {
+      proCard.className      = 'plan-card plan-card-monthly';
+      proBadge.textContent   = 'Mais popular';
+      proBadge.className     = 'plan-badge badge-popular';
+      proPrice.textContent   = 'R$ 59,90';
+      proPrice.style.color   = 'var(--blue)';
+      priceDesc.textContent  = '30 dias de acesso · ~R$ 1,00/geração';
+      proSavings.classList.add('hidden');
+      proBtn.className       = 'btn-plan btn-plan-blue';
+      proBtnText.textContent = 'Assinar Pro Mensal';
+      proName.style.color    = 'var(--blue)';
+    }
+  };
+
+  window.openProModal = function () {
+    openPlanModal(proMode === 'annual' ? 'pro_annual' : 'pro_monthly');
+  };
 
   init();
   loadCampaignBar('credits_page');
