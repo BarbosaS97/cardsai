@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="50 questões + 100 flashcards sobre qualquer matéria em 1 minuto. A IA do CardsQuestões faz o trabalho pesado. Comece grátis." />
-  <title>CardsQuestõesAI — 50 questões e 100 flashcards em 1 minuto</title>
+  <meta name="description" content="Gere 50 questões e 100 flashcards sobre qualquer matéria em menos de 1 minuto. Comece grátis, sem cartão." />
+  <title>CardsQuestõesAI — 50 questões e 100 flashcards em menos de 1 minuto</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -20,50 +20,57 @@
 
     a { color: inherit; text-decoration: none; }
 
-    /* ── Layout ────────────────────────────────────────────── */
-    .page {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 48px 24px 64px;
+    .wrap {
+      width: 100%;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 0 20px;
     }
 
-    /* ── Logo ──────────────────────────────────────────────── */
+    /* ── Divider between sections ─────────────────────────── */
+    .section-divider {
+      border: none;
+      border-top: 1px solid #f0f0f0;
+      margin: 0;
+    }
+
+    /* ════════════════════════════════════════════════════════
+       HEADER / LOGO
+    ════════════════════════════════════════════════════════ */
+    .site-header {
+      padding: 28px 20px 0;
+      display: flex;
+      justify-content: center;
+    }
+
     .logo {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      margin-bottom: 48px;
-      font-size: 15px;
+      gap: 10px;
+      font-size: 16px;
       font-weight: 700;
       color: #18181b;
     }
 
-    .logo-mark {
-      width: 28px;
-      height: 28px;
-      border-radius: 7px;
-      background: #4F46E5;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
+    .logo img {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      display: block;
     }
 
-    .logo-mark svg { color: #fff; }
-
-    /* ── Hero ──────────────────────────────────────────────── */
+    /* ════════════════════════════════════════════════════════
+       HERO
+    ════════════════════════════════════════════════════════ */
     .hero {
-      max-width: 640px;
+      padding: 56px 20px 64px;
       text-align: center;
     }
 
     .badge {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
+      gap: 7px;
       font-size: 12px;
       font-weight: 600;
       color: #4F46E5;
@@ -71,7 +78,7 @@
       border: 1px solid #C7D2FE;
       border-radius: 99px;
       padding: 5px 14px;
-      margin-bottom: 28px;
+      margin-bottom: 32px;
       letter-spacing: 0.2px;
     }
 
@@ -80,26 +87,27 @@
       height: 6px;
       border-radius: 50%;
       background: #4F46E5;
-      animation: pulse 2s ease-in-out infinite;
+      flex-shrink: 0;
+      animation: blink 2s ease-in-out infinite;
     }
 
-    @keyframes pulse {
+    @keyframes blink {
       0%, 100% { opacity: 1; }
-      50%       { opacity: .4; }
+      50%       { opacity: .35; }
     }
 
     h1 {
-      font-size: clamp(28px, 6vw, 48px);
+      font-size: clamp(26px, 5.5vw, 46px);
       font-weight: 800;
-      line-height: 1.15;
-      letter-spacing: -0.5px;
+      line-height: 1.13;
+      letter-spacing: -0.6px;
       color: #18181b;
       margin-bottom: 20px;
     }
 
     h1 em {
       font-style: normal;
-      background: linear-gradient(135deg, #4F46E5, #7C3AED);
+      background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
@@ -108,11 +116,17 @@
     .subtitle {
       font-size: clamp(15px, 2.5vw, 18px);
       color: #52525b;
-      line-height: 1.6;
+      line-height: 1.65;
       margin-bottom: 40px;
     }
 
-    /* ── CTA button ────────────────────────────────────────── */
+    .cta-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+    }
+
     .btn-cta {
       display: inline-flex;
       align-items: center;
@@ -121,50 +135,47 @@
       color: #fff;
       font-size: 17px;
       font-weight: 700;
-      padding: 18px 40px;
+      padding: 18px 44px;
       border-radius: 14px;
-      cursor: pointer;
       border: none;
       text-decoration: none;
-      box-shadow: 0 4px 24px rgba(79,70,229,.35);
-      transition: transform .15s, box-shadow .15s, opacity .15s;
-      letter-spacing: -0.1px;
+      box-shadow: 0 4px 24px rgba(79,70,229,.32);
+      transition: transform .15s, box-shadow .15s;
+      letter-spacing: 0.1px;
+      cursor: pointer;
     }
 
     .btn-cta:hover {
       transform: translateY(-2px);
-      box-shadow: 0 8px 32px rgba(79,70,229,.45);
+      box-shadow: 0 8px 32px rgba(79,70,229,.42);
     }
 
     .btn-cta:active { transform: translateY(0); }
+    .btn-cta svg   { flex-shrink: 0; }
 
-    .btn-cta svg { flex-shrink: 0; }
-
-    /* ── Social proof micro ────────────────────────────────── */
     .proof {
-      margin-top: 16px;
-      font-size: 12.5px;
+      font-size: 13px;
       color: #a1a1aa;
     }
 
-    /* ── Benefits ──────────────────────────────────────────── */
+    /* ════════════════════════════════════════════════════════
+       BENEFITS
+    ════════════════════════════════════════════════════════ */
+    .benefits-section {
+      padding: 0 20px 64px;
+    }
+
     .benefits {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      margin-top: 56px;
-      width: 100%;
-      max-width: 440px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
     }
 
     .benefit {
-      display: flex;
-      align-items: center;
-      gap: 16px;
       background: #fafaf9;
       border: 1px solid #e4e4e7;
-      border-radius: 12px;
-      padding: 16px 20px;
+      border-radius: 14px;
+      padding: 20px 18px;
     }
 
     .benefit-icon-wrap {
@@ -176,56 +187,354 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      flex-shrink: 0;
       color: #4F46E5;
+      margin-bottom: 14px;
     }
 
-    .benefit-text strong {
+    .benefit strong {
       display: block;
       font-size: 14px;
       font-weight: 700;
       color: #18181b;
-      margin-bottom: 2px;
+      margin-bottom: 4px;
     }
 
-    .benefit-text span {
+    .benefit span {
       font-size: 13px;
       color: #71717a;
+      line-height: 1.45;
+    }
+
+    /* ════════════════════════════════════════════════════════
+       HOW IT WORKS
+    ════════════════════════════════════════════════════════ */
+    .how-section {
+      padding: 64px 20px;
+      background: #fafaf9;
+    }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: #a1a1aa;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    h2 {
+      font-size: clamp(20px, 4vw, 28px);
+      font-weight: 800;
+      letter-spacing: -0.4px;
+      color: #18181b;
+      text-align: center;
+      margin-bottom: 48px;
+    }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0;
+      position: relative;
+    }
+
+    .steps::before {
+      content: '';
+      position: absolute;
+      top: 20px;
+      left: calc(16.66% + 10px);
+      right: calc(16.66% + 10px);
+      height: 1px;
+      background: #e4e4e7;
+      z-index: 0;
+    }
+
+    .step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 0 12px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .step-num {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #4F46E5;
+      color: #fff;
+      font-size: 15px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 18px;
+      flex-shrink: 0;
+    }
+
+    .step strong {
+      display: block;
+      font-size: 14px;
+      font-weight: 700;
+      color: #18181b;
+      margin-bottom: 6px;
+    }
+
+    .step span {
+      font-size: 13px;
+      color: #71717a;
+      line-height: 1.5;
+    }
+
+    /* ════════════════════════════════════════════════════════
+       PLANS
+    ════════════════════════════════════════════════════════ */
+    .plans-section {
+      padding: 64px 20px;
+    }
+
+    .plans {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+
+    .plan-card {
+      border: 1px solid #e4e4e7;
+      border-radius: 16px;
+      padding: 24px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .plan-card.highlight {
+      border-color: #C7D2FE;
+      background: #fafbff;
+      box-shadow: 0 2px 16px rgba(79,70,229,.08);
+    }
+
+    .plan-tag {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      padding: 3px 9px;
+      border-radius: 99px;
+      width: fit-content;
+    }
+
+    .plan-tag-free   { background: #f4f4f5; color: #71717a; }
+    .plan-tag-credit { background: #F0FDF4; color: #15803D; border: 1px solid #BBF7D0; }
+    .plan-tag-pro    { background: #EEF2FF; color: #4F46E5; border: 1px solid #C7D2FE; }
+
+    .plan-name {
+      font-size: 16px;
+      font-weight: 800;
+      color: #18181b;
+    }
+
+    .plan-price {
+      font-size: 22px;
+      font-weight: 800;
+      color: #18181b;
+      letter-spacing: -0.5px;
+    }
+
+    .plan-price small {
+      font-size: 13px;
+      font-weight: 500;
+      color: #71717a;
+      letter-spacing: 0;
+    }
+
+    .plan-features {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex: 1;
+    }
+
+    .plan-features li {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 13px;
+      color: #52525b;
       line-height: 1.4;
     }
 
-    /* ── Footer ────────────────────────────────────────────── */
-    footer {
-      text-align: center;
-      padding: 24px;
-      font-size: 12px;
-      color: #a1a1aa;
-      border-top: 1px solid #f4f4f5;
+    .plan-features li svg {
+      color: #4F46E5;
+      flex-shrink: 0;
+      margin-top: 1px;
     }
 
-    /* ── Mobile tweaks ─────────────────────────────────────── */
-    @media (max-width: 480px) {
+    .plan-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      font-size: 14px;
+      font-weight: 700;
+      padding: 12px 16px;
+      border-radius: 10px;
+      text-decoration: none;
+      transition: opacity .15s, transform .15s;
+      margin-top: auto;
+    }
+
+    .plan-btn:hover { opacity: .88; transform: translateY(-1px); }
+
+    .plan-btn-outline {
+      border: 1px solid #e4e4e7;
+      color: #18181b;
+      background: #fff;
+    }
+
+    .plan-btn-primary {
+      background: linear-gradient(135deg, #4F46E5, #7C3AED);
+      color: #fff;
+      box-shadow: 0 2px 12px rgba(79,70,229,.25);
+    }
+
+    /* ════════════════════════════════════════════════════════
+       FAQ
+    ════════════════════════════════════════════════════════ */
+    .faq-section {
+      padding: 64px 20px;
+      background: #fafaf9;
+    }
+
+    .faq-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    details {
+      border: 1px solid #e4e4e7;
+      border-radius: 12px;
+      background: #fff;
+      overflow: hidden;
+    }
+
+    details[open] { border-color: #C7D2FE; }
+
+    summary {
+      font-size: 14px;
+      font-weight: 600;
+      color: #18181b;
+      padding: 18px 20px;
+      cursor: pointer;
+      list-style: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      user-select: none;
+    }
+
+    summary::-webkit-details-marker { display: none; }
+
+    .faq-chevron {
+      flex-shrink: 0;
+      color: #a1a1aa;
+      transition: transform .2s;
+    }
+
+    details[open] .faq-chevron { transform: rotate(180deg); }
+
+    .faq-body {
+      font-size: 13.5px;
+      color: #52525b;
+      line-height: 1.6;
+      padding: 0 20px 18px;
+    }
+
+    /* ════════════════════════════════════════════════════════
+       FOOTER
+    ════════════════════════════════════════════════════════ */
+    footer {
+      border-top: 1px solid #f0f0f0;
+      padding: 28px 20px;
+      text-align: center;
+    }
+
+    .footer-inner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .footer-copy {
+      font-size: 12px;
+      color: #a1a1aa;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 20px;
+    }
+
+    .footer-links a {
+      font-size: 12px;
+      color: #a1a1aa;
+      text-decoration: none;
+      transition: color .15s;
+    }
+
+    .footer-links a:hover { color: #52525b; }
+
+    /* ════════════════════════════════════════════════════════
+       RESPONSIVE
+    ════════════════════════════════════════════════════════ */
+    @media (max-width: 640px) {
       .btn-cta { width: 100%; justify-content: center; padding: 18px 24px; }
-      .benefits { max-width: 100%; }
+
+      .benefits { grid-template-columns: 1fr; }
+
+      .steps {
+        grid-template-columns: 1fr;
+        gap: 32px;
+      }
+
+      .steps::before { display: none; }
+
+      .step { flex-direction: row; text-align: left; gap: 16px; align-items: flex-start; }
+      .step-num { margin-bottom: 0; flex-shrink: 0; }
+      .step > div { flex: 1; }
+
+      .plans { grid-template-columns: 1fr; }
+    }
+
+    @media (min-width: 641px) and (max-width: 800px) {
+      .plans { grid-template-columns: 1fr 1fr; }
+      .plans .plan-card:last-child { grid-column: 1 / -1; }
     }
   </style>
 </head>
 <body>
 
-<main class="page">
-
-  <!-- Logo -->
+<!-- ── Header ──────────────────────────────────────────────────── -->
+<header class="site-header">
   <a href="/" class="logo">
-    <span class="logo-mark">
-      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-      </svg>
-    </span>
+    <img src="/static/images/logo1.png" alt="CardsQuestõesAI" />
     CardsQuestõesAI
   </a>
+</header>
 
-  <!-- Hero -->
-  <div class="hero">
+<!-- ── Hero ────────────────────────────────────────────────────── -->
+<section class="hero">
+  <div class="wrap">
 
     <div class="badge">
       <span class="badge-dot"></span>
@@ -236,16 +545,24 @@
 
     <p class="subtitle">Digite o assunto. Cole um texto. Envie um PDF.<br>A IA faz o resto.</p>
 
-    <a href="/register.html?utm_source=landing" class="btn-cta">
-      TESTE GRÁTIS
-      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M12 5l7 7-7 7"/>
-      </svg>
-    </a>
+    <div class="cta-group">
+      <a href="/register.html?utm_source=landing" class="btn-cta">
+        TESTE GRÁTIS
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M12 5l7 7-7 7"/>
+        </svg>
+      </a>
+      <p class="proof">5 gerações grátis. Sem cartão. Sem compromisso.</p>
+    </div>
 
-    <p class="proof">5 gerações grátis. Sem cartão. Sem compromisso.</p>
+  </div>
+</section>
 
-    <!-- Benefits -->
+<hr class="section-divider" />
+
+<!-- ── Benefits ─────────────────────────────────────────────────── -->
+<section class="benefits-section">
+  <div class="wrap">
     <div class="benefits">
 
       <div class="benefit">
@@ -254,10 +571,8 @@
             <path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
           </svg>
         </div>
-        <div class="benefit-text">
-          <strong>IA avançada</strong>
-          <span>Gera questões e flashcards automaticamente a partir do seu conteúdo</span>
-        </div>
+        <strong>IA avançada</strong>
+        <span>Gera questões e flashcards automaticamente a partir do seu conteúdo</span>
       </div>
 
       <div class="benefit">
@@ -266,10 +581,8 @@
             <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
           </svg>
         </div>
-        <div class="benefit-text">
-          <strong>Qualquer conteúdo</strong>
-          <span>PDF, texto colado ou apenas o nome da matéria</span>
-        </div>
+        <strong>Qualquer conteúdo</strong>
+        <span>PDF, texto colado ou apenas o nome da matéria</span>
       </div>
 
       <div class="benefit">
@@ -278,20 +591,180 @@
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
           </svg>
         </div>
-        <div class="benefit-text">
-          <strong>Grátis para começar</strong>
-          <span>5 gerações por mês sem custo. Sem cartão de crédito.</span>
+        <strong>Grátis para começar</strong>
+        <span>5 gerações por mês sem custo. Sem cartão de crédito.</span>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ── Como funciona ─────────────────────────────────────────────── -->
+<section class="how-section">
+  <div class="wrap">
+    <p class="section-label">Passo a passo</p>
+    <h2>Como funciona</h2>
+
+    <div class="steps">
+
+      <div class="step">
+        <span class="step-num">1</span>
+        <div>
+          <strong>Escolha seu conteúdo</strong>
+          <span>Digite o assunto, cole um texto ou envie um PDF de até 150 páginas</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-num">2</span>
+        <div>
+          <strong>IA processa</strong>
+          <span>Nossa IA lê e entende o conteúdo em menos de 2 minutos</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-num">3</span>
+        <div>
+          <strong>Estude</strong>
+          <span>Receba 50 questões de múltipla escolha e 100 flashcards prontos</span>
         </div>
       </div>
 
     </div>
-
   </div>
+</section>
 
-</main>
+<!-- ── Planos ────────────────────────────────────────────────────── -->
+<section class="plans-section">
+  <div class="wrap">
+    <p class="section-label">Preços</p>
+    <h2>Comece grátis, evolua quando precisar</h2>
 
+    <div class="plans">
+
+      <!-- Grátis -->
+      <div class="plan-card">
+        <span class="plan-tag plan-tag-free">Grátis</span>
+        <p class="plan-name">Plano Grátis</p>
+        <p class="plan-price">R$ 0 <small>/ para sempre</small></p>
+        <ul class="plan-features">
+          <li>
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            5 gerações por mês (reset dia 1°)
+          </li>
+          <li>
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            20 questões + 30 flashcards por geração
+          </li>
+          <li>
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            Modo Concurso Público
+          </li>
+        </ul>
+        <a href="/register.html?utm_source=landing" class="plan-btn plan-btn-outline">Criar conta grátis</a>
+      </div>
+
+      <!-- Créditos Avulsos -->
+      <div class="plan-card highlight">
+        <span class="plan-tag plan-tag-credit">Avulso</span>
+        <p class="plan-name">Créditos Avulsos</p>
+        <p class="plan-price">R$ 14,90 <small>/ 5 créditos</small></p>
+        <ul class="plan-features">
+          <li>
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            5 gerações avulsas (não expiram)
+          </li>
+          <li>
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            50 questões + 100 flashcards por geração
+          </li>
+          <li>
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            +30 dias de acesso às funções Pro
+          </li>
+        </ul>
+        <a href="/pricing.html?utm_source=landing" class="plan-btn plan-btn-primary">Comprar créditos</a>
+      </div>
+
+      <!-- Pro -->
+      <div class="plan-card">
+        <span class="plan-tag plan-tag-pro">Pro</span>
+        <p class="plan-name">Pro Mensal</p>
+        <p class="plan-price">R$ 59,90 <small>/ mês</small></p>
+        <ul class="plan-features">
+          <li>
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            60 gerações por mês (reset dia 1°)
+          </li>
+          <li>
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            50 questões + 100 flashcards por geração
+          </li>
+          <li>
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            Todos os modos, dificuldades e Sketch
+          </li>
+        </ul>
+        <a href="/pricing.html?utm_source=landing" class="plan-btn plan-btn-outline">Assinar Pro</a>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ── FAQ ──────────────────────────────────────────────────────── -->
+<section class="faq-section">
+  <div class="wrap">
+    <p class="section-label">Dúvidas</p>
+    <h2>Perguntas frequentes</h2>
+
+    <div class="faq-list">
+
+      <details>
+        <summary>
+          Preciso de cartão de crédito para testar?
+          <svg class="faq-chevron" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+          </svg>
+        </summary>
+        <p class="faq-body">Não. O plano Grátis não exige nenhum dado de pagamento. Você tem 5 gerações por mês sem custo, que resetam no dia 1° de cada mês.</p>
+      </details>
+
+      <details>
+        <summary>
+          Os créditos expiram?
+          <svg class="faq-chevron" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+          </svg>
+        </summary>
+        <p class="faq-body">Créditos avulsos não expiram — você usa quando quiser. A assinatura Pro Mensal tem validade de 30 dias e o Pro Anual de 365 dias.</p>
+      </details>
+
+      <details>
+        <summary>
+          Posso usar qualquer tipo de conteúdo?
+          <svg class="faq-chevron" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+          </svg>
+        </summary>
+        <p class="faq-body">Sim. Você pode enviar um PDF de até 150 páginas, colar um texto diretamente ou simplesmente digitar o nome da matéria e o assunto.</p>
+      </details>
+
+    </div>
+  </div>
+</section>
+
+<!-- ── Footer ───────────────────────────────────────────────────── -->
 <footer>
-  CardsQuestõesAI &mdash; Todos os direitos reservados
+  <div class="footer-inner">
+    <p class="footer-copy">CardsQuestõesAI &mdash; Todos os direitos reservados</p>
+    <nav class="footer-links">
+      <a href="/terms.html">Termos de uso</a>
+      <a href="/privacy.html">Privacidade</a>
+      <a href="/pricing.html">Planos</a>
+    </nav>
+  </div>
 </footer>
 
 </body>
