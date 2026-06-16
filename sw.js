@@ -42,6 +42,9 @@ const BYPASS_DOMAINS = [
   'analytics.google.com',
   'doubleclick.net',
   'googlesyndication.com',
+  'fonts.googleapis.com',
+  'fonts.gstatic.com',
+  'google.com',
   'woovi.com',
   'openpix.com.br',
 ];
