@@ -97,6 +97,13 @@ serve(async (req) => {
     const sessionParams: Record<string, unknown> = {
       line_items: [{ price: resolvedPriceId, quantity: 1 }],
       mode: 'payment',
+      payment_method_options: {
+        card: {
+          installments: {
+            enabled: true,
+          },
+        },
+      },
       success_url: 'https://cardsquestoes.com.br/pricing.html?success=true&plan=' + resolvedPlan,
       cancel_url: 'https://cardsquestoes.com.br/pricing.html?canceled=true',
       metadata: {

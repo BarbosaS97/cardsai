@@ -1,0 +1,2 @@
+[functions.generate-subject]
+verify_jwt = false

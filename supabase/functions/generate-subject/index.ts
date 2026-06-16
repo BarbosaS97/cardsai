@@ -471,7 +471,8 @@ serve(async (req) => {
   const elapsed = () => `${Math.round((Date.now() - startTime) / 1000)}s`
 
   try {
-    const { generationId, materia, assunto, observacoes = '', modoEstudo = 'concurso', dificuldade = 'medio' } = await req.json()
+    const body = await req.json()
+    const { generationId, materia, assunto, observacoes = '', modoEstudo = 'concurso', dificuldade = 'medio', guestMode = false } = body
 
     if (!materia || !assunto) {
       return new Response(JSON.stringify({ error: 'materia e assunto são obrigatórios' }), {
@@ -480,83 +481,81 @@ serve(async (req) => {
       })
     }
 
-    if (!generationId) {
-      return new Response(JSON.stringify({ error: 'generationId é obrigatório' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
-    }
-
     const authHeader = req.headers.get('Authorization') ?? ''
-    if (!authHeader.startsWith('Bearer ')) {
-      return new Response(JSON.stringify({ error: 'Authorization header ausente' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
-    }
+    const isGuest = guestMode === true || !authHeader.startsWith('Bearer ')
 
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
-    )
-    const userClient = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_ANON_KEY')!,
-      { global: { headers: { Authorization: authHeader } } },
-    )
+    // Authenticated flow: validate token, credit, generation ownership
+    let supabase: ReturnType<typeof createClient> | null = null
+    let userId: string | null = null
 
-    const { data: { user }, error: userError } = await userClient.auth.getUser()
-    if (userError || !user) {
-      return new Response(JSON.stringify({ error: 'Não autorizado' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
-    }
-    const userId = user.id
+    if (!isGuest) {
+      if (!generationId) {
+        return new Response(JSON.stringify({ error: 'generationId é obrigatório' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
 
-    // A-4: Valida que o generationId pertence ao usuário autenticado
-    const { data: genOwnership, error: genOwnerErr } = await supabase
-      .from('generations')
-      .select('id')
-      .eq('id', generationId)
-      .eq('user_id', userId)
-      .single()
-
-    if (genOwnerErr || !genOwnership) {
-      return new Response(JSON.stringify({ error: 'Geração não encontrada ou sem permissão' }), {
-        status: 403,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
-    }
-
-    // Rate limiting: máx 10 gerações por hora
-    const { data: withinLimit, error: rlErr } = await supabase
-      .rpc('check_generation_rate_limit', { p_user_id: userId })
-
-    if (rlErr || !withinLimit) {
-      return new Response(
-        JSON.stringify({ error: 'Limite de gerações atingido. Aguarde antes de gerar novamente.' }),
-        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      supabase = createClient(
+        Deno.env.get('SUPABASE_URL')!,
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
       )
-    }
+      const userClient = createClient(
+        Deno.env.get('SUPABASE_URL')!,
+        Deno.env.get('SUPABASE_ANON_KEY')!,
+        { global: { headers: { Authorization: authHeader } } },
+      )
 
-    // A-3: Consome crédito ANTES de chamar a DeepSeek (previne TOCTOU)
-    const { data: creditOk, error: creditErr } = await supabase
-      .rpc('consume_credit', { p_user_id: userId })
+      const { data: { user }, error: userError } = await userClient.auth.getUser()
+      if (userError || !user) {
+        return new Response(JSON.stringify({ error: 'Não autorizado' }), {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+      userId = user.id
 
-    if (creditErr || !creditOk) {
-      return new Response(JSON.stringify({ error: 'Créditos insuficientes' }), {
-        status: 402,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      const { data: genOwnership, error: genOwnerErr } = await supabase
+        .from('generations')
+        .select('id')
+        .eq('id', generationId)
+        .eq('user_id', userId)
+        .single()
+
+      if (genOwnerErr || !genOwnership) {
+        return new Response(JSON.stringify({ error: 'Geração não encontrada ou sem permissão' }), {
+          status: 403,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+
+      const { data: withinLimit, error: rlErr } = await supabase
+        .rpc('check_generation_rate_limit', { p_user_id: userId })
+
+      if (rlErr || !withinLimit) {
+        return new Response(
+          JSON.stringify({ error: 'Limite de gerações atingido. Aguarde antes de gerar novamente.' }),
+          { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        )
+      }
+
+      const { data: creditOk, error: creditErr } = await supabase
+        .rpc('consume_credit', { p_user_id: userId })
+
+      if (creditErr || !creditOk) {
+        return new Response(JSON.stringify({ error: 'Créditos insuficientes' }), {
+          status: 402,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+
+      await supabase.from('generations').update({ status: 'processing' }).eq('id', generationId)
     }
 
     const config = modeConfig[modoEstudo] ?? modeConfig.concurso
     const diffConfig = difficultyConfig[dificuldade] ?? difficultyConfig.medio
 
-    console.log(`📚 Matéria: ${materia} | Assunto: ${assunto} | modo: ${modoEstudo} | dificuldade: ${dificuldade} | userId: ${userId}`)
-
-    await supabase.from('generations').update({ status: 'processing' }).eq('id', generationId)
+    console.log(`📚 Matéria: ${materia} | Assunto: ${assunto} | modo: ${modoEstudo} | dificuldade: ${dificuldade} | ${isGuest ? 'GUEST' : `userId: ${userId}`}`)
 
     const keys = loadApiKeys()
     if (keys.length === 0) throw new Error('Nenhuma DEEPSEEK_API_KEY configurada')
@@ -726,6 +725,46 @@ serve(async (req) => {
 
     console.log(`📊 Após dedup: ${allQuestions.length}Q (target ${TARGET_QUESTIONS}), ${allFlashcards.length}FC (target ${TARGET_FLASHCARDS})`)
 
+    // Guest mode: return data directly without saving to DB
+    if (isGuest) {
+      console.log(`🎉 [GUEST] Concluído em ${elapsed()}! ${allQuestions.length}Q + ${allFlashcards.length}FC`)
+      return new Response(
+        JSON.stringify({
+          success: true,
+          guestMode: true,
+          questionCount: allQuestions.length,
+          flashcardCount: allFlashcards.length,
+          data: {
+            title: `${materia} — ${assunto}`,
+            materia,
+            assunto,
+            modoEstudo,
+            dificuldade,
+            summary: finalSummary,
+            topics: uniqueTopics.slice(0, 10),
+            questions: allQuestions.map((q, i) => ({
+              id: `guest-q-${i}`,
+              text: q.text,
+              alternatives: q.alternatives,
+              correct_answer: q.correct_answer,
+              explanation: q.explanation ?? null,
+              topic: q.topic ?? assunto,
+              order_index: i + 1,
+            })),
+            flashcards: allFlashcards.map((f, i) => ({
+              id: `guest-fc-${i}`,
+              front: f.front,
+              back: f.back,
+              topic: f.topic ?? assunto,
+              order_index: i + 1,
+            })),
+          },
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      )
+    }
+
+    // Authenticated mode: save to DB
     const questionRows = allQuestions.map((q, i) => ({
       generation_id: generationId,
       text: q.text,
@@ -747,10 +786,10 @@ serve(async (req) => {
     const BATCH = 25
     const insertResults = await Promise.all([
       ...Array.from({ length: Math.ceil(questionRows.length / BATCH) }, (_, i) =>
-        supabase.from('questions').insert(questionRows.slice(i * BATCH, (i + 1) * BATCH)),
+        supabase!.from('questions').insert(questionRows.slice(i * BATCH, (i + 1) * BATCH)),
       ),
       ...Array.from({ length: Math.ceil(flashcardRows.length / BATCH) }, (_, i) =>
-        supabase.from('flashcards').insert(flashcardRows.slice(i * BATCH, (i + 1) * BATCH)),
+        supabase!.from('flashcards').insert(flashcardRows.slice(i * BATCH, (i + 1) * BATCH)),
       ),
     ])
 
@@ -767,7 +806,7 @@ serve(async (req) => {
     console.log(`✅ ${questionRows.length}Q + ${flashcardRows.length}FC salvos em ${elapsed()}`)
 
     const now = new Date().toISOString()
-    const { data: updatedRows, error: updateError } = await supabase
+    const { data: updatedRows, error: updateError } = await supabase!
       .from('generations')
       .update({
         summary: finalSummary,

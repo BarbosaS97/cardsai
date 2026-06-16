@@ -1027,7 +1027,35 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <h1>Crie seu material de estudo</h1>
       <p>Gere 50 questões + 100 flashcards sobre qualquer assunto em até 2 minutos.</p>
     </div>
-    <div class="main-grid">
+
+    <!-- Visitor mode: free trial banner -->
+    <div id="visitorBanner" class="hidden" style="margin-bottom:16px;padding:12px 16px;background:var(--blue-bg);border:1px solid var(--blue-bd);border-radius:10px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color:var(--blue);flex-shrink:0;"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" d="M12 16v-4M12 8h.01"/></svg>
+        <div>
+          <span style="font-size:13px;font-weight:700;color:var(--blue);">Modo teste — 1 geração grátis</span>
+          <span style="font-size:12px;color:var(--blue);margin-left:8px;opacity:.8;">Sem criar conta. Preencha os campos e gere seu material agora.</span>
+        </div>
+      </div>
+      <a href="/register.html" style="font-size:12px;font-weight:700;color:var(--blue);white-space:nowrap;background:var(--surface);border:1px solid var(--blue-bd);padding:5px 12px;border-radius:7px;text-decoration:none;">Criar conta grátis →</a>
+    </div>
+
+    <!-- Visitor mode: already used generation -->
+    <div id="alreadyUsedBanner" class="hidden" style="text-align:center;padding:48px 24px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow);">
+      <div style="width:56px;height:56px;border-radius:50%;background:var(--blue-bg);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color:var(--blue);"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      </div>
+      <h2 style="font-size:20px;font-weight:800;color:var(--text);margin-bottom:8px;">Você já usou sua geração grátis!</h2>
+      <p style="font-size:14px;color:var(--text-2);line-height:1.6;max-width:400px;margin:0 auto 24px;">Crie uma conta grátis para gerar mais materiais, salvar seu conteúdo e acessar todas as funcionalidades.</p>
+      <a href="/register.html" style="display:inline-flex;align-items:center;gap:8px;padding:13px 28px;background:linear-gradient(135deg,#2563EB,#1D4ED8);color:#fff;border-radius:11px;font-size:15px;font-weight:700;text-decoration:none;box-shadow:0 4px 14px rgba(37,99,235,.35);">
+        Criar conta grátis — é de graça
+      </a>
+      <div style="margin-top:12px;">
+        <a href="/login.html" style="font-size:13px;color:var(--text-3);text-decoration:none;">Já tenho conta → Entrar</a>
+      </div>
+    </div>
+
+    <div class="main-grid" id="mainGrid">
 
       <!-- LEFT: upload + configuração -->
       <div>
@@ -1358,6 +1386,7 @@ Mínimo: 500 caracteres · Máximo: 50.000 caracteres"
 
   /* ── State ──────────────────────────────────────────────── */
   let profile = null;
+  let isGuestMode = false;
   let selectedFile = null;
   let inputMode = 'subject';
   let selectedMode = 'concurso';
@@ -1384,7 +1413,8 @@ Mínimo: 500 caracteres · Máximo: 50.000 caracteres"
   }
 
   window.selectMode = function (mode) {
-    if (LOCKED_MODES.includes(mode) && profile && !hasProAccess(profile)) {
+    const isLocked = LOCKED_MODES.includes(mode) && (isGuestMode || (profile && !hasProAccess(profile)));
+    if (isLocked) {
       showProFeatureModal('mode');
       return;
     }
@@ -1395,7 +1425,8 @@ Mínimo: 500 caracteres · Máximo: 50.000 caracteres"
   };
 
   window.selectDifficulty = function (diff) {
-    if (LOCKED_DIFFS.includes(diff) && profile && !hasProAccess(profile)) {
+    const isLocked = LOCKED_DIFFS.includes(diff) && (isGuestMode || (profile && !hasProAccess(profile)));
+    if (isLocked) {
       showProFeatureModal('difficulty');
       return;
     }
@@ -1501,13 +1532,27 @@ Mínimo: 500 caracteres · Máximo: 50.000 caracteres"
 
   /* ── Pro Feature Modal ─────────────────────────────────── */
   function showProFeatureModal(feature) {
-    const configs = {
+    const configs = isGuestMode ? {
+      mode:       { title: 'Modo disponível após criar conta', desc: 'OAB, Vestibular/ENEM e Faculdade estão disponíveis para usuários cadastrados no Plano Pro.' },
+      difficulty: { title: 'Dificuldade disponível após criar conta', desc: 'Difícil e Expert estão disponíveis para usuários cadastrados no Plano Pro.' },
+    } : {
       mode:       { title: 'Opção disponível apenas no Plano Pro', desc: 'Os modos OAB, Vestibular/ENEM e Faculdade estão disponíveis para assinantes Pro.' },
       difficulty: { title: 'Opção disponível apenas no Plano Pro', desc: 'As dificuldades Difícil e Expert estão disponíveis para assinantes Pro.' },
     };
-    const c = configs[feature] || { title: 'Opção disponível apenas no Plano Pro', desc: 'Este recurso está disponível apenas no Plano Pro.' };
+    const c = configs[feature] || { title: 'Recurso exclusivo', desc: 'Este recurso requer cadastro e/ou Plano Pro.' };
     document.getElementById('proModalTitle').textContent = c.title;
     document.getElementById('proModalDesc').textContent  = c.desc;
+    // Swap CTA between guest (register) and logged-in (pricing)
+    const cta = document.getElementById('proModalCta');
+    if (cta) {
+      if (isGuestMode) {
+        cta.textContent = 'Criar conta grátis';
+        cta.onclick = () => { window.location.href = '/register.html'; };
+      } else {
+        cta.textContent = 'Ver Plano Pro';
+        cta.onclick = () => { window.location.href = '/pricing.html'; };
+      }
+    }
     document.getElementById('proFeatureModal').style.display = 'flex';
   }
 
@@ -1569,8 +1614,12 @@ Mínimo: 500 caracteres · Máximo: 50.000 caracteres"
 
   /* ── Init ───────────────────────────────────────────────── */
   async function init() {
-    const session = await requireAuth();
-    if (!session) return;
+    const { data: { session } } = await db.auth.getSession();
+
+    if (!session) {
+      enterGuestMode();
+      return;
+    }
 
     profile = await getProfile();
     if (!profile) return;
@@ -1590,6 +1639,63 @@ Mínimo: 500 caracteres · Máximo: 50.000 caracteres"
     selectMode('concurso');
     selectDifficulty('medio');
     await loadGenerations();
+  }
+
+  /* ── Guest / Visitor mode ───────────────────────────────── */
+  function enterGuestMode() {
+    isGuestMode = true;
+
+    // If already used free generation, show "already used" screen
+    if (localStorage.getItem('free_generation_used') === 'true') {
+      document.getElementById('mainGrid').style.display = 'none';
+      document.getElementById('alreadyUsedBanner').classList.remove('hidden');
+    } else {
+      document.getElementById('visitorBanner').classList.remove('hidden');
+    }
+
+    // Update credits pill to show "1 grátis"
+    const pill = document.getElementById('creditsPill');
+    const text = document.getElementById('creditsText');
+    if (text) text.textContent = '1 grátis';
+    if (pill) pill.className = 'credits-pill credits-ok';
+
+    // Update credits row
+    const rowLabel = document.getElementById('creditsRowLabel');
+    const rowCost  = document.getElementById('creditsRowCost');
+    if (rowLabel) rowLabel.innerHTML = '<strong>1 geração grátis</strong> — sem criar conta';
+    if (rowCost)  rowCost.style.display = 'none';
+
+    // Update generate button label
+    const genBtn = document.getElementById('generateBtn');
+    if (genBtn) genBtn.innerHTML = `
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+      Gerar meu material grátis
+    `;
+
+    // Only subject mode available for guests — hide PDF and text tabs
+    document.getElementById('tabPDF').style.display   = 'none';
+    document.getElementById('tabText').style.display  = 'none';
+
+    // Ensure subject mode is active
+    switchInputMode('subject');
+    selectMode('concurso');
+    selectDifficulty('medio');
+    applyFeatureFlags(null);
+
+    // User avatar/menu — show login/register links
+    const drop = document.getElementById('userDropdown');
+    if (drop) {
+      drop.innerHTML = `
+        <a href="/login.html">Entrar</a>
+        <a href="/register.html">Criar conta grátis</a>
+      `;
+    }
+
+    // Hide recent generations panel (nothing saved for guests)
+    document.getElementById('latestSkeleton').style.display = 'none';
+    document.getElementById('latestEmpty').classList.remove('hidden');
+
+    updateGenerateBtn();
   }
 
   function updateCreditsPill(p) {
@@ -1706,6 +1812,7 @@ Mínimo: 500 caracteres · Máximo: 50.000 caracteres"
   };
 
   function canUserGenerate() {
+    if (isGuestMode) return true;
     if (!profile) return false;
     if (profile.is_admin || profile.unlimited_access) return true;
     const now  = new Date();
@@ -1841,7 +1948,8 @@ Mínimo: 500 caracteres · Máximo: 50.000 caracteres"
 
   /* ── Generation ─────────────────────────────────────────── */
   window.startGeneration = async function () {
-    if (!profile || isUploading) return;
+    if (isUploading) return;
+    if (!isGuestMode && !profile) return;
     if (inputMode === 'pdf' && !selectedFile) return;
     isUploading = true;
     window.dataLayer = window.dataLayer || [];
@@ -1852,6 +1960,48 @@ Mínimo: 500 caracteres · Máximo: 50.000 caracteres"
     setProcBar(5);
 
     try {
+      // ── Guest mode: call API without auth, store in localStorage ──
+      if (isGuestMode) {
+        setProcMsg('Preparando geração por matéria...');
+        const materia = document.getElementById('subjectMateria').value.trim();
+        const assunto = document.getElementById('subjectAssunto').value.trim();
+        const observacoes = document.getElementById('subjectObs').value.trim();
+        if (!materia || !assunto) throw new Error('Preencha a Matéria e o Assunto.');
+
+        setProcMsg(PROC_MSGS[0]);
+        setProcBar(48);
+        startMsgRotation();
+        startSlowProgress(48, 88, 100);
+
+        const response = await fetch(SUBJECT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            materia,
+            assunto,
+            observacoes,
+            modoEstudo:  selectedMode,
+            dificuldade: selectedDifficulty,
+            guestMode:   true,
+          }),
+        });
+
+        const result = await response.json();
+        if (!response.ok || !result.success) throw new Error(result.error || 'Erro ao processar com IA');
+
+        localStorage.setItem('guest_generation_data', JSON.stringify(result.data));
+        localStorage.setItem('free_generation_used', 'true');
+
+        clearInterval(msgTimer);
+        clearInterval(progressTimer);
+        setProcMsg('Concluído! Redirecionando...');
+        setProcBar(100);
+
+        setTimeout(() => { window.location.href = '/results.html?guest=true'; }, 1200);
+        return;
+      }
+
+      // ── Authenticated mode ──
       let text, pageCount, titleText, pdfName;
       let isSubjectMode = inputMode === 'subject';
 
@@ -2139,7 +2289,7 @@ Mínimo: 500 caracteres · Máximo: 50.000 caracteres"
     <div class="pro-lock-modal-box">
       <h2 class="pro-lock-modal-title" id="proModalTitle">Opção disponível apenas no Plano Pro</h2>
       <p class="pro-lock-modal-desc" id="proModalDesc">Este recurso está disponível apenas no Plano Pro.</p>
-      <button class="pro-lock-modal-cta" onclick="window.location.href='/pricing.html'">Ver Plano Pro</button>
+      <button id="proModalCta" class="pro-lock-modal-cta" onclick="window.location.href='/pricing.html'">Ver Plano Pro</button>
       <button class="pro-lock-modal-ghost" onclick="closeProModal()">Continuar com o Plano Grátis</button>
     </div>
   </div>
