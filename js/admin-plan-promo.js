@@ -22,7 +22,19 @@ function getPlanBadge(u) {
   if (u.credits > 0) {
     return `<span style="font-size:10px;font-weight:600;color:#15803D;background:#F0FDF4;padding:2px 7px;border-radius:4px;border:1px solid #BBF7D0;">Créditos avulsos</span>`;
   }
-  return `<span style="font-size:10px;font-weight:600;color:var(--text-3);background:var(--surface-2);padding:2px 7px;border-radius:4px;border:1px solid var(--border);">Grátis</span>`;
+  // Plano Grátis: calcular uso mensal
+  const used = _freeUsedThisMonth(u);
+  const pct  = used >= 5 ? 'color:#DC2626;background:#FEF2F2;border:1px solid #FECACA;' : 'color:var(--text-3);background:var(--surface-2);border:1px solid var(--border);';
+  return `<span style="font-size:10px;font-weight:600;${pct}padding:2px 7px;border-radius:4px;">Grátis · ${used}/5 este mês</span>`;
+}
+
+// Retorna quantas gerações grátis o usuário usou no mês corrente
+function _freeUsedThisMonth(u) {
+  if (!u.monthly_reset_date) return 0;
+  const reset = new Date(u.monthly_reset_date);
+  const now   = new Date();
+  const sameMonth = reset.getFullYear() === now.getFullYear() && reset.getMonth() === now.getMonth();
+  return sameMonth ? (u.monthly_generations || 0) : 0;
 }
 
 function _getPlanCurrentText(u) {
@@ -40,7 +52,7 @@ function _getPlanCurrentText(u) {
     return `Bônus Pro até ${new Date(u.pro_features_until).toLocaleDateString('pt-BR')} · ${u.credits} crédito(s)`;
   }
   if (u.credits > 0) return `Créditos avulsos · ${u.credits} crédito(s)`;
-  return 'Grátis';
+  return `Grátis · ${_freeUsedThisMonth(u)}/5 gerações este mês`;
 }
 
 // ─── Modal ────────────────────────────────────────────────────────────────────
