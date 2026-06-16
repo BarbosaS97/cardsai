@@ -5,8 +5,14 @@
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO public.profiles (id, email, credits, is_admin)
-  VALUES (NEW.id, NEW.email, 2, FALSE)
+  INSERT INTO public.profiles (id, email, full_name, credits, is_admin)
+  VALUES (
+    NEW.id,
+    NEW.email,
+    COALESCE(NEW.raw_user_meta_data->>'full_name', ''),
+    5,
+    FALSE
+  )
   ON CONFLICT (id) DO NOTHING;
   RETURN NEW;
 END;

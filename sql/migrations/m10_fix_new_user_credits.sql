@@ -1,10 +1,8 @@
 -- m10_fix_new_user_credits.sql
--- Corrige o trigger handle_new_user: novos usuários devem começar com credits = 0.
--- O plano Grátis é 5 gerações/mês, controlado pela coluna monthly_generations
--- na função consume_credit — NÃO por créditos avulsos.
--- O valor antigo credits = 2 dava 2 extras sobre as 5 mensais (total = 7 no 1º mês).
+-- Corrige créditos do plano Grátis de 2 → 5 gerações.
 -- Execute no Supabase SQL Editor.
 
+-- ── 1. Corrige o trigger de criação de novos usuários ────────────────────────
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -13,10 +11,24 @@ BEGIN
     NEW.id,
     NEW.email,
     COALESCE(NEW.raw_user_meta_data->>'full_name', ''),
-    0,   -- Plano Grátis: 5 gerações/mês via monthly_generations (sem créditos avulsos)
+    5,
     FALSE
   )
   ON CONFLICT (id) DO NOTHING;
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- ── 2. Corrige o default da coluna credits para novos registros diretos ──────
+ALTER TABLE public.profiles ALTER COLUMN credits SET DEFAULT 5;
+
+-- ── 3. Backfill: ajusta usuários existentes com 2 créditos para 5 ─────────
+-- Afeta apenas quem ainda tem exatamente 2 créditos (nunca os consumiu nem comprou mais).
+-- Usuários com 0, 1, 3, 4+ créditos ficam intactos.
+UPDATE public.profiles
+SET    credits    = 5,
+       updated_at = NOW()
+WHERE  credits = 2
+  AND  subscription_status = 'free'
+  AND  unlimited_access    = FALSE
+  AND  is_admin            = FALSE;

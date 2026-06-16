@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   id UUID REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
   email TEXT NOT NULL,
   full_name TEXT,
-  credits INTEGER NOT NULL DEFAULT 2,
+  credits INTEGER NOT NULL DEFAULT 5,
   is_admin BOOLEAN NOT NULL DEFAULT false,
   unlimited_access BOOLEAN NOT NULL DEFAULT false,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -89,8 +89,14 @@ $$ LANGUAGE sql SECURITY DEFINER STABLE;
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO public.profiles (id, email, credits, is_admin)
-  VALUES (NEW.id, NEW.email, 2, FALSE)
+  INSERT INTO public.profiles (id, email, full_name, credits, is_admin)
+  VALUES (
+    NEW.id,
+    NEW.email,
+    COALESCE(NEW.raw_user_meta_data->>'full_name', ''),
+    5,
+    FALSE
+  )
   ON CONFLICT (id) DO NOTHING;
   RETURN NEW;
 END;
@@ -146,7 +152,7 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Reseta créditos de um usuário para um valor específico (somente admin; retorna novo saldo)
-CREATE OR REPLACE FUNCTION public.reset_credits(p_user_id UUID, p_amount INTEGER DEFAULT 2)
+CREATE OR REPLACE FUNCTION public.reset_credits(p_user_id UUID, p_amount INTEGER DEFAULT 5)
 RETURNS INTEGER AS $$
 DECLARE
   v_new_credits INTEGER;
