@@ -826,6 +826,27 @@ serve(async (req) => {
       console.error('⚠️ Revisão automática falhou (questões mantidas como geradas):', reviewErr.message)
     }
 
+    // Randomiza a posição das alternativas/gabarito para evitar viés de letra (ex: sempre "C").
+    // Roda por último, depois da revisão, para cobrir também questões corrigidas por ela.
+    try {
+      const randomizeRes = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/randomize-answers`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+        },
+        body: JSON.stringify({ generationId }),
+      })
+      if (randomizeRes.ok) {
+        const randomizeData = await randomizeRes.json()
+        console.log(`🎲 Randomização automática: ${randomizeData.processed ?? 0} processadas, ${randomizeData.changed ?? 0} alteradas`)
+      } else {
+        console.warn(`⚠️ Randomização automática retornou HTTP ${randomizeRes.status}`)
+      }
+    } catch (randomizeErr: any) {
+      console.error('⚠️ Randomização automática falhou (ordem original mantida):', randomizeErr.message)
+    }
+
     const now = new Date().toISOString()
     const { data: updatedRows, error: updateError } = await supabase!
       .from('generations')

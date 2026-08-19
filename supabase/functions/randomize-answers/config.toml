@@ -1,0 +1,2 @@
+[functions.randomize-answers]
+verify_jwt = false
