@@ -418,6 +418,19 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     .note-btn-light:hover { background: rgba(255,255,255,0.2); opacity: 1; }
     .note-btn-light.has-note { color: #fff; opacity: 1; }
 
+    /* ── Review button ─────────────────────────────────────── */
+    .review-btn {
+      background: transparent; border: none;
+      padding: 4px; border-radius: 5px; cursor: pointer;
+      line-height: 0; color: var(--text-3, #94A3B8);
+      opacity: 0.45; display: block;
+      transition: opacity .15s, background .15s, color .15s;
+    }
+    .review-btn:hover { opacity: 1; background: rgba(0,0,0,.07); color: #7C3AED; }
+    .review-btn.is-loading { opacity: 1; color: #7C3AED; animation: review-spin 1s linear infinite; pointer-events: none; }
+    .review-btn:disabled { pointer-events: none; opacity: 0.25; }
+    @keyframes review-spin { to { transform: rotate(360deg); } }
+
     /* ── Note modal ────────────────────────────────────────── */
     #noteModal {
       display: none; position: fixed; inset: 0; z-index: 200;
@@ -643,6 +656,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
       <!-- Card -->
       <div id="qCard" class="card-in bg-white rounded-2xl border border-slate-200 shadow-sm p-4 md:p-6 mb-4" style="position:relative;">
+        <button id="qReviewBtn" class="review-btn" title="Revisar esta questão com IA" style="position:absolute;top:12px;right:68px;" onclick="void 0">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4"/></svg>
+        </button>
         <button id="qNoteBtn" class="note-btn" title="Adicionar anotação" style="position:absolute;top:12px;right:40px;" onclick="void 0">
           <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
         </button>
@@ -1193,6 +1209,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   const SUPABASE_URL = 'https://gxkhmmbovlfulcxyupue.supabase.co';
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4a2htbWJvdmxmdWxjeHl1cHVlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNDAzMzcsImV4cCI6MjA5NTcxNjMzN30.BipAmuzpW_x7KhIQdgdnQma5wLOS53QVLFCMYsxmMqE';
   const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  const REVIEW_SINGLE_QUESTION_URL = `${SUPABASE_URL}/functions/v1/review-single-question`;
 
   let questions = [], flashcards = [];
   let qIdx = 0, fcIdx = 0, activeTab = 'questions';
@@ -1370,6 +1387,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     document.getElementById('qGoogleBtn').onclick = () => searchOnGoogle(q.text);
     if (window._refreshNoteButtons) window._refreshNoteButtons();
 
+    const reviewBtn = document.getElementById('qReviewBtn');
+    const canReview = !!generationId && !!q.id && !String(q.id).startsWith('guest-');
+    reviewBtn.style.display = canReview ? 'block' : 'none';
+    reviewBtn.classList.remove('is-loading');
+    reviewBtn.disabled = false;
+    reviewBtn.onclick = () => reviewSingleQuestion(q);
+
     document.getElementById('qAnswer').classList.add('hidden');
     document.getElementById('qReveal').textContent = 'Ver resposta';
 
@@ -1401,6 +1425,55 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     card.classList.remove('card-in');
     void card.offsetWidth;
     card.classList.add('card-in');
+  }
+
+  async function reviewSingleQuestion(q) {
+    const reviewBtn = document.getElementById('qReviewBtn');
+    if (!q || !q.id || reviewBtn.classList.contains('is-loading')) return;
+
+    reviewBtn.classList.add('is-loading');
+    reviewBtn.disabled = true;
+
+    try {
+      const { data: { session } } = await db.auth.getSession();
+      if (!session || !session.access_token) {
+        showToast('Faça login novamente para revisar esta questão.', 'error');
+        return;
+      }
+
+      const res = await fetch(REVIEW_SINGLE_QUESTION_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ questionId: q.id }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok || !data.success) {
+        showToast(data.error || 'Erro ao revisar questão. Tente novamente.', 'error');
+        return;
+      }
+
+      if (data.corrected && data.question) {
+        const idx = questions.findIndex(item => item.id === q.id);
+        if (idx !== -1) {
+          questions[idx] = { ...questions[idx], ...data.question };
+          if (idx === qIdx) renderQ();
+        }
+        showToast('✏️ Questão corrigida: ' + (data.motivo || 'ajustes aplicados.'), 'success');
+      } else {
+        showToast('✅ Questão já estava correta.', 'success');
+      }
+    } catch (e) {
+      console.error('[review-single-question]', e);
+      showToast('Erro ao revisar questão. Tente novamente.', 'error');
+    } finally {
+      reviewBtn.classList.remove('is-loading');
+      reviewBtn.disabled = false;
+    }
   }
 
   function trackAnswer(selectedIdx, correctIdx, alternatives) {

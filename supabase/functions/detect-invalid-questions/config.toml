@@ -1,0 +1,2 @@
+[functions.detect-invalid-questions]
+verify_jwt = false

@@ -460,6 +460,39 @@ function isJunk(text: string): boolean {
   return JUNK_RE.some(p => p.test(text))
 }
 
+function normalizeAltText(alt: string): string {
+  return String(alt).replace(/^[A-E]\)\s*/, '').trim().toLowerCase().replace(/\s+/g, ' ')
+}
+
+function hasDuplicateAlternatives(alternatives: string[]): boolean {
+  const seen = new Set<string>()
+  for (const alt of alternatives) {
+    const key = normalizeAltText(alt)
+    if (!key || seen.has(key)) return true
+    seen.add(key)
+  }
+  return false
+}
+
+// Valida estrutura da questão: alternativas presentes, não-vazias, todas distintas entre si,
+// e gabarito apontando para uma alternativa que realmente existe. Trunca ao altCount se necessário.
+// Retorna false se qualquer verificação falhar — a questão deve ser descartada.
+function sanitizeAndValidateQuestion(q: any, altCount: number): boolean {
+  if (!Array.isArray(q.alternatives) || q.alternatives.length < 4) return false
+  if (!q.alternatives.every((a: any) => typeof a === 'string' && normalizeAltText(a).length > 3)) return false
+
+  if (q.alternatives.length > altCount) {
+    q.alternatives = q.alternatives.slice(0, altCount)
+  }
+
+  if (hasDuplicateAlternatives(q.alternatives)) return false
+
+  const letters = ['A', 'B', 'C', 'D', 'E'].slice(0, q.alternatives.length)
+  if (!letters.includes(q.correct_answer)) return false
+
+  return true
+}
+
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req)
 
@@ -617,26 +650,13 @@ serve(async (req) => {
     }
 
     const altCount = config.alternativesCount
-    const VALID_ANSWERS = new Set(['A', 'B', 'C', 'D', 'E'])
 
-    // Sanitizar questões
+    // Sanitizar questões: descarta as com alternativas ausentes, vazias, duplicadas
+    // entre si, ou com gabarito que não corresponde a nenhuma alternativa real.
     for (const q of allQuestions) {
-      const altsValid =
-        Array.isArray(q.alternatives) &&
-        q.alternatives.length >= 4 &&
-        q.alternatives.every((a: any) => typeof a === 'string' && a.trim().length > 3)
-
-      if (altsValid) {
-        if (q.alternatives.length > altCount) {
-          q.alternatives = q.alternatives.slice(0, altCount)
-        }
-      } else {
-        console.warn(`⚠️ Q inválida descartada`)
+      if (!sanitizeAndValidateQuestion(q, altCount)) {
+        console.warn(`⚠️ Q inválida descartada: alternatives=${JSON.stringify(q.alternatives)?.substring(0, 80)} correct_answer=${q.correct_answer}`)
         q._discard = true
-      }
-
-      if (!VALID_ANSWERS.has(q.correct_answer)) {
-        q.correct_answer = 'A'
       }
     }
 
@@ -672,13 +692,7 @@ serve(async (req) => {
         for (const q of extraQ.questions) {
           if (allQuestions.length >= TARGET_QUESTIONS) break
           if (isJunk(q.text ?? '') || !q.text || q.text.trim().length <= 10) continue
-          const altsValid =
-            Array.isArray(q.alternatives) &&
-            q.alternatives.length >= 4 &&
-            q.alternatives.every((a: any) => typeof a === 'string' && a.trim().length > 3)
-          if (!altsValid) continue
-          if (!VALID_ANSWERS.has(q.correct_answer)) q.correct_answer = 'A'
-          if (q.alternatives.length > altCount) q.alternatives = q.alternatives.slice(0, altCount)
+          if (!sanitizeAndValidateQuestion(q, altCount)) continue
           const key = (q.text ?? '').toLowerCase().replace(/\s+/g, ' ').trim().substring(0, 70)
           if (seenQ.has(key)) continue
           seenQ.add(key)
@@ -824,6 +838,48 @@ serve(async (req) => {
       }
     } catch (reviewErr: any) {
       console.error('⚠️ Revisão automática falhou (questões mantidas como geradas):', reviewErr.message)
+    }
+
+    // Segunda camada de verificação: valida o CONTEÚDO de cada questão de forma independente
+    // (resolve do zero, adaptando o método ao assunto), pois a revisão acima também pode errar.
+    try {
+      const validateRes = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/validate-content`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+        },
+        body: JSON.stringify({ generationId }),
+      })
+      if (validateRes.ok) {
+        const validateData = await validateRes.json()
+        console.log(`🔬 Validação de conteúdo automática: ${validateData.validated ?? 0} analisadas, ${validateData.corrected ?? 0} corrigidas`)
+      } else {
+        console.warn(`⚠️ Validação de conteúdo automática retornou HTTP ${validateRes.status}`)
+      }
+    } catch (validateErr: any) {
+      console.error('⚠️ Validação de conteúdo automática falhou (questões mantidas como estavam):', validateErr.message)
+    }
+
+    // Avaliação de qualidade pedagógica: pontua cada questão e substitui as fracas
+    // (Ruim/Média) por novas, mantendo sempre o total de questões da geração.
+    try {
+      const assessRes = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/assess-quality`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+        },
+        body: JSON.stringify({ generationId }),
+      })
+      if (assessRes.ok) {
+        const assessData = await assessRes.json()
+        console.log(`📊 Avaliação de qualidade automática: ${assessData.assessed ?? 0} avaliadas, ${assessData.replaced ?? 0} substituídas`)
+      } else {
+        console.warn(`⚠️ Avaliação de qualidade automática retornou HTTP ${assessRes.status}`)
+      }
+    } catch (assessErr: any) {
+      console.error('⚠️ Avaliação de qualidade automática falhou (questões mantidas como estavam):', assessErr.message)
     }
 
     // Randomiza a posição das alternativas/gabarito para evitar viés de letra (ex: sempre "C").

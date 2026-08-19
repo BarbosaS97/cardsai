@@ -1,0 +1,2 @@
+[functions.assess-quality]
+verify_jwt = false

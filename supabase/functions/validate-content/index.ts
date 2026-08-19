@@ -73,7 +73,7 @@ async function callDeepSeek(
   keys: string[],
   messages: { role: string; content: string }[],
   maxTokens: number,
-  temperature = 0.2,
+  temperature = 0.1,
 ): Promise<string> {
   const startIdx = _rrIndex++ % keys.length
   for (let attempt = 0; attempt < keys.length; attempt++) {
@@ -100,17 +100,7 @@ async function callDeepSeek(
   throw new Error('Todas as chaves DeepSeek estão com rate limit (429)')
 }
 
-interface QuestionRow {
-  id: string
-  text: string
-  alternatives: string[]
-  correct_answer: string
-  explanation: string | null
-  topic: string | null
-}
-
 const VALID_LETTERS = ['A', 'B', 'C', 'D', 'E']
-const REVIEW_BATCH_SIZE = 10
 
 function normalizeAltText(alt: string): string {
   return String(alt).replace(/^[A-E]\)\s*/, '').trim().toLowerCase().replace(/\s+/g, ' ')
@@ -126,71 +116,86 @@ function hasDuplicateAlternatives(alternatives: string[]): boolean {
   return false
 }
 
-function buildReviewMessages(batch: QuestionRow[]): { role: string; content: string }[] {
-  const input = batch.map((q, i) => ({
-    index: i,
-    topic: q.topic || 'Geral',
-    text: q.text,
-    alternatives: q.alternatives,
-    correct_answer: q.correct_answer,
-    explanation: q.explanation || '',
-  }))
+interface QuestionRow {
+  id: string
+  text: string
+  alternatives: string[]
+  correct_answer: string
+  explanation: string | null
+  topic: string | null
+}
 
-  const prompt = `Revise as ${batch.length} questões de múltipla escolha abaixo. Para CADA questão, faça isto:
+// Segunda camada de verificação, independente da revisão estrutural de review-questions:
+// resolve a questão do zero usando o método apropriado à área de conhecimento (Direito,
+// Matemática, Português, História, ou qualquer outro assunto), em vez de apenas comparar
+// contra o gabarito informado. Uma chamada por questão (não em lote), para dar à IA espaço
+// suficiente para raciocinar com profundidade sobre cada questão individualmente.
+function buildValidationMessages(q: QuestionRow, generationContext: string): { role: string; content: string }[] {
+  const prompt = `Você é um especialista revisor multidisciplinar. Sua tarefa é validar se o GABARITO desta questão está PRECISAMENTE correto, usando o método de verificação apropriado à área de conhecimento do assunto abaixo. Esta é uma segunda camada de verificação, independente de qualquer revisão anterior — não confie cegamente no gabarito informado; resolva a questão você mesmo, do zero.
 
-1. Resolva a questão de forma INDEPENDENTE, como se não conhecesse o "correct_answer" informado, usando apenas conhecimento real e consolidado sobre o tema ("topic").
-2. Compare sua resposta com o "correct_answer" fornecido.
-3. Verifique também:
-   - O enunciado ("text") é claro, objetivo e sem ambiguidade?
-   - Todas as alternativas fazem sentido, não estão vazias e são plausíveis?
-   - Nenhuma alternativa é duplicada, idêntica a outra ou apenas uma repetição disfarçada?
-   - A "explanation" realmente justifica corretamente por que a alternativa correta está certa?
-   - ATENÇÃO CRÍTICA: dentre TODAS as alternativas, existe de fato uma que está correta? Se NENHUMA
-     alternativa fornecida for realmente a resposta certa (todas erradas ou nenhuma corresponde ao seu
-     próprio julgamento independente do passo 1), isso é um problema GRAVE — você DEVE reescrever as
-     alternativas para que uma delas passe a ser genuinamente a correta, mantendo as demais como
-     distratores plausíveis.
-4. Se TUDO estiver correto, retorne apenas: {"index": N, "status": "ok"}
-5. Se houver QUALQUER problema, retorne a questão CORRIGIDA POR COMPLETO:
-   {
-     "index": N,
-     "status": "corrected",
-     "issues": ["gabarito_incorreto" | "nenhuma_alternativa_correta" | "alternativa_duplicada" | "alternativa_incoerente" | "enunciado_confuso" | "explicacao_inconsistente", ...],
-     "text": "enunciado corrigido",
-     "alternatives": ["A) ...", "B) ...", ...],
-     "correct_answer": "X",
-     "explanation": "explicação corrigida, coerente com o gabarito correto"
-   }
+CONTEXTO DA GERAÇÃO: ${generationContext}
+ASSUNTO/TÓPICO DESTA QUESTÃO: ${q.topic || 'Geral'}
 
-REGRAS OBRIGATÓRIAS PARA CORREÇÃO:
-- Mantenha o MESMO número de alternativas de cada questão original e os mesmos prefixos de letra (ex: "A) ", "B) ").
-- Todas as alternativas retornadas devem ser DIFERENTES entre si — nunca repita o mesmo texto em duas alternativas.
-- "correct_answer" deve ser sempre uma letra que corresponda a uma das alternativas retornadas, e essa
-  alternativa deve ser realmente correta (não apenas uma letra válida).
-- Corrija apenas o que estiver realmente errado — não reescreva questões que já estão corretas.
-- Use apenas conhecimento real e academicamente consolidado. Nunca invente informações, artigos ou fatos.
+QUESTÃO:
+Enunciado: ${q.text}
+Alternativas:
+${q.alternatives.map(a => `  ${a}`).join('\n')}
+Gabarito informado: ${q.correct_answer}
+Explicação informada: ${q.explanation || '(nenhuma)'}
+
+MÉTODO DE VALIDAÇÃO — identifique a área de conhecimento do assunto acima e aplique o método correspondente:
+- DIREITO: identifique a lei, artigo ou súmula especificamente envolvida. Baseie-se apenas no texto normativo REAL — nunca invente dispositivos, incisos ou efeitos jurídicos que a lei citada não prevê.
+- MATEMÁTICA/EXATAS: resolva o problema passo a passo, mostrando o cálculo completo, ANTES de comparar com as alternativas.
+- PORTUGUÊS/LINGUÍSTICA: verifique regras gramaticais, ortográficas, de concordância ou de interpretação textual especificamente aplicáveis ao enunciado.
+- HISTÓRIA/GEOGRAFIA/CIÊNCIAS/outras áreas: verifique fatos, datas, conceitos, nomes e relações contra conhecimento consolidado e academicamente aceito — nunca invente eventos ou dados.
+- Qualquer outro assunto: aplique o mesmo rigor — resolva a questão de forma completa e independente antes de validar.
+
+PROCESSO OBRIGATÓRIO:
+1. Identifique a área de conhecimento do assunto.
+2. Resolva a questão de forma COMPLETA e INDEPENDENTE, como se estivesse respondendo-a do zero, SEM olhar o gabarito informado.
+3. Só então compare sua resposta com o gabarito informado.
+4. Se divergirem, o gabarito informado está ERRADO — corrija completamente a questão.
+5. Também corrija se encontrar alternativas incoerentes, vazias, duplicadas, ou enunciado ambíguo — mesmo que o gabarito esteja certo.
+
+Se TUDO estiver correto (gabarito preciso, alternativas coerentes, explicação correta), retorne apenas:
+{"status": "ok"}
+
+Se houver QUALQUER problema, retorne a questão CORRIGIDA POR COMPLETO:
+{
+  "status": "corrected",
+  "subject_area": "direito" | "matematica" | "portugues" | "historia" | "outro",
+  "reasoning": "resumo em 1-3 frases do raciocínio que levou à correção (para auditoria)",
+  "issues": ["gabarito_incorreto" | "nenhuma_alternativa_correta" | "alternativa_duplicada" | "alternativa_incoerente" | "enunciado_confuso" | "explicacao_inconsistente"],
+  "text": "enunciado (corrigido se necessário, senão igual ao original)",
+  "alternatives": ["A) ...", "B) ...", ...],
+  "correct_answer": "X",
+  "explanation": "explicação corrigida e coerente com o gabarito correto"
+}
+
+REGRAS OBRIGATÓRIAS:
+- Mantenha o MESMO número de alternativas (${q.alternatives.length}) e os mesmos prefixos de letra.
+- Todas as alternativas devem ser DIFERENTES entre si.
+- "correct_answer" deve corresponder a uma alternativa que você mesmo verificou ser a correta.
+- Use apenas conhecimento real, consolidado e verificável. NUNCA invente leis, artigos, fórmulas, fatos ou dados.
 - Todo o conteúdo deve estar em português.
 
-Questões a revisar:
-${JSON.stringify(input)}
-
-Retorne APENAS este JSON (sem markdown, sem texto fora do JSON):
-{"results": [{"index": 0, "status": "ok"}, {"index": 1, "status": "corrected", "issues": ["gabarito_incorreto"], "text": "...", "alternatives": ["A) ...", "B) ..."], "correct_answer": "B", "explanation": "..."}]}`
+Retorne APENAS o JSON, sem markdown, sem texto fora do JSON.`
 
   return [
     {
       role: 'system',
       content:
-        'Você é um revisor rigoroso de questões de múltipla escolha, atuando como banca examinadora de controle de qualidade. ' +
-        'Sua função é detectar e corrigir gabaritos incorretos, alternativas incoerentes ou duplicadas, enunciados confusos e explicações ' +
-        'inconsistentes com o gabarito. Resolva cada questão de forma independente antes de validar o gabarito informado — nunca assuma que ' +
-        'está correto sem verificar. Seja conservador: só marque como "corrected" quando houver um problema real. Retorne APENAS JSON válido.',
+        'Você é um especialista revisor multidisciplinar (Direito, Matemática, Português, História, Ciências e qualquer outra área), ' +
+        'atuando como segunda camada de controle de qualidade após uma revisão anterior. Sua função é validar com rigor máximo se o ' +
+        'gabarito de cada questão está PRECISAMENTE correto, resolvendo cada questão de forma independente e completa antes de confiar ' +
+        'em qualquer gabarito informado. Nunca invente leis, artigos, fórmulas, fatos ou dados — use apenas conhecimento real e verificável. ' +
+        'Seja conservador ao corrigir: só marque "corrected" quando tiver certeza de um problema real. Retorne APENAS JSON válido.',
     },
     { role: 'user', content: prompt },
   ]
 }
 
-function sanitizeCorrection(
+function sanitizeValidation(
   original: QuestionRow,
   item: any,
 ): { text: string; alternatives: string[]; correct_answer: string; explanation: string } | null {
@@ -205,9 +210,6 @@ function sanitizeCorrection(
     alternatives.length >= 4 &&
     alternatives.every((a: string) => a.length > 3)
   if (!altsValid) return null
-
-  // A correção da própria IA também precisa passar pela checagem estrutural:
-  // nenhuma alternativa vazia/duplicada, mesmo que ela tenha marcado "corrected".
   if (hasDuplicateAlternatives(alternatives)) return null
 
   const correctAnswer = typeof item.correct_answer === 'string' ? item.correct_answer.trim().toUpperCase() : ''
@@ -254,8 +256,8 @@ serve(async (req) => {
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(supabaseUrl, serviceRoleKey)
 
-    // Chamada interna (process-pdf/generate-subject usam a service role key
-    // diretamente após salvar as questões) pula a checagem de usuário.
+    // Chamada interna (process-pdf/generate-subject usam a service role key diretamente
+    // após a revisão) pula a checagem de usuário.
     const isInternalCall = token === serviceRoleKey
 
     let userId: string | null = null
@@ -275,7 +277,7 @@ serve(async (req) => {
 
     const { data: generation, error: genErr } = await supabase
       .from('generations')
-      .select('id, user_id')
+      .select('id, user_id, title, study_mode')
       .eq('id', generationId)
       .single()
 
@@ -305,8 +307,8 @@ serve(async (req) => {
     if (qErr) throw new Error(`Falha ao buscar questões: ${qErr.message}`)
 
     if (!questions || questions.length === 0) {
-      console.log('✅ Revisão concluída: 0 analisadas, 0 corrigidas (nenhuma questão encontrada para esta geração)')
-      return new Response(JSON.stringify({ success: true, reviewed: 0, corrected: 0 }), {
+      console.log('✅ Validação de conteúdo concluída: 0 analisadas, 0 corrigidas (nenhuma questão encontrada para esta geração)')
+      return new Response(JSON.stringify({ success: true, validated: 0, corrected: 0 }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
@@ -314,55 +316,57 @@ serve(async (req) => {
     const keys = loadApiKeys()
     if (keys.length === 0) throw new Error('Nenhuma DEEPSEEK_API_KEY configurada')
 
-    const batches: QuestionRow[][] = []
-    for (let i = 0; i < questions.length; i += REVIEW_BATCH_SIZE) {
-      batches.push(questions.slice(i, i + REVIEW_BATCH_SIZE) as QuestionRow[])
-    }
+    const generationContext = [generation.title, generation.study_mode ? `modo: ${generation.study_mode}` : null]
+      .filter(Boolean)
+      .join(' — ') || 'Sem contexto adicional'
 
-    console.log(`🔍 Revisando ${questions.length} questões (geração ${generationId}) em ${batches.length} lote(s)...`)
+    console.log(`🔬 Validando conteúdo de ${questions.length} questões (geração ${generationId}), uma chamada por questão...`)
 
-    const batchResults = await Promise.all(
-      batches.map(async (batch, batchIdx) => {
+    // Uma chamada de IA por questão (não em lote): dá à IA espaço dedicado para
+    // raciocinar profundamente sobre cada questão individual, em vez de avaliar
+    // várias de uma vez com atenção diluída.
+    const results = await Promise.all(
+      (questions as QuestionRow[]).map(async (q) => {
         try {
-          const messages = buildReviewMessages(batch)
-          const raw = await callDeepSeek(keys, messages, 7500, 0.2)
+          const messages = buildValidationMessages(q, generationContext)
+          const raw = await callDeepSeek(keys, messages, 2000, 0.1)
           const parsed = tentarParsearJSON(raw)
-          const results = parsed && Array.isArray(parsed.results) ? parsed.results : []
-          console.log(`✅ Lote ${batchIdx + 1}/${batches.length}: ${results.length}/${batch.length} avaliadas`)
-          return { batch, results, failed: false }
+          return { question: q, item: parsed, failed: !parsed }
         } catch (e: any) {
-          console.error(`❌ Lote ${batchIdx + 1}/${batches.length} falhou:`, e.message)
-          return { batch, results: [] as any[], failed: true }
+          console.error(`❌ Validação da questão ${q.id} falhou:`, e.message)
+          return { question: q, item: null, failed: true }
         }
       }),
     )
 
-    const failedBatches = batchResults.filter(b => b.failed).length
+    const failedCount = results.filter(r => r.failed).length
 
-    const candidates: { id: string; original: QuestionRow; fixed: NonNullable<ReturnType<typeof sanitizeCorrection>>; issues: string[] }[] = []
+    const candidates: { id: string; original: QuestionRow; fixed: NonNullable<ReturnType<typeof sanitizeValidation>>; issues: string[]; subjectArea: string | null; reasoning: string | null }[] = []
 
-    for (const { batch, results } of batchResults) {
-      for (const item of results) {
-        if (!item || item.status !== 'corrected') continue
-        const idx = Number(item.index)
-        const original = batch[idx]
-        if (!original) continue
+    for (const { question, item } of results) {
+      if (!item || item.status !== 'corrected') continue
 
-        const fixed = sanitizeCorrection(original, item)
-        if (!fixed) {
-          console.warn(`⚠️ Correção inválida descartada para questão ${original.id}`)
-          continue
-        }
-
-        const unchanged =
-          fixed.text === original.text &&
-          fixed.correct_answer === original.correct_answer &&
-          fixed.explanation === (original.explanation ?? '') &&
-          JSON.stringify(fixed.alternatives) === JSON.stringify(original.alternatives)
-        if (unchanged) continue
-
-        candidates.push({ id: original.id, original, fixed, issues: Array.isArray(item.issues) ? item.issues : [] })
+      const fixed = sanitizeValidation(question, item)
+      if (!fixed) {
+        console.warn(`⚠️ Correção de conteúdo inválida descartada para questão ${question.id}`)
+        continue
       }
+
+      const unchanged =
+        fixed.text === question.text &&
+        fixed.correct_answer === question.correct_answer &&
+        fixed.explanation === (question.explanation ?? '') &&
+        JSON.stringify(fixed.alternatives) === JSON.stringify(question.alternatives)
+      if (unchanged) continue
+
+      candidates.push({
+        id: question.id,
+        original: question,
+        fixed,
+        issues: Array.isArray(item.issues) ? item.issues : [],
+        subjectArea: typeof item.subject_area === 'string' ? item.subject_area : null,
+        reasoning: typeof item.reasoning === 'string' ? item.reasoning : null,
+      })
     }
 
     let corrected = 0
@@ -384,7 +388,7 @@ serve(async (req) => {
       const auditRows: any[] = []
       for (let i = 0; i < candidates.length; i++) {
         if (updateResults[i].error) {
-          console.error(`❌ Falha ao salvar correção da questão ${candidates[i].id}:`, updateResults[i].error!.message)
+          console.error(`❌ Falha ao salvar validação de conteúdo da questão ${candidates[i].id}:`, updateResults[i].error!.message)
           continue
         }
         const c = candidates[i]
@@ -392,7 +396,9 @@ serve(async (req) => {
           question_id: c.id,
           generation_id: generationId,
           user_id: generation.user_id,
+          subject_area: c.subjectArea,
           issues_found: c.issues,
+          reasoning: c.reasoning,
           before: {
             text: c.original.text,
             alternatives: c.original.alternatives,
@@ -404,8 +410,8 @@ serve(async (req) => {
       }
 
       if (auditRows.length > 0) {
-        const { error: auditErr } = await supabase.from('question_corrections').insert(auditRows)
-        if (auditErr) console.error('❌ Falha ao salvar auditoria de correções:', auditErr.message)
+        const { error: auditErr } = await supabase.from('content_validations').insert(auditRows)
+        if (auditErr) console.error('❌ Falha ao salvar auditoria de validação de conteúdo:', auditErr.message)
       }
       corrected = auditRows.length
     }
@@ -413,18 +419,18 @@ serve(async (req) => {
     const statusSuffix =
       corrected > 0
         ? ''
-        : failedBatches > 0
-          ? ` (falha ao analisar ${failedBatches}/${batches.length} lote(s))`
-          : ' (nenhum problema encontrado)'
-    console.log(`✅ Revisão concluída: ${questions.length} analisadas, ${corrected} corrigidas${statusSuffix} — ${elapsed()}`)
+        : failedCount > 0
+          ? ` (falha ao validar ${failedCount}/${questions.length} questão(ões))`
+          : ' (nenhum problema de conteúdo encontrado)'
+    console.log(`✅ Validação de conteúdo concluída: ${questions.length} analisadas, ${corrected} corrigidas${statusSuffix} — ${elapsed()}`)
 
     return new Response(
-      JSON.stringify({ success: true, reviewed: questions.length, corrected }),
+      JSON.stringify({ success: true, validated: questions.length, corrected }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     )
   } catch (error: any) {
-    console.error('❌ Erro fatal na revisão:', error.message)
-    return new Response(JSON.stringify({ error: 'Erro interno ao revisar questões. Tente novamente.' }), {
+    console.error('❌ Erro fatal na validação de conteúdo:', error.message)
+    return new Response(JSON.stringify({ error: 'Erro interno ao validar conteúdo. Tente novamente.' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
