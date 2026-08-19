@@ -1,0 +1,2 @@
+[functions.review-questions]
+verify_jwt = false

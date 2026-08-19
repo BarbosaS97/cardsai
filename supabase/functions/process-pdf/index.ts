@@ -741,6 +741,27 @@ serve(async (req) => {
     }
     console.log(`✅ ${questionRows.length}Q + ${flashcardRows.length}FC salvos em ${elapsed()}`)
 
+    // Revisão automática de qualidade: corrige gabarito, alternativas, enunciado e explicação
+    // antes de liberar a geração para o usuário. Falha aqui não deve travar a geração.
+    try {
+      const reviewRes = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/review-questions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+        },
+        body: JSON.stringify({ generationId }),
+      })
+      if (reviewRes.ok) {
+        const reviewData = await reviewRes.json()
+        console.log(`🔍 Revisão automática: ${reviewData.reviewed ?? 0} analisadas, ${reviewData.corrected ?? 0} corrigidas`)
+      } else {
+        console.warn(`⚠️ Revisão automática retornou HTTP ${reviewRes.status}`)
+      }
+    } catch (reviewErr: any) {
+      console.error('⚠️ Revisão automática falhou (questões mantidas como geradas):', reviewErr.message)
+    }
+
     console.log(`📝 Atualizando status da geração ${generationId} para 'completed'...`)
     const now = new Date().toISOString()
     const { data: updatedRows, error: updateError } = await supabase
